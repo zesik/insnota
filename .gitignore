@@ -1,0 +1,24 @@
+# OS X Generated Files
+.DS_Store
+._*
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+
+# IDE and Editors
+.idea
+*.iml
+.vscode
+
+# Node and NPM
+node_modules
+logs
+*.log
+npm-debug.log*
+pids
+*.pid
+*.seed
+
+# Output
+.sass-cache
+build
