@@ -4,6 +4,11 @@ import { selectDocument, createDocument, changeDocumentTitle } from '../actions/
 import DocumentList from '../components/DocumentList';
 import SyncedEditor from '../components/SyncedEditor';
 
+function createWebSocketURL(s = '') {
+  const l = window.location;
+  return ((l.protocol === 'https:') ? 'wss://' : 'ws://') + l.host + l.pathname + s;
+}
+
 class App extends React.Component {
   render() {
     const { dispatch } = this.props;
@@ -12,11 +17,11 @@ class App extends React.Component {
         <DocumentList
           selectedDocumentID={this.props.selectedDocumentID}
           documentList={this.props.documentList}
-          onNewDocumentClicked={(title, content) => dispatch(createDocument('untitled'))}
+          onNewDocumentClicked={() => dispatch(createDocument('untitled'))}
           onDocumentClicked={(documentID) => dispatch(selectDocument(documentID))}
         />
         <SyncedEditor
-          socketURL="ws://localhost:3000/"
+          socketURL={createWebSocketURL()}
           collection="collection"
           documentID={this.props.selectedDocumentID}
           defaultTitle="Untitled"
