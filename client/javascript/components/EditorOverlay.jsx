@@ -1,9 +1,9 @@
 import React from 'react';
 import { DOC_INITIAL, DOC_OPENING, DOC_FAILED } from './SyncedEditor';
 
-function EditorOverlay(state) {
+function EditorOverlay(props) {
   let overlay;
-  switch (state) {
+  switch (props.state) {
     case DOC_INITIAL:
       overlay = (<div className="overlay" />);
       break;
