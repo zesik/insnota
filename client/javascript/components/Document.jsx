@@ -4,8 +4,8 @@ import classNames from 'classnames';
 class Document extends React.Component {
   render() {
     const elementClasses = classNames({
-      'document': true,
-      'selected': this.props.selected
+      document: true,
+      selected: this.props.selected
     });
     return (
       <div className={elementClasses} onClick={this.props.onClick}>
