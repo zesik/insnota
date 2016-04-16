@@ -18,6 +18,7 @@ const DEFAULT_DOCUMENT = {
 class SyncedEditor extends React.Component {
   constructor(props) {
     super(props);
+    this.handleTitleChanged = this.handleTitleChanged.bind(this);
     this.handleContentChanged = this.handleContentChanged.bind(this);
     this.handleContentCursorActivity = this.handleContentCursorActivity.bind(this);
     // this.handleFocusChanged is not bound here, but in componentDidMount
@@ -108,6 +109,26 @@ class SyncedEditor extends React.Component {
   handleFocusChanged(focus) {
   }
 
+  handleTitleChanged(event) {
+    // Event is not raised if not subscribing to remote document
+    if (this.state.state === DOC_INITIAL || this.state.state === DOC_FAILED) {
+      return;
+    }
+    const doc = this.shareDBDoc;
+    if (!doc) {
+      return;
+    }
+
+    // Do not submit remote changes again to the server
+    this.raiseTitleChanged(event.target.value, this.remoteUpdating);
+    if (this.remoteUpdating) {
+      return;
+    }
+
+    // Submit changes to remote server
+    //this.setState({ state: DOC_SYNCING });
+  }
+
   handleContentChanged(cm, change) {
     // Event is not raised if not subscribing to remote document
     const doc = this.shareDBDoc;
@@ -121,7 +142,7 @@ class SyncedEditor extends React.Component {
       return;
     }
 
-    // Submit changed to remote server
+    // Submit changes to remote server
     this.setState({ state: DOC_SYNCING });
     this.submitDocumentChange(cm, change);
   }
@@ -138,12 +159,12 @@ class SyncedEditor extends React.Component {
       cursors.push({
         anchor: {
           ln: selections[i].anchor.line + 1,
-          col: this.getColumn(selections[i].anchor.line, selections[i].anchor.ch, tabSize) + 1,
+          col: this.getColumnIndex(cm, selections[i].anchor.line, selections[i].anchor.ch, tabSize) + 1,
           ch: selections[i].anchor.ch + 1
         },
         head: {
           ln: selections[i].head.line + 1,
-          col: this.getColumn(selections[i].head.line, selections[i].head.ch, tabSize) + 1,
+          col: this.getColumnIndex(cm, selections[i].head.line, selections[i].head.ch, tabSize) + 1,
           ch: selections[i].head.ch + 1
         },
         length: selectedStrings[i].length
@@ -208,13 +229,15 @@ class SyncedEditor extends React.Component {
         }
 
         // The first initialization of document is considered as remote updating event
+        this.shareDBDoc = doc;
         this.remoteUpdating = true;
         this.refs.title.value = title;
+        // Change event is not triggered automatically, triggering it
+        this.refs.title.dispatchEvent(new Event('input', { bubbles: true }));
         this.codeMirror.setValue(content);
         this.remoteUpdating = false;
 
         // Document is populated
-        this.shareDBDoc = doc;
         this.setState({ state: DOC_SYNCED });
         this.codeMirror.focus();
 
@@ -254,7 +277,7 @@ class SyncedEditor extends React.Component {
     return (
       <div className="editor-container">
         <EditorOverlay state={this.state.state} />
-        <input ref="title" type="text" />
+        <input ref="title" type="text" className="document-title" onChange={this.handleTitleChanged} />
         <textarea ref="textarea" />
         <EditorStatusBar
           state={this.state.state}
