@@ -62,7 +62,7 @@ class SyncedEditor extends React.Component {
     this.codeMirror.on('cursorActivity', this.handleContentCursorActivity);
     this.codeMirror.on('focus', this.handleFocusChanged.bind(this, true));
     this.codeMirror.on('blur', this.handleFocusChanged.bind(this, false));
-    this.shareDBConnection = new ShareDB.Connection(this.getWebSocketConnection());
+    this.shareDBConnection = new ShareDB.Connection(this.initiateWebSocketConnection());
     this.shareDBConnection.on('state', this.handleConnectionStateChanged);
     this.shareDBDoc = null;
     this.remoteUpdating = false;
@@ -128,7 +128,7 @@ class SyncedEditor extends React.Component {
     return [Math.pow(2, Math.min(retryCount, MAX_BACKOFF_TIME_PARAMETER)), Math.floor(Math.random() * 1000)];
   }
 
-  getWebSocketConnection() {
+  initiateWebSocketConnection() {
     return new WebSocket(this.props.socketURL);
   }
 
@@ -266,7 +266,7 @@ class SyncedEditor extends React.Component {
 
       // Start reconnecting
       this.setState({ connectionState: CONNECTION_CONNECTING });
-      this.shareDBConnection.bindToSocket(this.getWebSocketConnection());
+      this.shareDBConnection.bindToSocket(this.initiateWebSocketConnection());
     }, 100);
   }
 
