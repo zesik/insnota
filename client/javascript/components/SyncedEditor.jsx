@@ -26,7 +26,7 @@ class SyncedEditor extends React.Component {
   constructor(props) {
     super(props);
     this.handleConnectionStateChanged = this.handleConnectionStateChanged.bind(this);
-    this.handleTitleChanged = this.handleTitleChanged.bind(this);
+    this.handleTitleKeyUp = this.handleTitleKeyUp.bind(this);
     this.handleContentChanged = this.handleContentChanged.bind(this);
     this.handleContentCursorActivity = this.handleContentCursorActivity.bind(this);
     // this.handleFocusChanged is not bound here, but in componentDidMount
@@ -79,9 +79,12 @@ class SyncedEditor extends React.Component {
     switch (nextState.documentState) {
       case DOC_SYNCED:
       case DOC_SYNCING:
+        this.refs.title.disabled = false;
+        this.refs.title.readOnly = nextState.documentReadOnly;
         this.codeMirror.setOption('readOnly', nextState.documentReadOnly);
         break;
       default:
+        this.refs.title.disabled = true;
         this.codeMirror.setOption('readOnly', 'nocursor');
         break;
     }
@@ -151,8 +154,7 @@ class SyncedEditor extends React.Component {
 
   handleContentChanged(cm, change) {
     // Event is not raised if not subscribing to remote document
-    const doc = this.shareDBDoc;
-    if (!doc) {
+    if (!this.shareDBDoc) {
       return;
     }
 
@@ -196,24 +198,27 @@ class SyncedEditor extends React.Component {
   handleFocusChanged(focus) {
   }
 
-  handleTitleChanged(event) {
+  handleTitleKeyUp(event) {
     // Event is not raised if not subscribing to remote document
-    if (this.state.documentState === DOC_INITIAL || this.state.documentState === DOC_FAILED) {
-      return;
-    }
-    const doc = this.shareDBDoc;
-    if (!doc) {
+    if (!this.shareDBDoc) {
       return;
     }
 
-    // Do not submit remote changes again to the server
-    this.raiseTitleChanged(event.target.value, this.remoteUpdating);
-    if (this.remoteUpdating) {
+    if (event.key === 'Escape') {
+      // Cancelled, revert to original title
+      event.target.blur();
+      event.target.value = this.shareDBDoc.data.t;
+    } else if (event.key === 'Enter') {
+      // Confirmed, submit changes
+      event.target.blur();
+      this.raiseTitleChanged(event.target.value, false);
+      this.setState({ documentState: DOC_SYNCING });
+      this.submitTitleChange(event.target.value);
+    } else {
       return;
     }
 
-    // Submit changes to remote server
-    //this.setState({ state: DOC_SYNCING });
+    event.preventDefault();
   }
 
   raiseContentChanged(content, remote) {
@@ -278,6 +283,10 @@ class SyncedEditor extends React.Component {
     }
   }
 
+  submitTitleChange(title) {
+    this.shareDBDoc.submitOp([{ p: ['t'], od: this.shareDBDoc.data.t, oi: title }], true);
+  }
+
   subscribeDocument(collection, documentID) {
     if (this.shareDBDoc) {
       this.shareDBDoc.off('op');
@@ -314,8 +323,8 @@ class SyncedEditor extends React.Component {
         this.shareDBDoc = doc;
         this.remoteUpdating = true;
         this.refs.title.value = title;
-        // Change event is not triggered automatically, triggering it
-        this.refs.title.dispatchEvent(new Event('input', { bubbles: true }));
+        // Manually trigger title change event
+        this.raiseTitleChanged(title, true);
         this.codeMirror.setValue(content);
         this.remoteUpdating = false;
 
@@ -333,7 +342,8 @@ class SyncedEditor extends React.Component {
           for (let i = 0; i < operationList.length; ++i) {
             const operation = operationList[i];
             if (operation.p[0] === 't') {
-              // TODO: Handle document title change
+              this.refs.title.value = operation.oi;
+              this.raiseTitleChanged(this.refs.title.value, true);
             } else {
               if (typeof operation.sd === 'undefined') {
                 // An insertion
@@ -357,7 +367,7 @@ class SyncedEditor extends React.Component {
     return (
       <div className="editor-container">
         <EditorOverlay state={this.state.documentState} />
-        <input ref="title" type="text" className="document-title" onChange={this.handleTitleChanged} />
+        <input ref="title" type="text" className="document-title" onKeyUp={this.handleTitleKeyUp} />
         <textarea ref="textarea" />
         <EditorStatusBar
           connectionState={this.state.connectionState}
