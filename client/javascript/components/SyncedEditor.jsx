@@ -4,6 +4,11 @@ import EditorStatusBar from './EditorStatusBar';
 import CodeMirror from 'codemirror';
 import ShareDB from 'sharedb/lib/client';
 
+export const CONNECTION_DISCONNECTED = 'CONNECTION_DISCONNECTED';
+export const CONNECTION_CONNECTING = 'CONNECTION_CONNECTING';
+export const CONNECTION_CONNECTED = 'CONNECTION_CONNECTED';
+export const CONNECTION_WAITING = 'CONNECTION_WAITING';
+
 export const DOC_INITIAL = 'DOC_INITIAL';
 export const DOC_OPENING = 'DOC_OPENING';
 export const DOC_FAILED = 'DOC_FAILED';
@@ -18,15 +23,19 @@ const DEFAULT_DOCUMENT = {
 class SyncedEditor extends React.Component {
   constructor(props) {
     super(props);
+    this.handleConnectionStateChanged = this.handleConnectionStateChanged.bind(this);
     this.handleTitleChanged = this.handleTitleChanged.bind(this);
     this.handleContentChanged = this.handleContentChanged.bind(this);
     this.handleContentCursorActivity = this.handleContentCursorActivity.bind(this);
     // this.handleFocusChanged is not bound here, but in componentDidMount
     this.state = {
-      state: DOC_INITIAL,
-      readOnly: false,
-      cursors: [],
-      showCursorChars: false
+      connectionState: CONNECTION_DISCONNECTED,
+      connectionRetries: 0,
+      connectionWaitSeconds: 0,
+      documentState: DOC_INITIAL,
+      documentReadOnly: false,
+      documentCursors: [],
+      documentShowCursorChars: false
     };
   }
 
@@ -51,7 +60,8 @@ class SyncedEditor extends React.Component {
     this.codeMirror.on('cursorActivity', this.handleContentCursorActivity);
     this.codeMirror.on('focus', this.handleFocusChanged.bind(this, true));
     this.codeMirror.on('blur', this.handleFocusChanged.bind(this, false));
-    this.shareDBConnection = new ShareDB.Connection(new WebSocket(this.props.socketURL));
+    this.shareDBConnection = new ShareDB.Connection(this.getWebSocketConnection());
+    this.shareDBConnection.on('state', this.handleConnectionStateChanged);
     this.shareDBDoc = null;
     this.remoteUpdating = false;
     this.subscribeDocument(this.props.documentID);
@@ -64,10 +74,10 @@ class SyncedEditor extends React.Component {
   }
 
   componentWillUpdate(nextProps, nextState) {
-    switch (nextState.state) {
+    switch (nextState.documentState) {
       case DOC_SYNCED:
       case DOC_SYNCING:
-        this.codeMirror.setOption('readOnly', nextState.readOnly);
+        this.codeMirror.setOption('readOnly', nextState.documentReadOnly);
         break;
       default:
         this.codeMirror.setOption('readOnly', 'nocursor');
@@ -84,10 +94,13 @@ class SyncedEditor extends React.Component {
       this.codeMirror.toTextArea();
     }
     if (this.shareDBDoc) {
+      this.shareDBDoc.off('op');
+      this.shareDBDoc.off('nothing pending');
       this.shareDBDoc.unsubscribe();
       this.shareDBDoc = null;
     }
     if (this.shareDBConnection) {
+      this.shareDBConnection.off('state');
       this.shareDBConnection.close();
       this.shareDBConnection = null;
     }
@@ -106,12 +119,72 @@ class SyncedEditor extends React.Component {
     return col;
   }
 
+  getWebSocketConnection() {
+    return new WebSocket(this.props.socketURL);
+  }
+
+  setupReconnection() {
+    // Ignore if we are already waiting for reconnecting
+    if (this.reconnectTimer) {
+      return;
+    }
+
+    // Get reconnecting wait time
+    const seconds = 10;
+    const expire = new Date();
+    expire.setSeconds(expire.getSeconds() + seconds);
+    this.setState({
+      connectionState: CONNECTION_WAITING,
+      connectionRetries: this.state.connectionRetries + 1,
+      connectionWaitSeconds: seconds
+    });
+
+    // Set up timer for reconnecting
+    this.reconnectTimer = window.setInterval(() => {
+      const difference = (expire - (new Date())) / 1000;
+      if (difference > 0) {
+        this.setState({
+          connectionWaitSeconds: Math.ceil(difference)
+        });
+        return;
+      }
+
+      // Stop timer
+      window.clearInterval(this.reconnectTimer);
+      this.reconnectTimer = 0;
+
+      // Start reconnecting
+      this.setState({ connectionState: CONNECTION_CONNECTING });
+      this.shareDBConnection.bindToSocket(this.getWebSocketConnection());
+    }, 100);
+  }
+
+  handleConnectionStateChanged(newState) {
+    switch (newState) {
+      case 'connected':
+        this.setState({
+          connectionState: CONNECTION_CONNECTED,
+          connectionRetries: 0,
+          connectionWaitSeconds: 0
+        });
+        break;
+      case 'connecting':
+        this.setState({
+          connectionState: CONNECTION_CONNECTING
+        });
+        break;
+      default:
+        this.setupReconnection();
+        break;
+    }
+  }
+
   handleFocusChanged(focus) {
   }
 
   handleTitleChanged(event) {
     // Event is not raised if not subscribing to remote document
-    if (this.state.state === DOC_INITIAL || this.state.state === DOC_FAILED) {
+    if (this.state.documentState === DOC_INITIAL || this.state.documentState === DOC_FAILED) {
       return;
     }
     const doc = this.shareDBDoc;
@@ -143,7 +216,7 @@ class SyncedEditor extends React.Component {
     }
 
     // Submit changes to remote server
-    this.setState({ state: DOC_SYNCING });
+    this.setState({ documentState: DOC_SYNCING });
     this.submitDocumentChange(cm, change);
   }
 
@@ -170,7 +243,7 @@ class SyncedEditor extends React.Component {
         length: selectedStrings[i].length
       });
     }
-    this.setState({ cursors });
+    this.setState({ documentCursors: cursors });
   }
 
   raiseTitleChanged(title, remote) {
@@ -200,18 +273,20 @@ class SyncedEditor extends React.Component {
 
   subscribeDocument(collection, documentID) {
     if (this.shareDBDoc) {
+      this.shareDBDoc.off('op');
+      this.shareDBDoc.off('nothing pending');
       this.shareDBDoc.unsubscribe();
       this.shareDBDoc = null;
     }
-    this.setState({ state: DOC_INITIAL });
+    this.setState({ documentState: DOC_INITIAL });
     if (collection && documentID) {
-      this.setState({ state: DOC_OPENING });
+      this.setState({ documentState: DOC_OPENING });
       const doc = this.shareDBConnection.get(collection, documentID);
       doc.subscribe(error => {
         // Unable to subscribe to the document
         if (error) {
           console.error('Failed to subscribe', error);
-          this.setState({ state: DOC_FAILED });
+          this.setState({ documentState: DOC_FAILED });
           return;
         }
 
@@ -238,37 +313,35 @@ class SyncedEditor extends React.Component {
         this.remoteUpdating = false;
 
         // Document is populated
-        this.setState({ state: DOC_SYNCED });
+        this.setState({ documentState: DOC_SYNCED });
         this.codeMirror.focus();
+        this.handleContentCursorActivity(this.codeMirror);
 
         // Handle document updating event
         doc.on('op', (operationList, local) => {
-          if (!local) {
-            this.remoteUpdating = true;
-            for (let i = 0; i < operationList.length; ++i) {
-              const operation = operationList[i];
-              if (operation.p[0] === 't') {
-                // TODO: Handle document title change
+          if (local) {
+            return;
+          }
+          this.remoteUpdating = true;
+          for (let i = 0; i < operationList.length; ++i) {
+            const operation = operationList[i];
+            if (operation.p[0] === 't') {
+              // TODO: Handle document title change
+            } else {
+              if (typeof operation.sd === 'undefined') {
+                // An insertion
+                this.codeMirror.replaceRange(operation.si, this.codeMirror.posFromIndex(operation.p[1]));
               } else {
-                if (typeof operation.sd === 'undefined') {
-                  // An insertion
-                  this.codeMirror.replaceRange(operation.si, this.codeMirror.posFromIndex(operation.p[1]));
-                } else {
-                  // A removal
-                  const from = this.codeMirror.posFromIndex(operation.p[1]);
-                  const to = this.codeMirror.posFromIndex(operation.p[1] + operation.sd.length);
-                  this.codeMirror.replaceRange('', from, to);
-                }
+                // A removal
+                const from = this.codeMirror.posFromIndex(operation.p[1]);
+                const to = this.codeMirror.posFromIndex(operation.p[1] + operation.sd.length);
+                this.codeMirror.replaceRange('', from, to);
               }
             }
-            this.remoteUpdating = false;
           }
-          if (this.refs.title.value === doc.data.t && this.codeMirror.getValue() === doc.data.c) {
-            this.setState({ state: DOC_SYNCED });
-          } else {
-            this.setState({ state: DOC_SYNCING });
-          }
+          this.remoteUpdating = false;
         });
+        doc.on('nothing pending', () => this.setState({ documentState: DOC_SYNCED }));
       });
     }
   }
@@ -276,13 +349,16 @@ class SyncedEditor extends React.Component {
   render() {
     return (
       <div className="editor-container">
-        <EditorOverlay state={this.state.state} />
+        <EditorOverlay state={this.state.documentState} />
         <input ref="title" type="text" className="document-title" onChange={this.handleTitleChanged} />
         <textarea ref="textarea" />
         <EditorStatusBar
-          state={this.state.state}
-          cursors={this.state.cursors}
-          showCursorChars={this.state.showCursorChars}
+          connectionState={this.state.connectionState}
+          connectionRetries={this.state.connectionRetries}
+          connectionWaitSeconds={this.state.connectionWaitSeconds}
+          documentState={this.state.documentState}
+          cursors={this.state.documentCursors}
+          showCursorChars={this.state.documentShowCursorChars}
         />
       </div>
     );

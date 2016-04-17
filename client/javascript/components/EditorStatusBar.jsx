@@ -1,10 +1,37 @@
 import React from 'react';
-import { DOC_SYNCING, DOC_SYNCED } from './SyncedEditor';
+import {
+  CONNECTION_CONNECTING,
+  CONNECTION_WAITING,
+  CONNECTION_CONNECTED,
+  DOC_SYNCING,
+  DOC_SYNCED
+} from './SyncedEditor';
 
 class EditorStatusBar extends React.Component {
   render() {
+    let connectionStatus;
+    switch (this.props.connectionState) {
+      case CONNECTION_CONNECTING:
+        connectionStatus = (<div className="connection-status">Connecting...</div>);
+        break;
+      case CONNECTION_WAITING:
+        connectionStatus = (
+          <div className="connection-status">
+            Waiting for {this.props.connectionWaitSeconds} second(s) before reconnecting
+            (No. {this.props.connectionRetries})...
+          </div>
+        );
+        break;
+      case CONNECTION_CONNECTED:
+        connectionStatus = (<div className="connection-status">Connected</div>);
+        break;
+      default:
+        connectionStatus = (<div className="connection-status">Not Connected</div>);
+        break;
+    }
+
     let syncStatus;
-    switch (this.props.state) {
+    switch (this.props.documentState) {
       case DOC_SYNCING:
         syncStatus = (<div className="sync-status">Saving...</div>);
         break;
@@ -53,6 +80,7 @@ class EditorStatusBar extends React.Component {
 
     return (
       <div className="status-bar">
+        {connectionStatus}
         {syncStatus}
         <div className="cursor-status">
           {cursorPositions}
@@ -64,7 +92,10 @@ class EditorStatusBar extends React.Component {
 }
 
 EditorStatusBar.propTypes = {
-  state: React.PropTypes.string,
+  connectionState: React.PropTypes.string,
+  connectionRetries: React.PropTypes.number,
+  connectionWaitSeconds: React.PropTypes.number,
+  documentState: React.PropTypes.string,
   cursors: React.PropTypes.arrayOf(React.PropTypes.shape({
     anchor: React.PropTypes.shape({
       ln: React.PropTypes.number.isRequired,

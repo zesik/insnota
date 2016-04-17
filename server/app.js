@@ -5,6 +5,7 @@ const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 const websocket = require('ws');
 const sharedb = require('sharedb');
+const sharedbDatabase = require('sharedb-mongo')('mongodb://localhost:27017/test');
 const ServerStream = require('./server-stream');
 
 // Initialize express
@@ -60,7 +61,7 @@ app.use(function (err, req, res, next) {
 const server = http.createServer(app);
 
 // Initialize ShareDB
-const share = sharedb();
+const share = sharedb({db: sharedbDatabase});
 
 require('sharedb-logger')(share);
 require('sharedb-access')(share);

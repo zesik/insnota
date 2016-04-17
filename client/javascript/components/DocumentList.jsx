@@ -30,7 +30,7 @@ class DocumentList extends React.Component {
           <Document />
         </div>
       </div>
-    )
+    );
   }
 }
 
