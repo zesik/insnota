@@ -147,7 +147,7 @@ class SyncedEditor extends React.Component {
         });
         break;
       default:
-        this.setupReconnection();
+        this.prepareReconnection();
         break;
     }
   }
@@ -204,16 +204,17 @@ class SyncedEditor extends React.Component {
       return;
     }
 
+    const titleTextBox = event.target;
     if (event.key === 'Escape') {
       // Cancelled, revert to original title
-      event.target.blur();
-      event.target.value = this.shareDBDoc.data.t;
+      titleTextBox.blur();
+      titleTextBox.value = this.shareDBDoc.data.t;
     } else if (event.key === 'Enter') {
       // Confirmed, submit changes
-      event.target.blur();
-      this.raiseTitleChanged(event.target.value, false);
+      titleTextBox.blur();
+      this.raiseTitleChanged(titleTextBox.value, false);
       this.setState({ documentState: DOC_SYNCING });
-      this.submitTitleChange(event.target.value);
+      this.submitTitleChange(titleTextBox.value);
     } else {
       return;
     }
@@ -233,7 +234,7 @@ class SyncedEditor extends React.Component {
     }
   }
 
-  setupReconnection() {
+  prepareReconnection() {
     // Ignore if we are already waiting for reconnecting
     if (this.reconnectTimer) {
       return;
