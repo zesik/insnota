@@ -15,6 +15,8 @@ export const DOC_FAILED = 'DOC_FAILED';
 export const DOC_SYNCING = 'DOC_SYNCING';
 export const DOC_SYNCED = 'DOC_SYNCED';
 
+const MAX_BACKOFF_TIME_PARAMETER = 6;
+
 const DEFAULT_DOCUMENT = {
   t: '',
   c: ''
@@ -119,44 +121,12 @@ class SyncedEditor extends React.Component {
     return col;
   }
 
-  getWebSocketConnection() {
-    return new WebSocket(this.props.socketURL);
+  getReconnectWaitTime(retryCount) {
+    return [Math.pow(2, Math.min(retryCount, MAX_BACKOFF_TIME_PARAMETER)), Math.floor(Math.random() * 1000)];
   }
 
-  setupReconnection() {
-    // Ignore if we are already waiting for reconnecting
-    if (this.reconnectTimer) {
-      return;
-    }
-
-    // Get reconnecting wait time
-    const seconds = 10;
-    const expire = new Date();
-    expire.setSeconds(expire.getSeconds() + seconds);
-    this.setState({
-      connectionState: CONNECTION_WAITING,
-      connectionRetries: this.state.connectionRetries + 1,
-      connectionWaitSeconds: seconds
-    });
-
-    // Set up timer for reconnecting
-    this.reconnectTimer = window.setInterval(() => {
-      const difference = (expire - (new Date())) / 1000;
-      if (difference > 0) {
-        this.setState({
-          connectionWaitSeconds: Math.ceil(difference)
-        });
-        return;
-      }
-
-      // Stop timer
-      window.clearInterval(this.reconnectTimer);
-      this.reconnectTimer = 0;
-
-      // Start reconnecting
-      this.setState({ connectionState: CONNECTION_CONNECTING });
-      this.shareDBConnection.bindToSocket(this.getWebSocketConnection());
-    }, 100);
+  getWebSocketConnection() {
+    return new WebSocket(this.props.socketURL);
   }
 
   handleConnectionStateChanged(newState) {
@@ -177,29 +147,6 @@ class SyncedEditor extends React.Component {
         this.setupReconnection();
         break;
     }
-  }
-
-  handleFocusChanged(focus) {
-  }
-
-  handleTitleChanged(event) {
-    // Event is not raised if not subscribing to remote document
-    if (this.state.documentState === DOC_INITIAL || this.state.documentState === DOC_FAILED) {
-      return;
-    }
-    const doc = this.shareDBDoc;
-    if (!doc) {
-      return;
-    }
-
-    // Do not submit remote changes again to the server
-    this.raiseTitleChanged(event.target.value, this.remoteUpdating);
-    if (this.remoteUpdating) {
-      return;
-    }
-
-    // Submit changes to remote server
-    //this.setState({ state: DOC_SYNCING });
   }
 
   handleContentChanged(cm, change) {
@@ -246,16 +193,76 @@ class SyncedEditor extends React.Component {
     this.setState({ documentCursors: cursors });
   }
 
-  raiseTitleChanged(title, remote) {
-    if (this.props.onTitleChanged) {
-      process.nextTick(() => this.props.onTitleChanged(title, remote));
+  handleFocusChanged(focus) {
+  }
+
+  handleTitleChanged(event) {
+    // Event is not raised if not subscribing to remote document
+    if (this.state.documentState === DOC_INITIAL || this.state.documentState === DOC_FAILED) {
+      return;
     }
+    const doc = this.shareDBDoc;
+    if (!doc) {
+      return;
+    }
+
+    // Do not submit remote changes again to the server
+    this.raiseTitleChanged(event.target.value, this.remoteUpdating);
+    if (this.remoteUpdating) {
+      return;
+    }
+
+    // Submit changes to remote server
+    //this.setState({ state: DOC_SYNCING });
   }
 
   raiseContentChanged(content, remote) {
     if (this.props.onContentChanged) {
       process.nextTick(() => this.props.onContentChanged(content, remote));
     }
+  }
+
+  raiseTitleChanged(title, remote) {
+    if (this.props.onTitleChanged) {
+      process.nextTick(() => this.props.onTitleChanged(title, remote));
+    }
+  }
+
+  setupReconnection() {
+    // Ignore if we are already waiting for reconnecting
+    if (this.reconnectTimer) {
+      return;
+    }
+
+    // Get reconnecting wait time
+    const seconds = this.getReconnectWaitTime(this.state.connectionRetries);
+    const expire = new Date();
+    expire.setSeconds(expire.getSeconds() + seconds[0]);
+    expire.setMilliseconds(expire.getMilliseconds() + seconds[1]);
+    this.setState({
+      connectionState: CONNECTION_WAITING,
+      connectionRetries: this.state.connectionRetries + 1,
+      connectionWaitSeconds: Math.ceil(seconds[0] + seconds[1] / 1000)
+    });
+
+    // Set up timer for reconnecting
+    this.reconnectTimer = window.setInterval(() => {
+      const difference = (expire - (new Date())) / 1000;
+      if (difference > 0) {
+        this.setState({
+          connectionWaitSeconds: Math.ceil(difference)
+        });
+        return;
+      }
+
+      // Stop timer
+      window.clearInterval(this.reconnectTimer);
+      this.reconnectTimer = 0;
+
+      // Start reconnecting
+      this.setState({ connectionState: CONNECTION_CONNECTING });
+      this.shareDBConnection.bindToSocket(this.getWebSocketConnection());
+    }, 100);
   }
 
   submitDocumentChange(cm, change) {
