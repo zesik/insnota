@@ -8,6 +8,17 @@ import {
 } from './SyncedEditor';
 
 class EditorStatusBar extends React.Component {
+  constructor() {
+    super();
+    this.handleLanguageModeChanged = this.handleLanguageModeChanged.bind(this);
+  }
+
+  handleLanguageModeChanged(event) {
+    if (this.props.onLanguageModeChanged) {
+      this.props.onLanguageModeChanged(event.target.value);
+    }
+  }
+
   render() {
     let connectionStatus;
     switch (this.props.connectionState) {
@@ -78,6 +89,15 @@ class EditorStatusBar extends React.Component {
       cursorSelections = (<div className="selection">({selectionLength} selected)</div>);
     }
 
+    const languageModeSelect = (
+      <select value={this.props.languageMode} onChange={this.handleLanguageModeChanged}>
+        {
+          this.props.languageModeList.map(
+            item => (<option key={item.mimeType} value={item.mimeType}>{item.name}</option>))
+        }
+      </select>
+    );
+
     return (
       <div className="status-bar">
         {connectionStatus}
@@ -85,6 +105,9 @@ class EditorStatusBar extends React.Component {
         <div className="cursor-status">
           {cursorPositions}
           {cursorSelections}
+        </div>
+        <div className="language-mode">
+          {languageModeSelect}
         </div>
       </div>
     );
@@ -110,7 +133,13 @@ EditorStatusBar.propTypes = {
     length: React.PropTypes.number.isRequired,
     primary: React.PropTypes.bool
   })),
-  showCursorChars: React.PropTypes.bool
+  showCursorChars: React.PropTypes.bool,
+  languageModeList: React.PropTypes.arrayOf(React.PropTypes.shape({
+    name: React.PropTypes.string.isRequired,
+    mimeType: React.PropTypes.string.isRequired
+  })),
+  languageMode: React.PropTypes.string,
+  onLanguageModeChanged: React.PropTypes.func
 };
 
 export default EditorStatusBar;

@@ -61,7 +61,7 @@ app.use(function (err, req, res, next) {
 const server = http.createServer(app);
 
 // Initialize ShareDB
-const share = sharedb({db: sharedbDatabase});
+const share = sharedb({ db: sharedbDatabase });
 
 require('sharedb-logger')(share);
 require('sharedb-access')(share);

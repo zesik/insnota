@@ -4,6 +4,9 @@ import EditorStatusBar from './EditorStatusBar';
 import CodeMirror from 'codemirror';
 import ShareDB from 'sharedb/lib/client';
 
+import 'codemirror/mode/gfm/gfm';
+import 'codemirror/mode/javascript/javascript';
+
 export const CONNECTION_DISCONNECTED = 'CONNECTION_DISCONNECTED';
 export const CONNECTION_CONNECTING = 'CONNECTION_CONNECTING';
 export const CONNECTION_CONNECTED = 'CONNECTION_CONNECTED';
@@ -22,6 +25,12 @@ const DEFAULT_DOCUMENT = {
   c: ''
 };
 
+const LANGUAGE_MODES = [
+  { name: 'Plain Text', mimeType: 'text/plain' },
+  { name: 'Markdown', mimeType: 'text/x-gfm' },
+  { name: 'JavaScript', mimeType: 'text/javascript' }
+];
+
 class SyncedEditor extends React.Component {
   constructor(props) {
     super(props);
@@ -29,6 +38,7 @@ class SyncedEditor extends React.Component {
     this.handleTitleKeyUp = this.handleTitleKeyUp.bind(this);
     this.handleContentChanged = this.handleContentChanged.bind(this);
     this.handleContentCursorActivity = this.handleContentCursorActivity.bind(this);
+    this.onLanguageModeChanged = this.onLanguageModeChanged.bind(this);
     // this.handleFocusChanged is not bound here, but in componentDidMount
     this.state = {
       connectionState: CONNECTION_DISCONNECTED,
@@ -37,7 +47,9 @@ class SyncedEditor extends React.Component {
       documentState: DOC_INITIAL,
       documentReadOnly: false,
       documentCursors: [],
-      documentShowCursorChars: false
+      documentShowCursorChars: false,
+      documentLanguageMode: '',
+      documentLanguageModeList: LANGUAGE_MODES
     };
   }
 
@@ -88,6 +100,7 @@ class SyncedEditor extends React.Component {
         this.codeMirror.setOption('readOnly', 'nocursor');
         break;
     }
+    this.codeMirror.setOption('mode', nextState.documentLanguageMode);
   }
 
   componentWillUnmount() {
@@ -109,6 +122,10 @@ class SyncedEditor extends React.Component {
       this.shareDBConnection.close();
       this.shareDBConnection = null;
     }
+  }
+
+  onLanguageModeChanged(languageMode) {
+    this.setState({ documentLanguageMode: languageMode });
   }
 
   getColumnIndex(cm, ln, ch, tabSize) {
@@ -310,13 +327,16 @@ class SyncedEditor extends React.Component {
         // Create the document or read document from server
         let title = this.props.defaultTitle;
         let content = this.props.defaultContent;
+        let mimeType = this.props.defaultMimeType;
         if (doc.type) {
           title = doc.data.t;
           content = doc.data.c;
+          mimeType = doc.data.m;
         } else {
           doc.create(Object.assign({}, DEFAULT_DOCUMENT, {
             t: title,
-            c: content
+            c: content,
+            m: mimeType
           }));
         }
 
@@ -327,6 +347,7 @@ class SyncedEditor extends React.Component {
         // Manually trigger title change event
         this.raiseTitleChanged(title, true);
         this.codeMirror.setValue(content);
+        this.setState({ documentLanguageMode: mimeType });
         this.remoteUpdating = false;
 
         // Document is populated
@@ -377,6 +398,9 @@ class SyncedEditor extends React.Component {
           documentState={this.state.documentState}
           cursors={this.state.documentCursors}
           showCursorChars={this.state.documentShowCursorChars}
+          languageModeList={this.state.documentLanguageModeList}
+          languageMode={this.state.documentLanguageMode}
+          onLanguageModeChanged={this.onLanguageModeChanged}
         />
       </div>
     );
@@ -389,6 +413,7 @@ SyncedEditor.propTypes = {
   documentID: React.PropTypes.string,
   defaultTitle: React.PropTypes.string,
   defaultContent: React.PropTypes.string,
+  defaultMimeType: React.PropTypes.string,
   onTitleChanged: React.PropTypes.func,
   onContentChanged: React.PropTypes.func,
   onCursorActivity: React.PropTypes.func

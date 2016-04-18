@@ -26,6 +26,7 @@ class App extends React.Component {
           documentID={this.props.selectedDocumentID}
           defaultTitle="Untitled"
           defaultContent=""
+          defaultMimeType="text/plain"
           onTitleChanged={(title) => dispatch(changeDocumentTitle(title))}
         />
       </div>
