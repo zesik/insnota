@@ -2,10 +2,8 @@ import React from 'react';
 import EditorOverlay from './EditorOverlay';
 import EditorStatusBar from './EditorStatusBar';
 import CodeMirror from 'codemirror';
+import LANGUAGE_MODES from '../utils/editorLanguageModes';
 import ShareDB from 'sharedb/lib/client';
-
-import 'codemirror/mode/gfm/gfm';
-import 'codemirror/mode/javascript/javascript';
 
 export const CONNECTION_DISCONNECTED = 'CONNECTION_DISCONNECTED';
 export const CONNECTION_CONNECTING = 'CONNECTION_CONNECTING';
@@ -18,27 +16,20 @@ export const DOC_FAILED = 'DOC_FAILED';
 export const DOC_SYNCING = 'DOC_SYNCING';
 export const DOC_SYNCED = 'DOC_SYNCED';
 
+export const REMOTE_LOCAL = 0;
+export const REMOTE_REMOTE = 1;
+export const REMOTE_INIT = 2;
+
 const MAX_BACKOFF_TIME_PARAMETER = 6;
-
-const DEFAULT_DOCUMENT = {
-  t: '',
-  c: ''
-};
-
-const LANGUAGE_MODES = [
-  { name: 'Plain Text', mimeType: 'text/plain' },
-  { name: 'Markdown', mimeType: 'text/x-gfm' },
-  { name: 'JavaScript', mimeType: 'text/javascript' }
-];
 
 class SyncedEditor extends React.Component {
   constructor(props) {
     super(props);
     this.handleConnectionStateChanged = this.handleConnectionStateChanged.bind(this);
-    this.handleTitleKeyUp = this.handleTitleKeyUp.bind(this);
     this.handleContentChanged = this.handleContentChanged.bind(this);
     this.handleContentCursorActivity = this.handleContentCursorActivity.bind(this);
-    this.onLanguageModeChanged = this.onLanguageModeChanged.bind(this);
+    this.handleLanguageModeChanged = this.handleLanguageModeChanged.bind(this);
+    this.handleTitleKeyUp = this.handleTitleKeyUp.bind(this);
     // this.handleFocusChanged is not bound here, but in componentDidMount
     this.state = {
       connectionState: CONNECTION_DISCONNECTED,
@@ -51,6 +42,7 @@ class SyncedEditor extends React.Component {
       documentLanguageMode: '',
       documentLanguageModeList: LANGUAGE_MODES
     };
+    console.log(CodeMirror.mimeModes);
   }
 
   componentDidMount() {
@@ -77,7 +69,7 @@ class SyncedEditor extends React.Component {
     this.shareDBConnection = new ShareDB.Connection(this.initiateWebSocketConnection());
     this.shareDBConnection.on('state', this.handleConnectionStateChanged);
     this.shareDBDoc = null;
-    this.remoteUpdating = false;
+    this.remoteUpdating = REMOTE_LOCAL;
     this.subscribeDocument(this.props.documentID);
   }
 
@@ -122,10 +114,6 @@ class SyncedEditor extends React.Component {
       this.shareDBConnection.close();
       this.shareDBConnection = null;
     }
-  }
-
-  onLanguageModeChanged(languageMode) {
-    this.setState({ documentLanguageMode: languageMode });
   }
 
   getColumnIndex(cm, ln, ch, tabSize) {
@@ -177,7 +165,7 @@ class SyncedEditor extends React.Component {
 
     // Do not submit remote changes again to the server
     this.raiseContentChanged(cm.getValue(), this.remoteUpdating);
-    if (this.remoteUpdating) {
+    if (this.remoteUpdating !== REMOTE_LOCAL) {
       return;
     }
 
@@ -215,6 +203,23 @@ class SyncedEditor extends React.Component {
   handleFocusChanged(focus) {
   }
 
+  handleLanguageModeChanged(languageMode) {
+    this.setState({ documentLanguageMode: languageMode });
+
+    // Event is not raised if not subscribing to remote document
+    if (!this.shareDBDoc) {
+      return;
+    }
+
+    this.raiseLanguageModeChanged(languageMode, this.remoteUpdating);
+    if (this.remoteUpdating !== REMOTE_LOCAL) {
+      return;
+    }
+
+    this.setState({ documentState: DOC_SYNCING });
+    this.submitLanguageModeChange(languageMode);
+  }
+
   handleTitleKeyUp(event) {
     // Event is not raised if not subscribing to remote document
     if (!this.shareDBDoc) {
@@ -229,7 +234,7 @@ class SyncedEditor extends React.Component {
     } else if (event.key === 'Enter') {
       // Confirmed, submit changes
       titleTextBox.blur();
-      this.raiseTitleChanged(titleTextBox.value, false);
+      this.raiseTitleChanged(titleTextBox.value, this.remoteUpdating);
       this.setState({ documentState: DOC_SYNCING });
       this.submitTitleChange(titleTextBox.value);
     } else {
@@ -241,13 +246,31 @@ class SyncedEditor extends React.Component {
 
   raiseContentChanged(content, remote) {
     if (this.props.onContentChanged) {
-      process.nextTick(() => this.props.onContentChanged(content, remote));
+      try {
+        this.props.onContentChanged(content, remote);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  }
+
+  raiseLanguageModeChanged(languageMode, remote) {
+    if (this.props.onLanguageModeChanged) {
+      try {
+        this.props.onLanguageModeChanged(languageMode, remote);
+      } catch (e) {
+        console.error(e);
+      }
     }
   }
 
   raiseTitleChanged(title, remote) {
     if (this.props.onTitleChanged) {
-      process.nextTick(() => this.props.onTitleChanged(title, remote));
+      try {
+        this.props.onTitleChanged(title, remote);
+      } catch (e) {
+        console.error(e);
+      }
     }
   }
 
@@ -301,6 +324,10 @@ class SyncedEditor extends React.Component {
     }
   }
 
+  submitLanguageModeChange(languageMode) {
+    this.shareDBDoc.submitOp([{ p: ['m'], od: this.shareDBDoc.data.m, oi: languageMode }], true);
+  }
+
   submitTitleChange(title) {
     this.shareDBDoc.submitOp([{ p: ['t'], od: this.shareDBDoc.data.t, oi: title }], true);
   }
@@ -333,22 +360,22 @@ class SyncedEditor extends React.Component {
           content = doc.data.c;
           mimeType = doc.data.m;
         } else {
-          doc.create(Object.assign({}, DEFAULT_DOCUMENT, {
+          doc.create(Object.assign({}, {
             t: title,
             c: content,
             m: mimeType
           }));
         }
 
-        // The first initialization of document is considered as remote updating event
         this.shareDBDoc = doc;
-        this.remoteUpdating = true;
+        this.remoteUpdating = REMOTE_INIT;
         this.refs.title.value = title;
-        // Manually trigger title change event
-        this.raiseTitleChanged(title, true);
+        this.raiseTitleChanged(title, this.remoteUpdating);
         this.codeMirror.setValue(content);
+        // CodeMirror will trigger change event
         this.setState({ documentLanguageMode: mimeType });
-        this.remoteUpdating = false;
+        this.raiseLanguageModeChanged(mimeType, this.remoteUpdating);
+        this.remoteUpdating = REMOTE_LOCAL;
 
         // Document is populated
         this.setState({ documentState: DOC_SYNCED });
@@ -360,25 +387,35 @@ class SyncedEditor extends React.Component {
           if (local) {
             return;
           }
-          this.remoteUpdating = true;
+          this.remoteUpdating = REMOTE_REMOTE;
           for (let i = 0; i < operationList.length; ++i) {
             const operation = operationList[i];
-            if (operation.p[0] === 't') {
-              this.refs.title.value = operation.oi;
-              this.raiseTitleChanged(this.refs.title.value, true);
-            } else {
-              if (typeof operation.sd === 'undefined') {
-                // An insertion
-                this.codeMirror.replaceRange(operation.si, this.codeMirror.posFromIndex(operation.p[1]));
-              } else {
-                // A removal
-                const from = this.codeMirror.posFromIndex(operation.p[1]);
-                const to = this.codeMirror.posFromIndex(operation.p[1] + operation.sd.length);
-                this.codeMirror.replaceRange('', from, to);
-              }
+            switch (operation.p[0]) {
+              case 't': // Title
+                this.refs.title.value = operation.oi;
+                this.raiseTitleChanged(this.refs.title.value, this.remoteUpdating);
+                break;
+              case 'c': // Content
+                if (typeof operation.sd === 'undefined') {
+                  // An insertion
+                  this.codeMirror.replaceRange(operation.si, this.codeMirror.posFromIndex(operation.p[1]));
+                } else {
+                  // A removal
+                  const from = this.codeMirror.posFromIndex(operation.p[1]);
+                  const to = this.codeMirror.posFromIndex(operation.p[1] + operation.sd.length);
+                  this.codeMirror.replaceRange('', from, to);
+                }
+                break;
+              case 'm': // Language mode
+                this.setState({ documentLanguageMode: operation.oi });
+                this.raiseLanguageModeChanged(operation.oi, this.remoteUpdating);
+                break;
+              default:
+                console.error(`Unexpected operation at ${operation.p[0]}`);
+                break;
             }
           }
-          this.remoteUpdating = false;
+          this.remoteUpdating = REMOTE_LOCAL;
         });
         doc.on('nothing pending', () => this.setState({ documentState: DOC_SYNCED }));
       });
@@ -400,7 +437,7 @@ class SyncedEditor extends React.Component {
           showCursorChars={this.state.documentShowCursorChars}
           languageModeList={this.state.documentLanguageModeList}
           languageMode={this.state.documentLanguageMode}
-          onLanguageModeChanged={this.onLanguageModeChanged}
+          onLanguageModeChanged={this.handleLanguageModeChanged}
         />
       </div>
     );
@@ -416,7 +453,8 @@ SyncedEditor.propTypes = {
   defaultMimeType: React.PropTypes.string,
   onTitleChanged: React.PropTypes.func,
   onContentChanged: React.PropTypes.func,
-  onCursorActivity: React.PropTypes.func
+  onCursorActivity: React.PropTypes.func,
+  onLanguageModeChanged: React.PropTypes.func
 };
 
 export default SyncedEditor;

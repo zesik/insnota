@@ -18,7 +18,7 @@ class App extends React.Component {
           selectedDocumentID={this.props.selectedDocumentID}
           documentList={this.props.documentList}
           onNewDocumentClicked={() => dispatch(createDocument('untitled'))}
-          onDocumentClicked={(documentID) => dispatch(selectDocument(documentID))}
+          onDocumentClicked={documentID => dispatch(selectDocument(documentID))}
         />
         <SyncedEditor
           socketURL={createWebSocketURL()}
@@ -27,7 +27,7 @@ class App extends React.Component {
           defaultTitle="Untitled"
           defaultContent=""
           defaultMimeType="text/plain"
-          onTitleChanged={(title) => dispatch(changeDocumentTitle(title))}
+          onTitleChanged={title => dispatch(changeDocumentTitle(title))}
         />
       </div>
     );
