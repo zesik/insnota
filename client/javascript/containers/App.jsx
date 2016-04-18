@@ -1,6 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { selectDocument, createDocument, changeDocumentTitle } from '../actions/documentList';
+import { getDocumentList, selectDocument, createDocument, changeDocumentTitle } from '../actions/documentList';
 import DocumentList from '../components/DocumentList';
 import SyncedEditor from '../components/SyncedEditor';
 
@@ -10,11 +10,17 @@ function createWebSocketURL(s = '') {
 }
 
 class App extends React.Component {
+  componentDidMount() {
+    const { dispatch } = this.props;
+    dispatch(getDocumentList());
+  }
+
   render() {
     const { dispatch } = this.props;
     return (
       <div>
         <DocumentList
+          loading={this.props.loading}
           selectedDocumentID={this.props.selectedDocumentID}
           documentList={this.props.documentList}
           onNewDocumentClicked={() => dispatch(createDocument('untitled'))}
@@ -35,6 +41,7 @@ class App extends React.Component {
 }
 
 App.propTypes = {
+  loading: React.PropTypes.bool,
   selectedDocumentID: React.PropTypes.string,
   documentList: React.PropTypes.arrayOf(React.PropTypes.shape({
     documentID: React.PropTypes.string.isRequired,

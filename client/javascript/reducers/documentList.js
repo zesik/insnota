@@ -1,12 +1,18 @@
-import { SELECT_DOCUMENT, CREATE_DOCUMENT, CHANGE_DOCUMENT_TITLE } from '../actions/documentList';
+import { LOAD_DOCUMENT_LIST, SELECT_DOCUMENT, CREATE_DOCUMENT, CHANGE_DOCUMENT_TITLE } from '../actions/documentList';
 
 const initialState = {
   selectedDocumentID: '',
-  documentList: []
+  documentList: [],
+  loading: false
 };
 
 function documentListReducer(state = initialState, action) {
   switch (action.type) {
+    case LOAD_DOCUMENT_LIST:
+      return Object.assign({}, state, {
+        loading: action.loading,
+        documentList: action.documentList
+      });
     case CREATE_DOCUMENT:
       return Object.assign({}, state, {
         selectedDocumentID: action.documentID,

@@ -9,11 +9,18 @@ class DocumentList extends React.Component {
   }
 
   render() {
+    let loading;
+    if (this.props.loading) {
+      loading = (<div className="document-list-loading">Loading...</div>);
+    } else {
+      loading = (<div className="document-list-loading"></div>);
+    }
     return (
       <div className="document-list-container">
         <button className="new-document" onClick={this.props.onNewDocumentClicked}>
           New Document
         </button>
+        {loading}
         <div className="document-list">
           {this.props.documentList.map(function (item) {
             const boundClick = this.handleDocumentClick.bind(this, item.documentID);
@@ -35,6 +42,7 @@ class DocumentList extends React.Component {
 }
 
 DocumentList.propTypes = {
+  loading: React.PropTypes.bool,
   selectedDocumentID: React.PropTypes.string,
   documentList: React.PropTypes.arrayOf(React.PropTypes.shape({
     documentID: React.PropTypes.string.isRequired,

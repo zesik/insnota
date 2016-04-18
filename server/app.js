@@ -8,6 +8,9 @@ const sharedb = require('sharedb');
 const sharedbDatabase = require('sharedb-mongo')('mongodb://localhost:27017/test');
 const ServerStream = require('./server-stream');
 
+const routes = require('./routes/index');
+const apis = require('./routes/api');
+
 // Initialize express
 const app = express();
 
@@ -22,9 +25,8 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, '..', 'build')));
 
 // Set up routers
-app.get('/', function (req, res, next) {
-  res.render('index');
-});
+app.use('/', routes);
+app.use('/api', apis);
 
 // Catch 404 and forward to error handler
 app.use(function (req, res, next) {

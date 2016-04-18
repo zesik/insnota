@@ -2,8 +2,8 @@ import React from 'react';
 import EditorOverlay from './EditorOverlay';
 import EditorStatusBar from './EditorStatusBar';
 import CodeMirror from 'codemirror';
-import LANGUAGE_MODES from '../utils/editorLanguageModes';
 import ShareDB from 'sharedb/lib/client';
+import LANGUAGE_MODES from '../utils/editorLanguageModes';
 
 export const CONNECTION_DISCONNECTED = 'CONNECTION_DISCONNECTED';
 export const CONNECTION_CONNECTING = 'CONNECTION_CONNECTING';
@@ -30,7 +30,10 @@ class SyncedEditor extends React.Component {
     this.handleContentCursorActivity = this.handleContentCursorActivity.bind(this);
     this.handleLanguageModeChanged = this.handleLanguageModeChanged.bind(this);
     this.handleTitleKeyUp = this.handleTitleKeyUp.bind(this);
-    // this.handleFocusChanged is not bound here, but in componentDidMount
+    this.handleEditorGotFocus = this.handleFocusChanged.bind(this, true);
+    this.handleEditorLostFocus = this.handleFocusChanged.bind(this, false);
+    this.handleShareDBDocOperation = this.handleShareDBDocOperation.bind(this);
+    this.handleShareDBDocNothingPending = this.handleShareDBDocNothingPending.bind(this);
     this.state = {
       connectionState: CONNECTION_DISCONNECTED,
       connectionRetries: 0,
@@ -42,7 +45,6 @@ class SyncedEditor extends React.Component {
       documentLanguageMode: '',
       documentLanguageModeList: LANGUAGE_MODES
     };
-    console.log(CodeMirror.mimeModes);
   }
 
   componentDidMount() {
@@ -64,8 +66,8 @@ class SyncedEditor extends React.Component {
     });
     this.codeMirror.on('change', this.handleContentChanged);
     this.codeMirror.on('cursorActivity', this.handleContentCursorActivity);
-    this.codeMirror.on('focus', this.handleFocusChanged.bind(this, true));
-    this.codeMirror.on('blur', this.handleFocusChanged.bind(this, false));
+    this.codeMirror.on('focus', this.handleEditorGotFocus);
+    this.codeMirror.on('blur', this.handleEditorLostFocus);
     this.shareDBConnection = new ShareDB.Connection(this.initiateWebSocketConnection());
     this.shareDBConnection.on('state', this.handleConnectionStateChanged);
     this.shareDBDoc = null;
@@ -97,20 +99,20 @@ class SyncedEditor extends React.Component {
 
   componentWillUnmount() {
     if (this.codeMirror) {
-      this.codeMirror.off('change');
-      this.codeMirror.off('cursorActivity');
-      this.codeMirror.off('focus');
-      this.codeMirror.off('blur');
+      this.codeMirror.off('change', this.handleContentChanged);
+      this.codeMirror.off('cursorActivity', this.handleContentCursorActivity);
+      this.codeMirror.off('focus', this.handleEditorGotFocus);
+      this.codeMirror.off('blur', this.handleEditorLostFocus);
       this.codeMirror.toTextArea();
     }
     if (this.shareDBDoc) {
-      this.shareDBDoc.off('op');
-      this.shareDBDoc.off('nothing pending');
+      this.shareDBDoc.removeListener('op', this.handleShareDBDocOperation);
+      this.shareDBDoc.removeListener('nothing pending', this.handleShareDBDocNothingPending);
       this.shareDBDoc.unsubscribe();
       this.shareDBDoc = null;
     }
     if (this.shareDBConnection) {
-      this.shareDBConnection.off('state');
+      this.shareDBConnection.off('state', this.handleConnectionStateChanged);
       this.shareDBConnection.close();
       this.shareDBConnection = null;
     }
@@ -244,6 +246,45 @@ class SyncedEditor extends React.Component {
     event.preventDefault();
   }
 
+  handleShareDBDocOperation(operationList, local) {
+    if (local) {
+      return;
+    }
+    this.remoteUpdating = REMOTE_REMOTE;
+    for (let i = 0; i < operationList.length; ++i) {
+      const operation = operationList[i];
+      switch (operation.p[0]) {
+        case 't': // Title
+          this.refs.title.value = operation.oi;
+          this.raiseTitleChanged(this.refs.title.value, this.remoteUpdating);
+          break;
+        case 'c': // Content
+          if (typeof operation.sd === 'undefined') {
+            // An insertion
+            this.codeMirror.replaceRange(operation.si, this.codeMirror.posFromIndex(operation.p[1]));
+          } else {
+            // A removal
+            const from = this.codeMirror.posFromIndex(operation.p[1]);
+            const to = this.codeMirror.posFromIndex(operation.p[1] + operation.sd.length);
+            this.codeMirror.replaceRange('', from, to);
+          }
+          break;
+        case 'm': // Language mode
+          this.setState({ documentLanguageMode: operation.oi });
+          this.raiseLanguageModeChanged(operation.oi, this.remoteUpdating);
+          break;
+        default:
+          console.error(`Unexpected operation at ${operation.p[0]}`);
+          break;
+      }
+    }
+    this.remoteUpdating = REMOTE_LOCAL;
+  }
+
+  handleShareDBDocNothingPending() {
+    this.setState({ documentState: DOC_SYNCED });
+  }
+
   raiseContentChanged(content, remote) {
     if (this.props.onContentChanged) {
       try {
@@ -334,8 +375,8 @@ class SyncedEditor extends React.Component {
 
   subscribeDocument(collection, documentID) {
     if (this.shareDBDoc) {
-      this.shareDBDoc.off('op');
-      this.shareDBDoc.off('nothing pending');
+      this.shareDBDoc.removeListener('op', this.handleShareDBDocOperation);
+      this.shareDBDoc.removeListener('nothing pending', this.handleShareDBDocNothingPending);
       this.shareDBDoc.unsubscribe();
       this.shareDBDoc = null;
     }
@@ -360,11 +401,11 @@ class SyncedEditor extends React.Component {
           content = doc.data.c;
           mimeType = doc.data.m;
         } else {
-          doc.create(Object.assign({}, {
+          doc.create({
             t: title,
             c: content,
             m: mimeType
-          }));
+          });
         }
 
         this.shareDBDoc = doc;
@@ -383,41 +424,8 @@ class SyncedEditor extends React.Component {
         this.handleContentCursorActivity(this.codeMirror);
 
         // Handle document updating event
-        doc.on('op', (operationList, local) => {
-          if (local) {
-            return;
-          }
-          this.remoteUpdating = REMOTE_REMOTE;
-          for (let i = 0; i < operationList.length; ++i) {
-            const operation = operationList[i];
-            switch (operation.p[0]) {
-              case 't': // Title
-                this.refs.title.value = operation.oi;
-                this.raiseTitleChanged(this.refs.title.value, this.remoteUpdating);
-                break;
-              case 'c': // Content
-                if (typeof operation.sd === 'undefined') {
-                  // An insertion
-                  this.codeMirror.replaceRange(operation.si, this.codeMirror.posFromIndex(operation.p[1]));
-                } else {
-                  // A removal
-                  const from = this.codeMirror.posFromIndex(operation.p[1]);
-                  const to = this.codeMirror.posFromIndex(operation.p[1] + operation.sd.length);
-                  this.codeMirror.replaceRange('', from, to);
-                }
-                break;
-              case 'm': // Language mode
-                this.setState({ documentLanguageMode: operation.oi });
-                this.raiseLanguageModeChanged(operation.oi, this.remoteUpdating);
-                break;
-              default:
-                console.error(`Unexpected operation at ${operation.p[0]}`);
-                break;
-            }
-          }
-          this.remoteUpdating = REMOTE_LOCAL;
-        });
-        doc.on('nothing pending', () => this.setState({ documentState: DOC_SYNCED }));
+        doc.on('op', this.handleShareDBDocOperation);
+        doc.on('nothing pending', this.handleShareDBDocNothingPending);
       });
     }
   }

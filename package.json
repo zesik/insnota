@@ -37,7 +37,8 @@
     "redux": "^3.4.0",
     "redux-logger": "^2.6.1",
     "redux-thunk": "^2.0.1",
-    "webpack": "^1.12.14"
+    "webpack": "^1.12.14",
+    "whatwg-fetch": "^0.11.0"
   },
   "scripts": {
     "init-dir": "mkdir -p build/stylesheets && mkdir -p build/javascript",
