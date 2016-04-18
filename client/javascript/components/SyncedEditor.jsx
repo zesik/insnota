@@ -30,6 +30,7 @@ class SyncedEditor extends React.Component {
     this.handleContentCursorActivity = this.handleContentCursorActivity.bind(this);
     this.handleLanguageModeChanged = this.handleLanguageModeChanged.bind(this);
     this.handleTitleKeyUp = this.handleTitleKeyUp.bind(this);
+    this.handleTitleBoxBlur = this.handleTitleBoxBlur.bind(this);
     this.handleEditorGotFocus = this.handleFocusChanged.bind(this, true);
     this.handleEditorLostFocus = this.handleFocusChanged.bind(this, false);
     this.handleShareDBDocOperation = this.handleShareDBDocOperation.bind(this);
@@ -222,8 +223,22 @@ class SyncedEditor extends React.Component {
     this.submitLanguageModeChange(languageMode);
   }
 
-  handleTitleKeyUp(event) {
+  handleTitleBoxBlur(event) {
     // Event is not raised if not subscribing to remote document
+    if (!this.shareDBDoc) {
+      return;
+    }
+
+    const titleTextBox = event.target;
+    if (titleTextBox.value !== this.shareDBDoc.data.t) {
+      this.raiseTitleChanged(titleTextBox.value, this.remoteUpdating);
+      this.setState({ documentState: DOC_SYNCING });
+      this.submitTitleChange(titleTextBox.value);
+    }
+  }
+
+  handleTitleKeyUp(event) {
+    // Event is not handled if not subscribing to remote document
     if (!this.shareDBDoc) {
       return;
     }
@@ -231,18 +246,13 @@ class SyncedEditor extends React.Component {
     const titleTextBox = event.target;
     if (event.key === 'Escape') {
       // Cancelled, revert to original title
-      titleTextBox.blur();
       titleTextBox.value = this.shareDBDoc.data.t;
-    } else if (event.key === 'Enter') {
-      // Confirmed, submit changes
       titleTextBox.blur();
-      this.raiseTitleChanged(titleTextBox.value, this.remoteUpdating);
-      this.setState({ documentState: DOC_SYNCING });
-      this.submitTitleChange(titleTextBox.value);
+    } else if (event.key === 'Enter') {
+      titleTextBox.blur();
     } else {
       return;
     }
-
     event.preventDefault();
   }
 
@@ -434,7 +444,8 @@ class SyncedEditor extends React.Component {
     return (
       <div className="editor-container">
         <EditorOverlay state={this.state.documentState} />
-        <input ref="title" type="text" className="document-title" onKeyUp={this.handleTitleKeyUp} />
+        <input ref="title" type="text" className="document-title"
+               onBlur={this.handleTitleBoxBlur} onKeyUp={this.handleTitleKeyUp} />
         <textarea ref="textarea" />
         <EditorStatusBar
           connectionState={this.state.connectionState}
