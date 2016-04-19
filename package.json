@@ -11,7 +11,6 @@
     "express": "^4.13.4",
     "jade": "^1.11.0",
     "sharedb": "^0.11.35",
-    "sharedb-access": "^3.0.0",
     "sharedb-logger": "^0.1.4",
     "sharedb-mongo": "^0.8.7",
     "ws": "^1.0.1"

@@ -1,7 +1,7 @@
 const Duplex = require('stream').Duplex;
 const inherits = require('util').inherits;
 
-function ServerStream(socket) {
+function SocketStream(socket) {
   Duplex.call(this, { objectMode: true });
 
   this.socket = socket;
@@ -36,13 +36,13 @@ function ServerStream(socket) {
     self.end();
   });
 }
-inherits(ServerStream, Duplex);
+inherits(SocketStream, Duplex);
 
-ServerStream.prototype.isServer = true;
+SocketStream.prototype.isServer = false;
 
-ServerStream.prototype._read = function () {};
+SocketStream.prototype._read = function () {};
 
-ServerStream.prototype._write = function (chunk, encoding, callback) {
+SocketStream.prototype._write = function (chunk, encoding, callback) {
   const socket = this.socket;
   process.nextTick(function () {
     if (socket.readyState === 1) {
@@ -52,4 +52,4 @@ ServerStream.prototype._write = function (chunk, encoding, callback) {
   });
 };
 
-module.exports = ServerStream;
+module.exports = SocketStream;

@@ -3,10 +3,6 @@ const path = require('path');
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
-const websocket = require('ws');
-const sharedb = require('sharedb');
-const sharedbDatabase = require('sharedb-mongo')('mongodb://localhost:27017/test');
-const ServerStream = require('./server-stream');
 
 const routes = require('./routes/index');
 const apis = require('./routes/api');
@@ -62,19 +58,8 @@ app.use(function (err, req, res, next) {
 // Create express server
 const server = http.createServer(app);
 
-// Initialize ShareDB
-const share = sharedb({ db: sharedbDatabase });
-
-require('sharedb-logger')(share);
-require('sharedb-access')(share);
-
-// Initialize web socket
-const wss = new websocket.Server({ server });
-
-wss.on('connection', function (ws, req) {
-  const stream = new ServerStream(ws);
-  share.listen(stream);
-});
+// Initialize WebSocket
+require('./websocket/index')(server);
 
 // Listen
 const port = 3000;
