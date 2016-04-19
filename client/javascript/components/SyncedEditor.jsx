@@ -135,6 +135,22 @@ class SyncedEditor extends React.Component {
     return col;
   }
 
+  getIndexFromPos(pos) {
+    if (pos.line < 0 || pos.ch < 0) {
+      return 0;
+    }
+    const doc = this.shareDBDoc.data.c.split('\n');
+    const last = doc.length - 1;
+    if (pos.line > last) {
+      pos = { line: last, ch: doc[last].length };
+    }
+    let index = pos.ch;
+    for (let i = 0; i < pos.line; ++i) {
+      index += doc[i].length + 1;
+    }
+    return index;
+  }
+
   getReconnectWaitTime(retryCount) {
     return [Math.pow(2, Math.min(retryCount, MAX_BACKOFF_TIME_PARAMETER)), Math.floor(Math.random() * 1000)];
   }
@@ -180,7 +196,7 @@ class SyncedEditor extends React.Component {
     for (let i = 0; i < changes.length; ++i) {
       this.submitDocumentChange(cm, changes[i]);
     }
-    //this.verifyDocumentContent();
+    this.verifyDocumentContent();
   }
 
   handleContentCursorActivity(cm) {
@@ -384,7 +400,7 @@ class SyncedEditor extends React.Component {
   }
 
   submitDocumentChange(cm, change) {
-    const startPos = cm.indexFromPos(change.from);
+    const startPos = this.getIndexFromPos(change.from);
     if (change.to.line !== change.from.line || change.to.ch !== change.from.ch) {
       this.shareDBDoc.submitOp([{ p: ['c', startPos], sd: change.removed.join('\n') }], true);
     }
@@ -470,7 +486,7 @@ class SyncedEditor extends React.Component {
       }
 
       if (this.shareDBDoc.data.c !== this.codeMirror.getValue()) {
-        console.warn('Content out of sync, resynchronizing');
+        console.warn('Content out of sync, repopulating text');
         this.remoteUpdating = REMOTE_RESYNC;
         const ranges = this.codeMirror.listSelections();
         const viewport = this.codeMirror.getScrollInfo();
