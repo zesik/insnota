@@ -3,7 +3,7 @@ import EditorOverlay from './EditorOverlay';
 import EditorStatusBar from './EditorStatusBar';
 import CodeMirror from 'codemirror';
 import ShareDB from 'sharedb/lib/client';
-import LANGUAGE_MODES from '../utils/editorLanguageModes';
+import { LANGUAGE_MODES } from '../utils/editorLanguageModes';
 
 export const CONNECTION_DISCONNECTED = 'CONNECTION_DISCONNECTED';
 export const CONNECTION_CONNECTING = 'CONNECTION_CONNECTING';
@@ -33,6 +33,7 @@ class SyncedEditor extends React.Component {
     this.handleTitleBoxBlur = this.handleTitleBoxBlur.bind(this);
     this.handleEditorGotFocus = this.handleFocusChanged.bind(this, true);
     this.handleEditorLostFocus = this.handleFocusChanged.bind(this, false);
+    this.handleShareDBDocError = this.handleShareDBDocError.bind(this);
     this.handleShareDBDocOperation = this.handleShareDBDocOperation.bind(this);
     this.handleShareDBDocNothingPending = this.handleShareDBDocNothingPending.bind(this);
     this.state = {
@@ -108,6 +109,7 @@ class SyncedEditor extends React.Component {
     }
     if (this.shareDBDoc) {
       this.shareDBDoc.removeListener('op', this.handleShareDBDocOperation);
+      this.shareDBDoc.removeListener('error', this.handleShareDBDocError);
       this.shareDBDoc.removeListener('nothing pending', this.handleShareDBDocNothingPending);
       this.shareDBDoc.unsubscribe();
       this.shareDBDoc = null;
@@ -295,6 +297,20 @@ class SyncedEditor extends React.Component {
     this.setState({ documentState: DOC_SYNCED });
   }
 
+  handleShareDBDocError(error) {
+    this.raiseDocumentError(error);
+  }
+
+  raiseDocumentError(error) {
+    if (this.props.onDocumentError) {
+      try {
+        this.props.onDocumentError(error);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  }
+
   raiseContentChanged(content, remote) {
     if (this.props.onContentChanged) {
       try {
@@ -386,6 +402,7 @@ class SyncedEditor extends React.Component {
   subscribeDocument(collection, documentID) {
     if (this.shareDBDoc) {
       this.shareDBDoc.removeListener('op', this.handleShareDBDocOperation);
+      this.shareDBDoc.removeListener('error', this.handleShareDBDocError);
       this.shareDBDoc.removeListener('nothing pending', this.handleShareDBDocNothingPending);
       this.shareDBDoc.unsubscribe();
       this.shareDBDoc = null;
@@ -435,6 +452,7 @@ class SyncedEditor extends React.Component {
 
         // Handle document updating event
         doc.on('op', this.handleShareDBDocOperation);
+        doc.on('error', this.handleShareDBDocError);
         doc.on('nothing pending', this.handleShareDBDocNothingPending);
       });
     }
@@ -473,7 +491,8 @@ SyncedEditor.propTypes = {
   onTitleChanged: React.PropTypes.func,
   onContentChanged: React.PropTypes.func,
   onCursorActivity: React.PropTypes.func,
-  onLanguageModeChanged: React.PropTypes.func
+  onLanguageModeChanged: React.PropTypes.func,
+  onDocumentError: React.PropTypes.func
 };
 
 export default SyncedEditor;

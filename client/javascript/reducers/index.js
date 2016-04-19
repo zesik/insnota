@@ -1,8 +1,10 @@
 import { combineReducers } from 'redux';
 import documentList from './documentList';
+import notificationList from './notificationList';
 
 const rootReducer = combineReducers({
-  documentList
+  documentList,
+  notificationList
 });
 
 export default rootReducer;
