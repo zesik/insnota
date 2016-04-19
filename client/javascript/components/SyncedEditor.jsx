@@ -19,6 +19,7 @@ export const DOC_SYNCED = 'DOC_SYNCED';
 export const REMOTE_LOCAL = 0;
 export const REMOTE_REMOTE = 1;
 export const REMOTE_INIT = 2;
+export const REMOTE_RESYNC = 3;
 
 const MAX_BACKOFF_TIME_PARAMETER = 6;
 
@@ -66,7 +67,7 @@ class SyncedEditor extends React.Component {
         }
       }
     });
-    this.codeMirror.on('change', this.handleContentChanged);
+    this.codeMirror.on('changes', this.handleContentChanged);
     this.codeMirror.on('cursorActivity', this.handleContentCursorActivity);
     this.codeMirror.on('focus', this.handleEditorGotFocus);
     this.codeMirror.on('blur', this.handleEditorLostFocus);
@@ -101,7 +102,7 @@ class SyncedEditor extends React.Component {
 
   componentWillUnmount() {
     if (this.codeMirror) {
-      this.codeMirror.off('change', this.handleContentChanged);
+      this.codeMirror.off('changes', this.handleContentChanged);
       this.codeMirror.off('cursorActivity', this.handleContentCursorActivity);
       this.codeMirror.off('focus', this.handleEditorGotFocus);
       this.codeMirror.off('blur', this.handleEditorLostFocus);
@@ -162,7 +163,7 @@ class SyncedEditor extends React.Component {
     }
   }
 
-  handleContentChanged(cm, change) {
+  handleContentChanged(cm, changes) {
     // Event is not raised if not subscribing to remote document
     if (!this.shareDBDoc) {
       return;
@@ -176,7 +177,10 @@ class SyncedEditor extends React.Component {
 
     // Submit changes to remote server
     this.setState({ documentState: DOC_SYNCING });
-    this.submitDocumentChange(cm, change);
+    for (let i = 0; i < changes.length; ++i) {
+      this.submitDocumentChange(cm, changes[i]);
+    }
+    //this.verifyDocumentContent();
   }
 
   handleContentCursorActivity(cm) {
@@ -290,6 +294,7 @@ class SyncedEditor extends React.Component {
           break;
       }
     }
+    this.verifyDocumentContent();
     this.remoteUpdating = REMOTE_LOCAL;
   }
 
@@ -456,6 +461,25 @@ class SyncedEditor extends React.Component {
         doc.on('nothing pending', this.handleShareDBDocNothingPending);
       });
     }
+  }
+
+  verifyDocumentContent() {
+    process.nextTick(() => {
+      if (!this.shareDBDoc) {
+        return;
+      }
+
+      if (this.shareDBDoc.data.c !== this.codeMirror.getValue()) {
+        console.warn('Content out of sync, resynchronizing');
+        this.remoteUpdating = REMOTE_RESYNC;
+        const ranges = this.codeMirror.listSelections();
+        const viewport = this.codeMirror.getScrollInfo();
+        this.codeMirror.setValue(this.shareDBDoc.data.c);
+        this.codeMirror.setSelections(ranges);
+        this.codeMirror.scrollTo(viewport.left, viewport.top);
+        this.remoteUpdating = REMOTE_LOCAL;
+      }
+    })
   }
 
   render() {
