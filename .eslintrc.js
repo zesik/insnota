@@ -8,6 +8,7 @@ module.exports = {
     }],
     'no-console': [1, { 'allow': ["warn", "error"] }],
     'no-multiple-empty-lines': [1, { 'max': 1 }],
+    'no-param-reassign': [0],
     'no-unused-vars': [1],
     'prefer-arrow-callback': [0],
     'react/prefer-stateless-function': [1]

@@ -36,9 +36,8 @@ function documentListReducer(state = initialState, action) {
             return Object.assign({}, doc, {
               title: action.title
             });
-          } else {
-            return doc;
           }
+          return doc;
         })
       });
     default:

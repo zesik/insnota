@@ -495,7 +495,7 @@ class SyncedEditor extends React.Component {
         this.codeMirror.scrollTo(viewport.left, viewport.top);
         this.remoteUpdating = REMOTE_LOCAL;
       }
-    })
+    });
   }
 
   render() {
@@ -503,7 +503,8 @@ class SyncedEditor extends React.Component {
       <div className="editor-container">
         <EditorOverlay state={this.state.documentState} />
         <input ref="title" type="text" className="document-title"
-               onBlur={this.handleTitleBoxBlur} onKeyUp={this.handleTitleKeyUp} />
+          onBlur={this.handleTitleBoxBlur} onKeyUp={this.handleTitleKeyUp}
+        />
         <textarea ref="textarea" />
         <EditorStatusBar
           connectionState={this.state.connectionState}
