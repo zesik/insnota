@@ -32,7 +32,7 @@ class SignIn extends React.Component {
           <div className={emailClasses}>
             <label htmlFor="signin-email">Email</label>
             <input type="text" id="signin-email"
-                   value={this.props.email} onChange={(e) => dispatch(editEmail(e.target.value))}
+              value={this.props.email} onChange={(e) => dispatch(editEmail(e.target.value))}
             />
             {this.props.emailEmpty && <div className="error">Email is empty.</div>}
             {this.props.emailInvalid && <div className="error">Email is not valid.</div>}
@@ -40,7 +40,7 @@ class SignIn extends React.Component {
           <div className={passwordClasses}>
             <label htmlFor="signin-password">Password</label>
             <input type="password" id="signin-password"
-                   value={this.props.password} onChange={(e) => dispatch(editPassword(e.target.value))}
+              value={this.props.password} onChange={(e) => dispatch(editPassword(e.target.value))}
             />
             {this.props.passwordEmpty && <div className="error">Password is empty.</div>}
           </div>
