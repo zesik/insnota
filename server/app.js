@@ -1,8 +1,15 @@
+'use strict';
+
 const http = require('http');
 const path = require('path');
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
+const session = require('express-session');
+const passport = require('passport');
+const LocalStrategy = require('passport-local');
+
+const userService = require('./services/user');
 
 const routes = require('./routes/index');
 const apis = require('./routes/api');
@@ -18,7 +25,14 @@ app.set('view engine', 'jade');
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
+app.use(session({
+  secret: 'keyboard cat',
+  resave: false,
+  saveUninitialized: false
+}));
 app.use(express.static(path.join(__dirname, '..', 'build')));
+app.use(passport.initialize());
+app.use(passport.session());
 
 // Set up routers
 app.use('/', routes);
@@ -54,6 +68,14 @@ app.use(function (err, req, res, next) {
     error: {}
   });
 });
+
+// Initialize passport
+passport.use(new LocalStrategy({ usernameField: 'email' }, userService.verifyUser));
+passport.serializeUser((user, callback) => callback(null, user.email));
+passport.deserializeUser(userService.findUser);
+
+// Initialize database
+require('./models/database');
 
 // Create express server
 const server = http.createServer(app);

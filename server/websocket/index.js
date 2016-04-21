@@ -1,3 +1,5 @@
+'use strict';
+
 const websocket = require('ws');
 const sharedb = require('sharedb');
 const sharedbDatabase = require('sharedb-mongo')('mongodb://localhost:27017/test');

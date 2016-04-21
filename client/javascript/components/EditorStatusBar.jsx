@@ -8,8 +8,8 @@ import {
 } from './SyncedEditor';
 
 class EditorStatusBar extends React.Component {
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
     this.handleLanguageModeChanged = this.handleLanguageModeChanged.bind(this);
   }
 

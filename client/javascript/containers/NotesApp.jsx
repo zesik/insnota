@@ -13,8 +13,8 @@ function createWebSocketURL(s = '') {
 }
 
 class App extends React.Component {
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
     this.handleLanguageModeChanged = this.handleLanguageModeChanged.bind(this);
   }
 

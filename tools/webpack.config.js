@@ -1,3 +1,5 @@
+'use strict';
+
 const webpack = require('webpack');
 
 // Configuration of variables
@@ -38,7 +40,8 @@ module.exports = {
     cachedAssets: VERBOSE
   },
   entry: {
-    index: './client/javascript/index.jsx'
+    notes: './client/javascript/notesIndex.jsx',
+    home: './client/javascript/homeIndex.jsx'
   },
   resolve: {
     extensions: ['', '.js', '.jsx']
