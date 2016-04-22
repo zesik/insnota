@@ -60,7 +60,8 @@ export function signUp(name, email, password) {
         name: name,
         email: email,
         password: password
-      })
+      }),
+      credentials: 'same-origin'
     }).then(function (response) {
       if (response.status >= 200 && response.status < 300) {
         return response;
@@ -95,7 +96,8 @@ export function signIn(email, password) {
       body: JSON.stringify({
         email: email,
         password: password
-      })
+      }),
+      credentials: 'same-origin'
     }).then(function (response) {
       if (response.status >= 200 && response.status < 300) {
         return response;

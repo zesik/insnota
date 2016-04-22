@@ -27,7 +27,7 @@ class SignIn extends React.Component {
     const passwordClasses = classname({ 'form-element': true, error: this.props.passwordEmpty });
     return (
       <div className="signin-form">
-        <h1>Sign up</h1>
+        <h1>Sign in</h1>
         <form method="post" onSubmit={this.handleSubmit}>
           <div className={emailClasses}>
             <label htmlFor="signin-email">Email</label>

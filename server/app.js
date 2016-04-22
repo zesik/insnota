@@ -30,11 +30,11 @@ app.use(session({
   resave: false,
   saveUninitialized: false
 }));
-app.use(express.static(path.join(__dirname, '..', 'build')));
 app.use(passport.initialize());
 app.use(passport.session());
 
 // Set up routers
+app.use(express.static(path.join(__dirname, '..', 'build')));
 app.use('/', routes);
 app.use('/api', apis);
 

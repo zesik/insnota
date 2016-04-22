@@ -16,7 +16,7 @@ export function loadDocumentList(loading, documentList) {
 export function getDocumentList() {
   return dispatch => {
     dispatch(loadDocumentList(true, []));
-    return fetch('/api/notes')
+    return fetch('/api/notes', { credentials: 'same-origin' })
       .then(response => response.json())
       .then(json => dispatch(loadDocumentList(false, json)));
   };

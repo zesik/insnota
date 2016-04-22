@@ -81,7 +81,12 @@ router.post('/signin', function (req, res, next) {
     if (!user) {
       return res.status(403).send({ credentialInvalid: true });
     }
-    res.status(204).end();
+    req.login(user, function (err) {
+      if (err) {
+        return next(err);
+      }
+      res.status(204).end();
+    });
   })(req, res, next);
 });
 
