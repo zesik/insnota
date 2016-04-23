@@ -1,78 +1,98 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { Link } from 'react-router';
-import classname from 'classnames';
-import { editName, editEmail, editPassword, editPasswordConfirm, cleanupForm, signUp } from '../actions/home';
+import SignUpForm from '../components/SignUpForm';
+import {
+  resetForm,
+  editFormName,
+  editFormEmail,
+  editFormPassword,
+  editFormPasswordConfirm,
+  validateFormName,
+  validateFormSignUpEmail,
+  validateFormSignUpPassword,
+  validateFormPasswordConfirm,
+  resetFormNameValidation,
+  resetFormEmailValidation,
+  resetFormPasswordValidation,
+  resetFormPasswordConfirmValidation,
+  submitSignUpForm
+} from '../actions/home';
 
 class SignUp extends React.Component {
-  constructor(props) {
-    super(props);
-    this.handleSubmit = this.handleSubmit.bind(this);
-  }
-
   componentDidMount() {
     const { dispatch } = this.props;
-    dispatch(cleanupForm());
-  }
-
-  handleSubmit(e) {
-    const { dispatch } = this.props;
-    e.preventDefault();
-    dispatch(signUp(this.props.name, this.props.email, this.props.password));
+    dispatch(resetForm());
   }
 
   render() {
-    const { dispatch } = this.props;
-    const nameClasses = classname({ 'form-element': true, error: this.props.nameEmpty });
-    const emailClasses = classname({
-      'form-element': true,
-      error: this.props.emailEmpty || this.props.emailInvalid || this.props.emailOccupied
-    });
-    const passwordClasses = classname({
-      'form-element': true,
-      error: this.props.passwordEmpty || this.props.passwordShort
-    });
-    const passwordConfirmClasses = classname({ 'form-element': true, error: this.props.passwordMismatch });
+    const {
+      formSubmitting,
+      name,
+      email,
+      password,
+      passwordConfirm,
+      validationNameEmpty,
+      validatingEmail,
+      validationEmailEmpty,
+      validationEmailInvalid,
+      validationEmailOccupied,
+      validationPasswordEmpty,
+      validationPasswordShort,
+      validationPasswordMismatch,
+      serverError,
+      dispatch
+    } = this.props;
     return (
       <div className="signup-form">
         <h1>Sign up</h1>
-        <form method="post" onSubmit={this.handleSubmit}>
-          <div className={nameClasses}>
-            <label htmlFor="signup-name">Name</label>
-            <input type="text" id="signup-name"
-              value={this.props.name} onChange={(e) => dispatch(editName(e.target.value))}
-            />
-            {this.props.nameEmpty && <div className="error">Name is empty.</div>}
-          </div>
-          <div className={emailClasses}>
-            <label htmlFor="signup-email">Email</label>
-            <input type="text" id="signup-email"
-              value={this.props.email} onChange={(e) => dispatch(editEmail(e.target.value))}
-            />
-            {this.props.emailEmpty && <div className="error">Email is empty.</div>}
-            {this.props.emailInvalid && <div className="error">Email is not valid.</div>}
-            {this.props.emailOccupied && <div className="error">Email is occupied.</div>}
-          </div>
-          <div className={passwordClasses}>
-            <label htmlFor="signup-password">Password</label>
-            <input type="password" id="signup-password"
-              value={this.props.password} onChange={(e) => dispatch(editPassword(e.target.value))}
-            />
-            {this.props.passwordEmpty && <div className="error">Password is empty.</div>}
-            {this.props.passwordShort && <div className="error">Password is too short.</div>}
-          </div>
-          <div className={passwordConfirmClasses}>
-            <label htmlFor="signup-password">Confirm Password</label>
-            <input type="password" id="signup-password"
-              value={this.props.passwordConfirm} onChange={(e) => dispatch(editPasswordConfirm(e.target.value))}
-            />
-            {this.props.passwordMismatch && <div className="error">Password confirmation does not match.</div>}
-          </div>
-          {this.props.serverError && <div className="error">Internal server error.</div>}
-          <div className="form-submit">
-            <button type="submit">Sign up</button>
-          </div>
-        </form>
+        <SignUpForm
+          formSubmitting={formSubmitting}
+          name={name}
+          email={email}
+          password={password}
+          passwordConfirm={passwordConfirm}
+          validationNameEmpty={validationNameEmpty}
+          validatingEmail={validatingEmail}
+          validationEmailEmpty={validationEmailEmpty}
+          validationEmailInvalid={validationEmailInvalid}
+          validationEmailOccupied={validationEmailOccupied}
+          validationPasswordEmpty={validationPasswordEmpty}
+          validationPasswordShort={validationPasswordShort}
+          validationPasswordMismatch={validationPasswordMismatch}
+          serverError={serverError}
+          onEnterNameBox={() => dispatch(resetFormNameValidation())}
+          onLeaveNameBox={(name) => dispatch(validateFormName(name))}
+          onEditName={(name) => {
+            dispatch(resetFormNameValidation());
+            dispatch(editFormName(name));
+          }}
+          onEnterEmailBox={() => dispatch(resetFormEmailValidation())}
+          onLeaveEmailBox={(email) => dispatch(validateFormSignUpEmail(email))}
+          onEditEmail={(email) => {
+            dispatch(resetFormEmailValidation());
+            dispatch(editFormEmail(email));
+          }}
+          onEnterPasswordBox={() => dispatch(resetFormPasswordValidation())}
+          onLeavePasswordBox={(password) => dispatch(validateFormSignUpPassword(password))}
+          onEditPassword={(password) => {
+            dispatch(resetFormPasswordValidation());
+            dispatch(editFormPassword(password));
+          }}
+          onEnterPasswordConfirmBox={() => dispatch(resetFormPasswordConfirmValidation())}
+          onLeavePasswordConfirmBox={(pwdConfirm) => dispatch(validateFormPasswordConfirm(password, pwdConfirm))}
+          onEditPasswordConfirm={(passwordConfirm) => {
+            dispatch(resetFormPasswordConfirmValidation());
+            dispatch(editFormPasswordConfirm(passwordConfirm));
+          }}
+          onSubmit={(name, email, password, passwordConfirm) => {
+            dispatch(validateFormName(name));
+            dispatch(validateFormSignUpEmail(email));
+            dispatch(validateFormSignUpPassword(password));
+            dispatch(validateFormPasswordConfirm(password, passwordConfirm));
+            dispatch(submitSignUpForm(name, email, password));
+          }}
+        />
         <div className="form-footer">
           <Link to="/signin">Sign in</Link>
         </div>
@@ -82,20 +102,38 @@ class SignUp extends React.Component {
 }
 
 SignUp.propTypes = {
+  formSubmitting: React.PropTypes.bool,
   name: React.PropTypes.string,
   email: React.PropTypes.string,
   password: React.PropTypes.string,
   passwordConfirm: React.PropTypes.string,
-  loading: React.PropTypes.bool,
-  nameEmpty: React.PropTypes.bool,
-  emailEmpty: React.PropTypes.bool,
-  emailInvalid: React.PropTypes.bool,
-  emailOccupied: React.PropTypes.bool,
-  passwordEmpty: React.PropTypes.bool,
-  passwordShort: React.PropTypes.bool,
-  passwordMismatch: React.PropTypes.bool,
+  validationNameEmpty: React.PropTypes.bool,
+  validatingEmail: React.PropTypes.bool,
+  validationEmailEmpty: React.PropTypes.bool,
+  validationEmailInvalid: React.PropTypes.bool,
+  validationEmailOccupied: React.PropTypes.bool,
+  validationPasswordEmpty: React.PropTypes.bool,
+  validationPasswordShort: React.PropTypes.bool,
+  validationPasswordMismatch: React.PropTypes.bool,
   serverError: React.PropTypes.bool,
   dispatch: React.PropTypes.func
 };
 
-export default connect(state => state.home)(SignUp);
+const mapStateToProps = state => ({
+  formSubmitting: state.home.formSubmitting,
+  name: state.home.formName,
+  email: state.home.formEmail,
+  password: state.home.formPassword,
+  passwordConfirm: state.home.formPasswordConfirm,
+  validationNameEmpty: state.home.formValidationNameEmpty,
+  validatingEmail: state.home.formValidatingEmail,
+  validationEmailEmpty: state.home.formValidationEmailEmpty,
+  validationEmailInvalid: state.home.formValidationEmailInvalid,
+  validationEmailOccupied: state.home.formValidationEmailOccupied,
+  validationPasswordEmpty: state.home.formValidationPasswordEmpty,
+  validationPasswordShort: state.home.formValidationPasswordShort,
+  validationPasswordMismatch: state.home.formValidationPasswordMismatch,
+  serverError: state.home.serverError
+});
+
+export default connect(mapStateToProps)(SignUp);

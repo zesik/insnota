@@ -1,57 +1,67 @@
 import {
-  EDIT_NAME,
-  EDIT_EMAIL,
-  EDIT_PASSWORD,
-  EDIT_PASSWORD_CONFIRM,
-  CLEAN_UP_FORM,
-  CHANGE_REQUEST_STATUS
+  UPDATE_VISITOR_IDENTITY,
+  RESET_FORM,
+  UPDATE_FORM_STATUS,
+  EDIT_FORM_NAME,
+  EDIT_FORM_EMAIL,
+  EDIT_FORM_PASSWORD,
+  EDIT_FORM_PASSWORD_CONFIRM
 } from '../actions/home';
 
-const verifications = {
-  nameEmpty: false,
-  emailEmpty: false,
-  emailInvalid: false,
-  emailOccupied: false,
-  passwordEmpty: false,
-  passwordShort: false,
-  passwordMismatch: false,
-  credentialInvalid: false,
-  serverError: false
+const initialState = {
+  checkingVisitorIdentity: false,
+  visitorIdentity: null,
+  serverError: false,
+  formName: '',
+  formEmail: '',
+  formPassword: '',
+  formPasswordConfirm: '',
+  formSubmitting: false,
+  formValidatingEmail: false,
+  formValidationNameEmpty: false,
+  formValidationEmailEmpty: false,
+  formValidationEmailInvalid: false,
+  formValidationEmailOccupied: false,
+  formValidationPasswordEmpty: false,
+  formValidationPasswordShort: false,
+  formValidationPasswordMismatch: false,
+  formValidationCredentialInvalid: false
 };
-
-const initialState = Object.assign({
-  name: '',
-  email: '',
-  password: '',
-  passwordConfirm: '',
-  loading: false
-}, verifications);
 
 function homeReducer(state = initialState, action) {
   switch (action.type) {
-    case EDIT_NAME:
+    case UPDATE_VISITOR_IDENTITY:
       return Object.assign({}, state, {
-        name: action.name
+        checkingVisitorIdentity: action.checkingVisitorIdentity,
+        visitorIdentity: action.visitorIdentity
       });
-    case EDIT_EMAIL:
+    case RESET_FORM:
+      return Object.assign({}, initialState, {
+        checkingVisitorIdentity: state.checkingVisitorIdentity,
+        visitorIdentity: state.visitorIdentity,
+        formName: state.formName,
+        formEmail: state.formEmail
+      });
+    case UPDATE_FORM_STATUS:
       return Object.assign({}, state, {
-        email: action.email
-      });
-    case EDIT_PASSWORD:
+        formSubmitting: action.formSubmitting
+      }, action.validations);
+    case EDIT_FORM_NAME:
       return Object.assign({}, state, {
-        password: action.password
+        formName: action.formName
       });
-    case EDIT_PASSWORD_CONFIRM:
+    case EDIT_FORM_EMAIL:
       return Object.assign({}, state, {
-        passwordConfirm: action.passwordConfirm
+        formEmail: action.formEmail
       });
-    case CLEAN_UP_FORM:
-      return Object.assign({}, state, verifications, {
-        password: '',
-        passwordConfirm: ''
+    case EDIT_FORM_PASSWORD:
+      return Object.assign({}, state, {
+        formPassword: action.formPassword
       });
-    case CHANGE_REQUEST_STATUS:
-      return Object.assign({}, state, verifications, action.errors);
+    case EDIT_FORM_PASSWORD_CONFIRM:
+      return Object.assign({}, state, {
+        formPasswordConfirm: action.formPasswordConfirm
+      });
     default:
       return state;
   }

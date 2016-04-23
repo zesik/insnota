@@ -12,17 +12,17 @@ function verifyCredentialForm(req, signupForm) {
   const password = req.body.password;
   const errors = {};
   if (!email || !email.trim().length) {
-    errors.emailEmpty = true;
+    errors.formValidationEmailEmpty = true;
   }
   if (!password) {
-    errors.passwordEmpty = true;
+    errors.formValidationPasswordEmpty = true;
   }
   if (signupForm) {
     if (!name || !name.trim().length) {
-      errors.nameEmpty = true;
+      errors.formValidationNameEmpty = true;
     }
     if (password && password.length < 6) {
-      errors.passwordShort = true;
+      errors.formValidationPasswordShort = true;
     }
   }
   return { name, email, password, errors };
@@ -54,7 +54,7 @@ router.post('/signup', function (req, res, next) {
   userService.createUser(form.name, form.email, form.password, function (err, user) {
     if (err) {
       if (err.name === 'MongoError' && err.code === 11000) {
-        res.status(409).send({ emailOccupied: true });
+        res.status(409).send({ formValidationEmailOccupied: true });
         return;
       }
       return next(err);
@@ -79,7 +79,7 @@ router.post('/signin', function (req, res, next) {
       return next(err);
     }
     if (!user) {
-      return res.status(403).send({ credentialInvalid: true });
+      return res.status(403).send({ formValidationCredentialInvalid: true });
     }
     req.login(user, function (err) {
       if (err) {

@@ -1,55 +1,66 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { Link } from 'react-router';
-import classname from 'classnames';
-import { editEmail, editPassword, cleanupForm, signIn } from '../actions/home';
+import SignInForm from '../components/SignInForm';
+import {
+  resetForm,
+  editFormEmail,
+  editFormPassword,
+  validateFormSignInEmail,
+  validateFormSignInPassword,
+  resetFormEmailValidation,
+  resetFormPasswordValidation,
+  submitSignInForm
+} from '../actions/home';
 
 class SignIn extends React.Component {
-  constructor(props) {
-    super(props);
-    this.handleSubmit = this.handleSubmit.bind(this);
-  }
-
   componentDidMount() {
     const { dispatch } = this.props;
-    dispatch(cleanupForm());
-  }
-
-  handleSubmit(e) {
-    const { dispatch } = this.props;
-    e.preventDefault();
-    dispatch(signIn(this.props.email, this.props.password));
+    dispatch(resetForm());
   }
 
   render() {
-    const { dispatch } = this.props;
-    const emailClasses = classname({ 'form-element': true, error: this.props.emailEmpty || this.props.emailInvalid });
-    const passwordClasses = classname({ 'form-element': true, error: this.props.passwordEmpty });
+    const {
+      formSubmitting,
+      email,
+      password,
+      validationEmailEmpty,
+      validationEmailInvalid,
+      validationPasswordEmpty,
+      validationCredentialInvalid,
+      serverError,
+      dispatch
+    } = this.props;
     return (
       <div className="signin-form">
         <h1>Sign in</h1>
-        <form method="post" onSubmit={this.handleSubmit}>
-          <div className={emailClasses}>
-            <label htmlFor="signin-email">Email</label>
-            <input type="text" id="signin-email"
-              value={this.props.email} onChange={(e) => dispatch(editEmail(e.target.value))}
-            />
-            {this.props.emailEmpty && <div className="error">Email is empty.</div>}
-            {this.props.emailInvalid && <div className="error">Email is not valid.</div>}
-          </div>
-          <div className={passwordClasses}>
-            <label htmlFor="signin-password">Password</label>
-            <input type="password" id="signin-password"
-              value={this.props.password} onChange={(e) => dispatch(editPassword(e.target.value))}
-            />
-            {this.props.passwordEmpty && <div className="error">Password is empty.</div>}
-          </div>
-          {this.props.credentialInvalid && <div className="error">The email and password you entered don't match.</div>}
-          {this.props.serverError && <div className="error">Internal server error.</div>}
-          <div className="form-submit">
-            <button type="submit">Sign in</button>
-          </div>
-        </form>
+        <SignInForm
+          formSubmitting={formSubmitting}
+          email={email}
+          password={password}
+          validationEmailEmpty={validationEmailEmpty}
+          validationEmailInvalid={validationEmailInvalid}
+          validationPasswordEmpty={validationPasswordEmpty}
+          validationCredentialInvalid={validationCredentialInvalid}
+          serverError={serverError}
+          onEnterEmailBox={() => dispatch(resetFormEmailValidation())}
+          onLeaveEmailBox={(email) => dispatch(validateFormSignInEmail(email))}
+          onEditEmail={(email) => {
+            dispatch(resetFormEmailValidation());
+            dispatch(editFormEmail(email));
+          }}
+          onEnterPasswordBox={() => dispatch(resetFormPasswordValidation())}
+          onLeavePasswordBox={(password) => dispatch(validateFormSignInPassword(password))}
+          onEditPassword={(password) => {
+            dispatch(resetFormPasswordValidation());
+            dispatch(editFormPassword(password));
+          }}
+          onSubmit={(email, password) => {
+            dispatch(validateFormSignInEmail(email));
+            dispatch(validateFormSignInPassword(password));
+            dispatch(submitSignInForm(email, password));
+          }}
+        />
         <div className="form-footer">
           <Link to="/forgot">Forgot Password?</Link>
           <Link to="/signup">Create an Account</Link>
@@ -60,15 +71,26 @@ class SignIn extends React.Component {
 }
 
 SignIn.propTypes = {
+  formSubmitting: React.PropTypes.bool,
   email: React.PropTypes.string,
   password: React.PropTypes.string,
-  loading: React.PropTypes.bool,
-  emailEmpty: React.PropTypes.bool,
-  emailInvalid: React.PropTypes.bool,
-  passwordEmpty: React.PropTypes.bool,
-  credentialInvalid: React.PropTypes.bool,
+  validationEmailEmpty: React.PropTypes.bool,
+  validationEmailInvalid: React.PropTypes.bool,
+  validationPasswordEmpty: React.PropTypes.bool,
+  validationCredentialInvalid: React.PropTypes.bool,
   serverError: React.PropTypes.bool,
   dispatch: React.PropTypes.func
 };
 
-export default connect(state => state.home)(SignIn);
+const mapStateToProps = state => ({
+  formSubmitting: state.home.formSubmitting,
+  email: state.home.formEmail,
+  password: state.home.formPassword,
+  validationEmailEmpty: state.home.formValidationEmailEmpty,
+  validationEmailInvalid: state.home.formValidationEmailInvalid,
+  validationPasswordEmpty: state.home.formValidationPasswordEmpty,
+  validationCredentialInvalid: state.home.formValidationCredentialInvalid,
+  serverError: state.home.serverError
+});
+
+export default connect(mapStateToProps)(SignIn);
