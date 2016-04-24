@@ -7,24 +7,28 @@ const SocketStream = require('./socket-stream');
 // Initialize ShareDB
 const share = sharedb({ db: sharedbDatabase });
 require('sharedb-logger')(share);
-share.use('doc', handleDocRequest);
-share.use('apply', handleApplyRequest);
-share.use('commit', handleCommitRequest);
+share.use('connect', handleConnect);
+share.use('doc', handleDoc);
+share.use('commit', handleCommit);
 
 function handleSocketConnection(ws, req) {
   const stream = new SocketStream(ws, req);
   share.listen(stream);
 }
 
-function handleDocRequest(req, next) {
+function handleConnect(req, next) {
+  const clientID = req.agent.clientId;
+  const user = req.stream.user || '(Anonymous)';
+  const remoteAddress = req.stream.remoteAddress;
+  console.log(`Client connected: ${remoteAddress}, ${clientID}, ${user}`);
   return next();
 }
 
-function handleApplyRequest(req, next) {
+function handleDoc(req, next) {
   return next();
 }
 
-function handleCommitRequest(req, next) {
+function handleCommit(req, next) {
   return next();
 }
 
