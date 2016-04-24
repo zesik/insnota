@@ -3,6 +3,7 @@
 const express = require('express');
 const passport = require('passport');
 const userService = require('../services/user');
+const shareDBHandler = require('../sharedb');
 
 const router = express.Router();
 
@@ -44,6 +45,7 @@ router.get('/', (req, res) => res.render('index'));
 router.get('/signin', (req, res) => res.render('index'));
 router.get('/signup', (req, res) => res.render('index'));
 router.get('/notes', (req, res) => res.render('notes'));
+router.ws('/notes', shareDBHandler);
 
 router.post('/signup', function (req, res, next) {
   const form = verifyCredentialForm(req, true);

@@ -11,17 +11,24 @@ const LocalStrategy = require('passport-local');
 
 const userService = require('./services/user');
 
-const routes = require('./routes/index');
-const apis = require('./routes/api');
-
 // Initialize express
 const app = express();
+// Enable web socket on the application
+require('express-ws')(app);
+
+// Initialize database
+require('./models/database');
+
+// Express routes. This must be called after enabling web socket
+const routes = require('./routes/index');
+const apis = require('./routes/api');
 
 // Set up view engine
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 
 // Set up middleware
+app.use(express.static(path.join(__dirname, '..', 'build')));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
@@ -34,7 +41,6 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // Set up routers
-app.use(express.static(path.join(__dirname, '..', 'build')));
 app.use('/', routes);
 app.use('/api', apis);
 
@@ -74,17 +80,8 @@ passport.use(new LocalStrategy({ usernameField: 'email' }, userService.verifyUse
 passport.serializeUser((user, callback) => callback(null, user.email));
 passport.deserializeUser(userService.findUser);
 
-// Initialize database
-require('./models/database');
-
-// Create express server
-const server = http.createServer(app);
-
-// Initialize WebSocket
-require('./websocket/index')(server);
-
 // Listen
 const port = 3000;
-server.listen(port, function () {
+app.listen(port, function () {
   console.log(`Listening on ${port}`);
 });

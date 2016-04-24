@@ -91,6 +91,7 @@ export function validateFormSignUpEmail(email) {
 
 export function resetFormEmailValidation() {
   return updateFormStatus(false, {
+    formValidatingEmail: false,
     formValidationEmailEmpty: false,
     formValidationEmailInvalid: false,
     formValidationEmailOccupied: false

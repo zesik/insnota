@@ -3,12 +3,13 @@
 const Duplex = require('stream').Duplex;
 const inherits = require('util').inherits;
 
-function SocketStream(socket) {
+function SocketStream(socket, req) {
   Duplex.call(this, { objectMode: true });
 
   this.socket = socket;
   this.headers = socket.upgradeReq.headers;
   this.remoteAddress = socket.upgradeReq.connection.remoteAddress;
+  this.user = req.user;
 
   this.on('error', function (error) {
     console.warn('ShareDB client message stream error', error);
