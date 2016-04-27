@@ -45,9 +45,6 @@ class App extends React.Component {
           socketURL={createWebSocketURL()}
           collection="collection"
           documentID={this.props.selectedDocumentID}
-          defaultTitle="Untitled"
-          defaultContent=""
-          defaultMimeType="text/plain"
           onTitleChanged={title => dispatch(changeDocumentTitle(title))}
           onLanguageModeChanged={this.handleLanguageModeChanged}
           onDocumentError={error => dispatch(showError(JSON.stringify(error)))}

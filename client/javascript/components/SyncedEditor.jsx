@@ -1,6 +1,7 @@
 import React from 'react';
 import EditorOverlay from './EditorOverlay';
 import EditorStatusBar from './EditorStatusBar';
+import Collaborators from './Collaborators';
 import CodeMirror from 'codemirror';
 import ShareDB from 'sharedb/lib/client';
 import { LANGUAGE_MODES } from '../utils/editorLanguageModes';
@@ -22,6 +23,28 @@ export const REMOTE_INIT = 2;
 export const REMOTE_RESYNC = 3;
 
 const MAX_BACKOFF_TIME_PARAMETER = 6;
+
+const COLLABORATOR_COLORS = [
+  'f44336:ffffff',  // Red 500
+  '3f51b5:ffffff',  // Indigo 500
+  '4caf50:ffffff',  // Green 600
+  '2196f3:ffffff',  // Blue 500
+  '795548:ffffff',  // Brown 500
+  '0097a7:ffffff',  // Cyan 700
+  '673ab7:ffffff',  // Deep Purple 500
+  'e91e63:ffffff',  // Pink 500
+  '827717:ffffff',  // Lime 900
+  'ef6c00:ffffff',  // Orange 800
+  '009688:ffffff',  // Teal 500
+  '607d8b:ffffff'   // Blue Bray 500
+];
+let colorIndex = 0;
+function getNextColor() {
+  console.log('get color');
+  const color = COLLABORATOR_COLORS[colorIndex];
+  colorIndex = (colorIndex + 1) % COLLABORATOR_COLORS.length;
+  return color;
+}
 
 class SyncedEditor extends React.Component {
   constructor(props) {
@@ -46,7 +69,8 @@ class SyncedEditor extends React.Component {
       documentCursors: [],
       documentShowCursorChars: false,
       documentLanguageMode: '',
-      documentLanguageModeList: LANGUAGE_MODES
+      documentLanguageModeList: LANGUAGE_MODES,
+      documentCollaborators: []
     };
   }
 
@@ -71,6 +95,8 @@ class SyncedEditor extends React.Component {
     this.codeMirror.on('cursorActivity', this.handleContentCursorActivity);
     this.codeMirror.on('focus', this.handleEditorGotFocus);
     this.codeMirror.on('blur', this.handleEditorLostFocus);
+    this.myClientID = null;
+    this.collaboratorColors = {};
     this.shareDBConnection = new ShareDB.Connection(this.initiateWebSocketConnection());
     this.shareDBConnection.on('state', this.handleConnectionStateChanged);
     this.shareDBDoc = null;
@@ -162,6 +188,7 @@ class SyncedEditor extends React.Component {
   handleConnectionStateChanged(newState) {
     switch (newState) {
       case 'connected':
+        this.myClientID = this.shareDBConnection.id;
         this.setState({
           connectionState: CONNECTION_CONNECTED,
           connectionRetries: 0,
@@ -174,6 +201,7 @@ class SyncedEditor extends React.Component {
         });
         break;
       default:
+        this.myClientID = null;
         this.prepareReconnection();
         break;
     }
@@ -305,6 +333,9 @@ class SyncedEditor extends React.Component {
           this.setState({ documentLanguageMode: operation.oi });
           this.raiseLanguageModeChanged(operation.oi, this.remoteUpdating);
           break;
+        case 'a': // Collaborators
+          this.updateDocumentCollaborators();
+          break;
         default:
           console.error(`Unexpected operation at ${operation.p[0]}`);
           break;
@@ -399,6 +430,41 @@ class SyncedEditor extends React.Component {
     }, 100);
   }
 
+  updateDocumentCollaborators() {
+    if (!this.myClientID) {
+      return;
+    }
+    const newCollaborators = [];
+    const collaborators = this.shareDBDoc.data.a;
+    for (let clientID in collaborators) {
+      if (!collaborators.hasOwnProperty(clientID)) {
+        continue;
+      }
+      if (clientID === this.myClientID) {
+        continue;
+      }
+      const collaborator = collaborators[clientID];
+
+      let color;
+      if (clientID in this.collaboratorColors) {
+        color = this.collaboratorColors[clientID];
+      } else {
+        color = getNextColor();
+        this.collaboratorColors[clientID] = color;
+      }
+
+      newCollaborators.push({
+        clientID: clientID,
+        time: collaborator.t,
+        name: collaborator.n,
+        email: collaborator.e,
+        color: color
+      });
+    }
+    newCollaborators.sort((a, b) => a.time - b.time);
+    this.setState({ documentCollaborators: newCollaborators });
+  }
+
   submitDocumentChange(cm, change) {
     const startPos = this.getIndexFromPos(change.from);
     if (change.to.line !== change.from.line || change.to.ch !== change.from.ch) {
@@ -440,21 +506,16 @@ class SyncedEditor extends React.Component {
           return;
         }
 
-        // Create the document or read document from server
-        let title = this.props.defaultTitle;
-        let content = this.props.defaultContent;
-        let mimeType = this.props.defaultMimeType;
-        if (doc.type) {
-          title = doc.data.t;
-          content = doc.data.c;
-          mimeType = doc.data.m;
-        } else {
-          doc.create({
-            t: title,
-            c: content,
-            m: mimeType
-          });
+        // Document does not exist
+        if (!doc.type) {
+          console.error('Document does not exist');
+          this.setState({ documentState: DOC_FAILED });
+          return;
         }
+
+        let title = doc.data.t;
+        let content = doc.data.c;
+        let mimeType = doc.data.m;
 
         this.shareDBDoc = doc;
         this.remoteUpdating = REMOTE_INIT;
@@ -506,6 +567,7 @@ class SyncedEditor extends React.Component {
           onBlur={this.handleTitleBoxBlur} onKeyUp={this.handleTitleKeyUp}
         />
         <textarea ref="textarea" />
+        <Collaborators collaborators={this.state.documentCollaborators} />
         <EditorStatusBar
           connectionState={this.state.connectionState}
           connectionRetries={this.state.connectionRetries}
@@ -526,9 +588,6 @@ SyncedEditor.propTypes = {
   socketURL: React.PropTypes.string.isRequired,
   collection: React.PropTypes.string,
   documentID: React.PropTypes.string,
-  defaultTitle: React.PropTypes.string,
-  defaultContent: React.PropTypes.string,
-  defaultMimeType: React.PropTypes.string,
   onTitleChanged: React.PropTypes.func,
   onContentChanged: React.PropTypes.func,
   onCursorActivity: React.PropTypes.func,

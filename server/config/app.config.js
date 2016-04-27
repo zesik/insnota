@@ -1,4 +1,8 @@
 module.exports = {
+  // Configures the database string of MongoDB used to store users, notes, sessions, etc.
+  mongo: 'mongodb://localhost:27017/test',
+  // Controls identifier of current server.
+  serverID: '0',
   // Controls reCAPTCHA display. Set to `false` to disable reCAPTCHA.
   reCAPTCHA: {
     // reCAPTCHA site key.

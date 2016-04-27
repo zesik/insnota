@@ -4,7 +4,7 @@ const express = require('express');
 const router = express.Router();
 
 router.use(function (req, res, next) {
-  if (req.user || req.path === '/user') {
+  if (req.user || req.path === '/user' || req.path === '/notes') {
     return next();
   }
   return res.status(403).end();
