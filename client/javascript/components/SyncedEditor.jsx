@@ -38,7 +38,6 @@ const COLLABORATOR_COLORS = [
 ];
 let colorIndex = 0;
 function getNextColor() {
-  console.log('get color');
   const color = COLLABORATOR_COLORS[colorIndex];
   colorIndex = (colorIndex + 1) % COLLABORATOR_COLORS.length;
   return color;
@@ -95,6 +94,7 @@ class SyncedEditor extends React.Component {
     this.codeMirror.on('blur', this.handleEditorLostFocus);
     this.myClientID = null;
     this.collaboratorColors = {};
+    this.cursorElements = [];
     this.shareDBConnection = new ShareDB.Connection(this.initiateWebSocketConnection());
     this.shareDBConnection.on('state', this.handleConnectionStateChanged);
     this.shareDBDoc = null;
@@ -122,6 +122,29 @@ class SyncedEditor extends React.Component {
         break;
     }
     this.codeMirror.setOption('mode', nextState.documentLanguageMode);
+    this.cursorElements.forEach(e => e.clear());
+    nextState.documentCollaborators.forEach(c => {
+      if (!c.cursors) {
+        return;
+      }
+      const colors = c.color.split(':');
+      const cursorContainer = this.codeMirror.getWrapperElement().ownerDocument.createElement('div');
+      cursorContainer.className = 'collaborator-cursor-container';
+      const cursorElement = this.codeMirror.getWrapperElement().ownerDocument.createElement('div');
+      cursorElement.className = 'collaborator-cursor';
+      cursorElement.style.backgroundColor = `#${colors[0]}`;
+      cursorContainer.appendChild(cursorElement);
+      const idElement = this.codeMirror.getWrapperElement().ownerDocument.createElement('div');
+      idElement.className = 'collaborator-identity';
+      idElement.innerText = c.name || '(Anonymous)';
+      idElement.style.backgroundColor = `#${colors[0]}`;
+      idElement.style.color = `#${colors[1]}`;
+      cursorContainer.appendChild(idElement);
+      this.cursorElements.push(this.codeMirror.setBookmark(
+        CodeMirror.Pos(c.cursors[0].head.ln - 1, c.cursors[0].head.ch - 1),
+        { widget: cursorContainer }
+      ));
+    });
   }
 
   componentWillUnmount() {
@@ -332,6 +355,7 @@ class SyncedEditor extends React.Component {
             const to = this.codeMirror.posFromIndex(operation.p[1] + operation.sd.length);
             this.codeMirror.replaceRange('', from, to);
           }
+          this.updateDocumentCollaborators();
           break;
         case 'm': // Language mode
           this.setState({ documentLanguageMode: operation.oi });
