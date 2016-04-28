@@ -11,7 +11,11 @@ function Collaborators({ collaborators }) {
         };
         return (
           <div className="collaborator" key={item.clientID}>
-            <div style={style}>{item.email || 'Anonymous'}</div>
+            <div style={style}>
+              {item.email || 'Anonymous'}
+              &nbsp;
+              {item.cursors && `Ln ${item.cursors[0].head.ln}, Col ${item.cursors[0].head.col}`}
+            </div>
           </div>
         );
       })}

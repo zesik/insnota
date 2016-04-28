@@ -25,18 +25,16 @@ export const REMOTE_RESYNC = 3;
 const MAX_BACKOFF_TIME_PARAMETER = 6;
 
 const COLLABORATOR_COLORS = [
-  'f44336:ffffff',  // Red 500
+  '0097a7:ffffff',  // Cyan 700
+  'e91e63:ffffff',  // Pink 500
+  'ef6c00:ffffff',  // Orange 800
   '3f51b5:ffffff',  // Indigo 500
   '4caf50:ffffff',  // Green 600
   '2196f3:ffffff',  // Blue 500
-  '795548:ffffff',  // Brown 500
-  '0097a7:ffffff',  // Cyan 700
   '673ab7:ffffff',  // Deep Purple 500
-  'e91e63:ffffff',  // Pink 500
+  '795548:ffffff',  // Brown 500
   '827717:ffffff',  // Lime 900
-  'ef6c00:ffffff',  // Orange 800
-  '009688:ffffff',  // Teal 500
-  '607d8b:ffffff'   // Blue Bray 500
+  '607d8b:ffffff'   // Blue Gray 500
 ];
 let colorIndex = 0;
 function getNextColor() {
@@ -161,6 +159,32 @@ class SyncedEditor extends React.Component {
     return col;
   }
 
+  getCursors(cm) {
+    const selections = cm.listSelections();
+    const selectedStrings = cm.getSelections();
+    const tabSize = cm.getOption('tabSize');
+    if (selections.length !== selectedStrings.length) {
+      console.error('Unexpected selection length.');
+    }
+    const cursors = [];
+    for (let i = 0; i < selections.length; ++i) {
+      cursors.push({
+        anchor: {
+          ln: selections[i].anchor.line + 1,
+          col: this.getColumnIndex(cm, selections[i].anchor.line, selections[i].anchor.ch, tabSize) + 1,
+          ch: selections[i].anchor.ch + 1
+        },
+        head: {
+          ln: selections[i].head.line + 1,
+          col: this.getColumnIndex(cm, selections[i].head.line, selections[i].head.ch, tabSize) + 1,
+          ch: selections[i].head.ch + 1
+        },
+        length: selectedStrings[i].length
+      });
+    }
+    return cursors;
+  }
+
   getIndexFromPos(pos) {
     if (pos.line < 0 || pos.ch < 0) {
       return 0;
@@ -228,28 +252,8 @@ class SyncedEditor extends React.Component {
   }
 
   handleContentCursorActivity(cm) {
-    const selections = cm.listSelections();
-    const selectedStrings = cm.getSelections();
-    const tabSize = cm.getOption('tabSize');
-    if (selections.length !== selectedStrings.length) {
-      console.error('Unexpected selection length.');
-    }
-    const cursors = [];
-    for (let i = 0; i < selections.length; ++i) {
-      cursors.push({
-        anchor: {
-          ln: selections[i].anchor.line + 1,
-          col: this.getColumnIndex(cm, selections[i].anchor.line, selections[i].anchor.ch, tabSize) + 1,
-          ch: selections[i].anchor.ch + 1
-        },
-        head: {
-          ln: selections[i].head.line + 1,
-          col: this.getColumnIndex(cm, selections[i].head.line, selections[i].head.ch, tabSize) + 1,
-          ch: selections[i].head.ch + 1
-        },
-        length: selectedStrings[i].length
-      });
-    }
+    const cursors = this.getCursors(cm);
+    this.submitCursorChange(cursors);
     this.setState({ documentCursors: cursors });
   }
 
@@ -334,7 +338,11 @@ class SyncedEditor extends React.Component {
           this.raiseLanguageModeChanged(operation.oi, this.remoteUpdating);
           break;
         case 'a': // Collaborators
-          this.updateDocumentCollaborators();
+          if (operation.p[1] === this.myClientID) {
+            this.submitCursorChange(this.getCursors(this.codeMirror));
+          } else {
+            this.updateDocumentCollaborators();
+          }
           break;
         default:
           console.error(`Unexpected operation at ${operation.p[0]}`);
@@ -458,6 +466,7 @@ class SyncedEditor extends React.Component {
         time: collaborator.t,
         name: collaborator.n,
         email: collaborator.e,
+        cursors: collaborator.c,
         color: color
       });
     }
@@ -484,6 +493,18 @@ class SyncedEditor extends React.Component {
 
   submitTitleChange(title) {
     this.shareDBDoc.submitOp([{ p: ['t'], od: this.shareDBDoc.data.t, oi: title }], true);
+  }
+
+  submitCursorChange(cursors) {
+    if (!this.myClientID || !(this.myClientID in this.shareDBDoc.data.a)) {
+      return;
+    }
+
+    this.shareDBDoc.submitOp([{
+      p: ['a', this.myClientID, 'c'],
+      od: this.shareDBDoc.data.a[this.myClientID].c,
+      oi: cursors
+    }], true);
   }
 
   subscribeDocument(collection, documentID) {
@@ -531,6 +552,7 @@ class SyncedEditor extends React.Component {
         this.setState({ documentState: DOC_SYNCED });
         this.codeMirror.focus();
         this.handleContentCursorActivity(this.codeMirror);
+        this.updateDocumentCollaborators();
 
         // Handle document updating event
         doc.on('op', this.handleShareDBDocOperation);
