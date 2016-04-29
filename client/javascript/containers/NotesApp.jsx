@@ -1,15 +1,17 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { getDocumentList, selectDocument, createDocument, changeDocumentTitle } from '../actions/documentList';
-import { showInformation, showError } from '../actions/notificationList';
+import { getDocuments, createDocument, changeDocumentTitle } from '../actions/documentManager';
+import { showInformation, showError } from '../actions/notificationCenter';
 import { getModeName } from '../utils/editorLanguageModes';
-import DocumentList from '../components/DocumentList';
+import DocumentManager from '../components/DocumentManager';
 import SyncedEditor, { REMOTE_REMOTE } from '../components/SyncedEditor';
-import NotificationList from '../components/NotificationList';
+import NotificationCenter from '../components/NotificationCenter';
 
-function createWebSocketURL(s = '') {
+const COLLECTION_NAME = 'collection';
+
+function createWebSocketURL() {
   const l = window.location;
-  return ((l.protocol === 'https:') ? 'wss://' : 'ws://') + l.host + l.pathname + s;
+  return ((l.protocol === 'https:') ? 'wss://' : 'ws://') + l.host + '/notes';
 }
 
 class App extends React.Component {
@@ -20,7 +22,7 @@ class App extends React.Component {
 
   componentDidMount() {
     const { dispatch } = this.props;
-    dispatch(getDocumentList());
+    dispatch(getDocuments());
   }
 
   handleLanguageModeChanged(mimeType, remote) {
@@ -34,37 +36,35 @@ class App extends React.Component {
     const { dispatch } = this.props;
     return (
       <div>
-        <DocumentList
-          loading={this.props.loading}
+        <DocumentManager
+          fetching={this.props.fetchingDocuments}
+          documents={this.props.documents}
           selectedDocumentID={this.props.selectedDocumentID}
-          documentList={this.props.documentList}
           onNewDocumentClicked={() => dispatch(createDocument('untitled'))}
-          onDocumentClicked={documentID => dispatch(selectDocument(documentID))}
         />
         <SyncedEditor
           socketURL={createWebSocketURL()}
-          collection="collection"
+          collection={COLLECTION_NAME}
           documentID={this.props.selectedDocumentID}
           onTitleChanged={title => dispatch(changeDocumentTitle(title))}
           onLanguageModeChanged={this.handleLanguageModeChanged}
           onDocumentError={error => dispatch(showError(JSON.stringify(error)))}
         />
-        <NotificationList notificationList={this.props.notificationList} />
+        <NotificationCenter notifications={this.props.notifications} />
       </div>
     );
   }
 }
 
 App.propTypes = {
-  loading: React.PropTypes.bool,
-  selectedDocumentID: React.PropTypes.string,
-  documentList: React.PropTypes.arrayOf(React.PropTypes.shape({
-    documentID: React.PropTypes.string.isRequired,
-    selected: React.PropTypes.bool,
+  fetchingDocuments: React.PropTypes.bool,
+  documents: React.PropTypes.arrayOf(React.PropTypes.shape({
+    id: React.PropTypes.string.isRequired,
     title: React.PropTypes.string,
     lastModified: React.PropTypes.string
   })),
-  notificationList: React.PropTypes.arrayOf(React.PropTypes.shape({
+  selectedDocumentID: React.PropTypes.string,
+  notifications: React.PropTypes.arrayOf(React.PropTypes.shape({
     id: React.PropTypes.number.isRequired,
     level: React.PropTypes.string.isRequired,
     message: React.PropTypes.string.isRequired
@@ -72,12 +72,12 @@ App.propTypes = {
   dispatch: React.PropTypes.func.isRequired
 };
 
-function mapStateToProps(state) {
+function mapStateToProps(state, ownProps) {
   return {
-    loading: state.documentList.loading,
-    selectedDocumentID: state.documentList.selectedDocumentID,
-    documentList: state.documentList.documentList,
-    notificationList: state.notificationList.notificationList
+    fetchingDocuments: state.document.fetchingDocuments,
+    documents: state.document.documents,
+    selectedDocumentID: ownProps.params.splat,
+    notifications: state.notification.notifications
   };
 }
 

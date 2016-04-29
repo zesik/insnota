@@ -44,8 +44,9 @@ function allValid(errors) {
 router.get('/', (req, res) => res.render('index'));
 router.get('/signin', (req, res) => res.render('index'));
 router.get('/signup', (req, res) => res.render('index'));
-router.get('/notes', (req, res) => res.render('notes'));
 router.ws('/notes', handleShareDBConnection);
+router.get('/notes', (req, res) => res.render('notes'));
+router.get('/notes/*', (req, res) => res.render('notes'));
 
 router.post('/signup', function (req, res, next) {
   const form = verifyCredentialForm(req, true);

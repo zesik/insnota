@@ -1,31 +1,23 @@
 import 'whatwg-fetch';
 
-export const LOAD_DOCUMENT_LIST = 'LOAD_DOCUMENT_LIST';
-export const SELECT_DOCUMENT = 'SELECT_DOCUMENT';
+export const LOAD_DOCUMENTS = 'LOAD_DOCUMENTS';
 export const CREATE_DOCUMENT = 'CREATE_DOCUMENT';
 export const CHANGE_DOCUMENT_TITLE = 'CHANGE_DOCUMENT_TITLE';
 
-export function loadDocumentList(loading, documentList) {
+function loadDocuments(fetchingDocuments, documents) {
   return {
-    type: LOAD_DOCUMENT_LIST,
-    loading,
-    documentList
+    type: LOAD_DOCUMENTS,
+    fetchingDocuments,
+    documents
   };
 }
 
-export function getDocumentList() {
+export function getDocuments() {
   return dispatch => {
-    dispatch(loadDocumentList(true, []));
+    dispatch(loadDocuments(true, []));
     return fetch('/api/notes', { credentials: 'same-origin' })
       .then(response => response.json())
-      .then(json => dispatch(loadDocumentList(false, json)));
-  };
-}
-
-export function selectDocument(documentID) {
-  return {
-    type: SELECT_DOCUMENT,
-    documentID
+      .then(json => dispatch(loadDocuments(false, json)));
   };
 }
 

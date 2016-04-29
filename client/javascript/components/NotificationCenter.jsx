@@ -1,11 +1,11 @@
 import React from 'react';
 
-class NotificationList extends React.Component {
+class NotificationCenter extends React.Component {
   render() {
     return (
       <div className="notification-container">
         <div className="notification">
-          {this.props.notificationList.map(function (item) {
+          {this.props.notifications.map(function (item) {
             return (
               <div key={item.id}>
                 {item.level}: {item.message}
@@ -18,12 +18,12 @@ class NotificationList extends React.Component {
   }
 }
 
-NotificationList.propTypes = {
-  notificationList: React.PropTypes.arrayOf(React.PropTypes.shape({
+NotificationCenter.propTypes = {
+  notifications: React.PropTypes.arrayOf(React.PropTypes.shape({
     id: React.PropTypes.number.isRequired,
     level: React.PropTypes.string.isRequired,
     message: React.PropTypes.string.isRequired
   }))
 };
 
-export default NotificationList;
+export default NotificationCenter;

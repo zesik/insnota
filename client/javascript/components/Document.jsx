@@ -8,7 +8,7 @@ class Document extends React.Component {
       selected: this.props.selected
     });
     return (
-      <div className={elementClasses} onClick={this.props.onClick}>
+      <div className={elementClasses}>
         <div className="title">{this.props.title}</div>
         <div className="last-modified">{this.props.lastModified}</div>
         <div className="permission"></div>
@@ -20,8 +20,7 @@ class Document extends React.Component {
 Document.propTypes = {
   title: React.PropTypes.string,
   lastModified: React.PropTypes.string,
-  selected: React.PropTypes.bool,
-  onClick: React.PropTypes.func
+  selected: React.PropTypes.bool
 };
 
 export default Document;

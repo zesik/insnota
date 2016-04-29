@@ -1,10 +1,12 @@
 import { combineReducers } from 'redux';
-import documentList from './documentList';
-import notificationList from './notificationList';
+import { routerReducer } from 'react-router-redux';
+import documentManager from './documentManager';
+import notificationCenter from './notificationCenter';
 
 const rootReducer = combineReducers({
-  documentList,
-  notificationList
+  document: documentManager,
+  notification: notificationCenter,
+  routing: routerReducer
 });
 
 export default rootReducer;

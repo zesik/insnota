@@ -520,7 +520,7 @@ class SyncedEditor extends React.Component {
   }
 
   submitCursorChange(cursors) {
-    if (!this.myClientID || !(this.myClientID in this.shareDBDoc.data.a)) {
+    if (!this.myClientID || !this.shareDBDoc || !(this.myClientID in this.shareDBDoc.data.a)) {
       return;
     }
 

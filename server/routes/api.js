@@ -20,9 +20,9 @@ router.get('/user', function (req, res, next) {
 
 router.get('/notes', function (req, res, next) {
   res.send([
-    { documentID: 'document1', title: 'Document1' },
-    { documentID: 'document2', title: 'Document2' },
-    { documentID: 'document3', title: 'Document3' }
+    { id: 'document1', title: 'Document1' },
+    { id: 'document2', title: 'Document2' },
+    { id: 'document3', title: 'Document3' }
   ]);
 });
 
