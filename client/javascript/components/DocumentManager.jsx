@@ -9,8 +9,10 @@ class DocumentManager extends React.Component {
         <button className="new-document" onClick={this.props.onNewDocumentClicked}>
           New Document
         </button>
-        {this.props.fetching && <div className="document-list-loading">Loading...</div>}
+        {this.props.creating && <div className="document-creating">Creating...</div>}
         <div className="document-list">
+          {this.props.fetching && <div className="loading">Loading...</div>}
+          {(!this.props.fetching && this.props.documents.length === 0) && <div className="empty">No Documents</div>}
           {this.props.documents.map(function (item) {
             return (
               <Link key={item.id} to={`/notes/${item.id}`}>
@@ -22,7 +24,6 @@ class DocumentManager extends React.Component {
               </Link>
             );
           }, this)}
-          <Document />
         </div>
       </div>
     );
@@ -31,6 +32,7 @@ class DocumentManager extends React.Component {
 
 DocumentManager.propTypes = {
   fetching: React.PropTypes.bool,
+  creating: React.PropTypes.bool,
   documents: React.PropTypes.arrayOf(React.PropTypes.shape({
     id: React.PropTypes.string.isRequired,
     title: React.PropTypes.string,

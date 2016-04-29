@@ -1,7 +1,9 @@
 import 'whatwg-fetch';
+import { push } from 'react-router-redux'
 
 export const LOAD_DOCUMENTS = 'LOAD_DOCUMENTS';
-export const CREATE_DOCUMENT = 'CREATE_DOCUMENT';
+export const START_CREATING_DOCUMENT = 'START_CREATING_DOCUMENT';
+export const FINISH_CREATING_DOCUMENT = 'FINISH_CREATING_DOCUMENT';
 export const CHANGE_DOCUMENT_TITLE = 'CHANGE_DOCUMENT_TITLE';
 
 function loadDocuments(fetchingDocuments, documents) {
@@ -10,6 +12,21 @@ function loadDocuments(fetchingDocuments, documents) {
     fetchingDocuments,
     documents
   };
+}
+
+function startCreatingDocument() {
+  return {
+    type: START_CREATING_DOCUMENT
+  };
+}
+
+function finishCreatingDocument(error, id, title) {
+  return {
+    type: FINISH_CREATING_DOCUMENT,
+    error,
+    id,
+    title
+  }
 }
 
 export function getDocuments() {
@@ -21,11 +38,31 @@ export function getDocuments() {
   };
 }
 
-export function createDocument(documentID) {
-  return {
-    type: CREATE_DOCUMENT,
-    documentID
-  };
+export function createDocument() {
+  return dispatch => {
+    dispatch(startCreatingDocument());
+    fetch('/api/notes', {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      credentials: 'same-origin'
+    }).then(function (response) {
+      if (response.status >= 200 && response.status < 300) {
+        return response.json();
+      } else {
+        let error = new Error(response.statusText);
+        error.response = response;
+        throw error;
+      }
+    }).then(function (json) {
+      dispatch(finishCreatingDocument(null, json.id, json.title));
+      dispatch(push(`/notes/${json.id}`));
+    }).catch(function (err) {
+      dispatch(finishCreatingDocument(err));
+    });
+  }
 }
 
 export function changeDocumentTitle(title) {

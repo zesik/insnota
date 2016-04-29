@@ -58,6 +58,7 @@ class App extends React.Component {
 
 App.propTypes = {
   fetchingDocuments: React.PropTypes.bool,
+  creatingDocuments: React.PropTypes.bool,
   documents: React.PropTypes.arrayOf(React.PropTypes.shape({
     id: React.PropTypes.string.isRequired,
     title: React.PropTypes.string,
@@ -75,6 +76,7 @@ App.propTypes = {
 function mapStateToProps(state, ownProps) {
   return {
     fetchingDocuments: state.document.fetchingDocuments,
+    creatingDocuments: state.document.creatingDocuments,
     documents: state.document.documents,
     selectedDocumentID: ownProps.params.splat,
     notifications: state.notification.notifications

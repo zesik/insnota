@@ -1,7 +1,13 @@
-import { LOAD_DOCUMENTS, CREATE_DOCUMENT, CHANGE_DOCUMENT_TITLE } from '../actions/documentManager';
+import {
+  LOAD_DOCUMENTS,
+  START_CREATING_DOCUMENT,
+  FINISH_CREATING_DOCUMENT,
+  CHANGE_DOCUMENT_TITLE
+} from '../actions/documentManager';
 
 const initialState = {
   fetchingDocuments: false,
+  creatingDocument: false,
   documents: []
 };
 
@@ -12,13 +18,19 @@ function documentManagerReducer(state = initialState, action) {
         fetchingDocuments: action.fetchingDocuments,
         documents: action.documents
       });
-    case CREATE_DOCUMENT:
+    case START_CREATING_DOCUMENT:
+      return Object.assign({}, state, {
+        creatingDocument: true
+      });
+    case FINISH_CREATING_DOCUMENT:
+      if (action.error) {
+        return state;
+      }
       return Object.assign({}, state, {
         documents: [
           {
-            id: action.documentID,
-            title: '',
-            content: ''
+            id: action.id,
+            title: action.title
           },
           ...state.documents
         ]

@@ -87,12 +87,7 @@ function verifyUser(email, password, callback) {
 }
 
 function findUser(email, callback) {
-  User.findOne({ email }, function(err, user) {
-    if (err) {
-      return callback(err);
-    }
-    return callback(null, user);
-  });
+  User.findOneByEmail(email, callback);
 }
 
 module.exports = {

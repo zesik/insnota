@@ -99,7 +99,7 @@ class SyncedEditor extends React.Component {
     this.shareDBConnection.on('state', this.handleConnectionStateChanged);
     this.shareDBDoc = null;
     this.remoteUpdating = REMOTE_LOCAL;
-    this.subscribeDocument(this.props.documentID);
+    this.subscribeDocument(this.props.collection, this.props.documentID);
   }
 
   componentWillReceiveProps(nextProps) {

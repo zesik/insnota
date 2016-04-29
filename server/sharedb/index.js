@@ -8,6 +8,13 @@ const SocketStream = require('./socket-stream');
 
 const ClientConnection = require('../models/clientConnection');
 
+const DEFAULT_DOCUMENT = {
+  a: {},                // Collaborators
+  t: 'Untitled',        // Title
+  c: '',                // Content
+  m: 'text/plain'       // MIME type
+};
+
 // Initialize ShareDB
 const backend = sharedb({ db: sharedbDatabase });
 require('sharedb-logger')(backend);
@@ -144,7 +151,26 @@ function tidyLooseConnections(callback) {
   });
 }
 
+function createDocument(id, callback) {
+  const sharedbDoc = serverConnection.get('collection', id);
+  sharedbDoc.fetch(function (err) {
+    if (err) {
+      return callback(err);
+    }
+    if (sharedbDoc.type) {
+      return callback(new Error(503));
+    }
+    sharedbDoc.create(DEFAULT_DOCUMENT, err => {
+      if (err) {
+        return callback(err);
+      }
+      callback(null, DEFAULT_DOCUMENT)
+    });
+  });
+}
+
 module.exports = {
   tidyLooseConnections,
-  handleSocketConnection
+  handleSocketConnection,
+  createDocument
 };
