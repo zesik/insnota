@@ -9,8 +9,8 @@ function notificationCenterReducer(state = initialState, action) {
     case APPEND_NOTIFICATION:
       return Object.assign({}, state, {
         notifications: [
-          { id: action.id, level: action.level, message: action.message },
-          ...state.notifications
+          ...state.notifications,
+          { id: action.id, level: action.level, message: action.message }
         ]
       });
     case REMOVE_NOTIFICATION:

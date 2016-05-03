@@ -609,10 +609,14 @@ class SyncedEditor extends React.Component {
     return (
       <div className="editor-container">
         <EditorOverlay state={this.state.documentState} />
-        <input ref="title" type="text" className="document-title"
-          onBlur={this.handleTitleBoxBlur} onKeyUp={this.handleTitleKeyUp}
-        />
-        <textarea ref="textarea" />
+        <div className="title-editor">
+          <input ref="title" type="text" className="document-title"
+            onBlur={this.handleTitleBoxBlur} onKeyUp={this.handleTitleKeyUp}
+          />
+        </div>
+        <div className="editor">
+          <textarea ref="textarea" />
+        </div>
         <Collaborators collaborators={this.state.documentCollaborators} />
         <EditorStatusBar
           connectionState={this.state.connectionState}

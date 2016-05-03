@@ -1,18 +1,27 @@
 import React from 'react';
+import classNames from 'classnames';
+import ReactCSSTransitionGroup from 'react-addons-css-transition-group';
+import { NOTIFICATION_INFORMATION, NOTIFICATION_WARNING, NOTIFICATION_ERROR } from '../constants/notificationLevels';
 
 class NotificationCenter extends React.Component {
   render() {
     return (
       <div className="notification-container">
-        <div className="notification">
-          {this.props.notifications.map(function (item) {
+        <ReactCSSTransitionGroup transitionName="notification-item" transitionEnterTimeout={400} transitionLeaveTimeout={400}>
+          {this.props.notifications.map(item => {
+            const classes = classNames({
+              'notification-item': true,
+              'notification-information': item.level === NOTIFICATION_INFORMATION,
+              'notification-warning': item.level === NOTIFICATION_WARNING,
+              'notification-error': item.level === NOTIFICATION_ERROR
+            });
             return (
-              <div key={item.id}>
-                {item.level}: {item.message}
+              <div className={classes} key={item.id}>
+                {item.message}
               </div>
             );
-          }, this)}
-        </div>
+          })}
+        </ReactCSSTransitionGroup>
       </div>
     );
   }

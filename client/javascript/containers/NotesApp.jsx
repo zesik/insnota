@@ -35,7 +35,7 @@ class App extends React.Component {
   render() {
     const { dispatch } = this.props;
     return (
-      <div>
+      <div className="full-screen-app">
         <DocumentManager
           fetching={this.props.fetchingDocuments}
           documents={this.props.documents}
