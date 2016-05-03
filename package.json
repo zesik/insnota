@@ -36,6 +36,7 @@
     "eslint-plugin-jsx-a11y": "^0.6.2",
     "eslint-plugin-react": "^4.3.0",
     "legal-eagle": "^0.13.0",
+    "md5": "^2.1.0",
     "npm-run-all": "^1.7.0",
     "react": "^15.0.2",
     "react-addons-css-transition-group": "^15.0.2",
