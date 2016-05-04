@@ -51,18 +51,20 @@ input {
   }
 }
 
-button {
+button, .button {
   border: none;
-  padding: 8px 6px;
+  padding: 12px 8px;
   outline: none;
   background-color: #2196f3;
   color: #ffffff;
 
   &:hover {
     background-color: #1e88e5;
+    color: #ffffff;
   }
 
   &:active {
     background-color: #1976d2;
+    color: #ffffff;
   }
 }

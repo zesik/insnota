@@ -9,7 +9,18 @@ class Index extends React.Component {
   }
 
   render() {
-    return (<div>{this.props.children}</div>);
+    return (
+      <div className="app-container">
+        <div className="app-content">
+          {this.props.children}
+        </div>
+        <footer className="app-footer">
+          <div className="container">
+            <div className="footer-content">&copy; 2016 Yang Liu</div>
+          </div>
+        </footer>
+      </div>
+    );
   }
 }
 

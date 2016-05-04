@@ -77,10 +77,11 @@ class SignUp extends React.Component {
           onLeavePasswordBox={passwordValue => dispatch(validateFormSignUpPassword(passwordValue))}
           onEditPassword={passwordValue => {
             dispatch(resetFormPasswordValidation());
+            dispatch(resetFormPasswordConfirmValidation());
             dispatch(editFormPassword(passwordValue));
           }}
           onEnterPasswordConfirmBox={() => dispatch(resetFormPasswordConfirmValidation())}
-          onLeavePasswordConfirmBox={pwdConfirm => dispatch(validateFormPasswordConfirm(pwdConfirm))}
+          onLeavePasswordConfirmBox={pwdConfirm => dispatch(validateFormPasswordConfirm(password, pwdConfirm))}
           onEditPasswordConfirm={pwdConfirm => {
             dispatch(resetFormPasswordConfirmValidation());
             dispatch(editFormPasswordConfirm(pwdConfirm));
