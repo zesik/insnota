@@ -3,16 +3,14 @@ import {
   CONNECTION_CONNECTING,
   CONNECTION_WAITING,
   CONNECTION_CONNECTED,
-  DOC_SYNCING,
   DOC_SYNCED
 } from './SyncedEditor';
 
 function formatSecondCounter(seconds) {
   if (seconds > 1) {
     return `${seconds} seconds`;
-  } else {
-    return `${seconds} second`;
   }
+  return `${seconds} second`;
 }
 
 class EditorStatusBar extends React.Component {

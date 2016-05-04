@@ -66,8 +66,8 @@ class SignUpForm extends React.Component {
             id="signup-name"
             ref="name"
             value={name}
-            onFocus={(e) => onEnterNameBox ? onEnterNameBox(e.target.value) : null}
-            onBlur={(e) => onLeaveNameBox ? onLeaveNameBox(e.target.value) : null}
+            onFocus={(e) => (onEnterNameBox ? onEnterNameBox(e.target.value) : null)}
+            onBlur={(e) => (onLeaveNameBox ? onLeaveNameBox(e.target.value) : null)}
             onChange={(e) => onEditName(e.target.value)}
             disabled={formSubmitting}
           />
@@ -80,8 +80,8 @@ class SignUpForm extends React.Component {
             id="signup-email"
             ref="email"
             value={email}
-            onFocus={(e) => onEnterEmailBox ? onEnterEmailBox(e.target.value) : null}
-            onBlur={(e) => onLeaveEmailBox ? onLeaveEmailBox(e.target.value) : null}
+            onFocus={(e) => (onEnterEmailBox ? onEnterEmailBox(e.target.value) : null)}
+            onBlur={(e) => (onLeaveEmailBox ? onLeaveEmailBox(e.target.value) : null)}
             onChange={(e) => onEditEmail(e.target.value)}
             disabled={formSubmitting}
           />
@@ -96,8 +96,8 @@ class SignUpForm extends React.Component {
             id="signup-password"
             ref="password"
             value={password}
-            onFocus={(e) => onEnterPasswordBox ? onEnterPasswordBox(e.target.value) : null}
-            onBlur={(e) => onLeavePasswordBox ? onLeavePasswordBox(e.target.value) : null}
+            onFocus={(e) => (onEnterPasswordBox ? onEnterPasswordBox(e.target.value) : null)}
+            onBlur={(e) => (onLeavePasswordBox ? onLeavePasswordBox(e.target.value) : null)}
             onChange={(e) => onEditPassword(e.target.value)}
             disabled={formSubmitting}
           />
@@ -111,8 +111,8 @@ class SignUpForm extends React.Component {
             id="signup-password-confirm"
             ref="passwordConfirm"
             value={passwordConfirm}
-            onFocus={(e) => onEnterPasswordConfirmBox ? onEnterPasswordConfirmBox(e.target.value) : null}
-            onBlur={(e) => onLeavePasswordConfirmBox ? onLeavePasswordConfirmBox(e.target.value) : null}
+            onFocus={(e) => (onEnterPasswordConfirmBox ? onEnterPasswordConfirmBox(e.target.value) : null)}
+            onBlur={(e) => (onLeavePasswordConfirmBox ? onLeavePasswordConfirmBox(e.target.value) : null)}
             onChange={(e) => onEditPasswordConfirm(e.target.value)}
             disabled={formSubmitting}
           />
@@ -157,7 +157,7 @@ SignUpForm.propTypes = {
   onLeaveEmailBox: React.PropTypes.func,
   onEditEmail: React.PropTypes.func.isRequired,
   onEnterPasswordBox: React.PropTypes.func,
-  OnLeavePasswordBox: React.PropTypes.func,
+  onLeavePasswordBox: React.PropTypes.func,
   onEditPassword: React.PropTypes.func.isRequired,
   onEnterPasswordConfirmBox: React.PropTypes.func,
   onLeavePasswordConfirmBox: React.PropTypes.func,

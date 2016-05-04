@@ -11,7 +11,7 @@ const COLLECTION_NAME = 'collection';
 
 function createWebSocketURL() {
   const l = window.location;
-  return ((l.protocol === 'https:') ? 'wss://' : 'ws://') + l.host + '/notes';
+  return `${((l.protocol === 'https:') ? 'wss://' : 'ws://')}${l.host}/notes`;
 }
 
 class App extends React.Component {

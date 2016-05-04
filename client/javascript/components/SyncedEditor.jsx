@@ -468,7 +468,7 @@ class SyncedEditor extends React.Component {
     }
     const newCollaborators = [];
     const collaborators = this.shareDBDoc.data.a;
-    for (let clientID in collaborators) {
+    for (const clientID in collaborators) {
       if (!collaborators.hasOwnProperty(clientID)) {
         continue;
       }
@@ -486,12 +486,12 @@ class SyncedEditor extends React.Component {
       }
 
       newCollaborators.push({
-        clientID: clientID,
+        clientID,
         time: collaborator.t,
         name: collaborator.n,
         email: collaborator.e,
         cursors: collaborator.c,
-        color: color
+        color
       });
     }
     newCollaborators.sort((a, b) => a.time - b.time);
@@ -558,9 +558,9 @@ class SyncedEditor extends React.Component {
           return;
         }
 
-        let title = doc.data.t;
-        let content = doc.data.c;
-        let mimeType = doc.data.m;
+        const title = doc.data.t;
+        const content = doc.data.c;
+        const mimeType = doc.data.m;
 
         this.shareDBDoc = doc;
         this.remoteUpdating = REMOTE_INIT;

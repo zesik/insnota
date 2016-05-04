@@ -62,35 +62,35 @@ class SignUp extends React.Component {
           validationPasswordConfirmMismatch={validationPasswordConfirmMismatch}
           serverError={serverError}
           onEnterNameBox={() => dispatch(resetFormNameValidation())}
-          onLeaveNameBox={(name) => dispatch(validateFormName(name))}
-          onEditName={(name) => {
+          onLeaveNameBox={nameValue => dispatch(validateFormName(nameValue))}
+          onEditName={nameValue => {
             dispatch(resetFormNameValidation());
-            dispatch(editFormName(name));
+            dispatch(editFormName(nameValue));
           }}
           onEnterEmailBox={() => dispatch(resetFormEmailValidation())}
-          onLeaveEmailBox={(email) => dispatch(validateFormSignUpEmail(email))}
-          onEditEmail={(email) => {
+          onLeaveEmailBox={emailValue => dispatch(validateFormSignUpEmail(emailValue))}
+          onEditEmail={emailValue => {
             dispatch(resetFormEmailValidation());
-            dispatch(editFormEmail(email));
+            dispatch(editFormEmail(emailValue));
           }}
           onEnterPasswordBox={() => dispatch(resetFormPasswordValidation())}
-          onLeavePasswordBox={(password) => dispatch(validateFormSignUpPassword(password))}
-          onEditPassword={(password) => {
+          onLeavePasswordBox={passwordValue => dispatch(validateFormSignUpPassword(passwordValue))}
+          onEditPassword={passwordValue => {
             dispatch(resetFormPasswordValidation());
-            dispatch(editFormPassword(password));
+            dispatch(editFormPassword(passwordValue));
           }}
           onEnterPasswordConfirmBox={() => dispatch(resetFormPasswordConfirmValidation())}
-          onLeavePasswordConfirmBox={(pwdConfirm) => dispatch(validateFormPasswordConfirm(password, pwdConfirm))}
-          onEditPasswordConfirm={(passwordConfirm) => {
+          onLeavePasswordConfirmBox={pwdConfirm => dispatch(validateFormPasswordConfirm(pwdConfirm))}
+          onEditPasswordConfirm={pwdConfirm => {
             dispatch(resetFormPasswordConfirmValidation());
-            dispatch(editFormPasswordConfirm(passwordConfirm));
+            dispatch(editFormPasswordConfirm(pwdConfirm));
           }}
-          onSubmit={(name, email, password, passwordConfirm) => {
-            dispatch(validateFormName(name));
-            dispatch(validateFormSignUpEmail(email));
-            dispatch(validateFormSignUpPassword(password));
-            dispatch(validateFormPasswordConfirm(password, passwordConfirm));
-            dispatch(submitSignUpForm(name, email, password));
+          onSubmit={(nameValue, emailValue, passwordValue, pwdConfirm) => {
+            dispatch(validateFormName(nameValue));
+            dispatch(validateFormSignUpEmail(emailValue));
+            dispatch(validateFormSignUpPassword(passwordValue));
+            dispatch(validateFormPasswordConfirm(passwordValue, pwdConfirm));
+            dispatch(submitSignUpForm(nameValue, emailValue, passwordValue));
           }}
         />
         <div className="form-footer">

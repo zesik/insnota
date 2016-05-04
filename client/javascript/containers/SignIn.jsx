@@ -52,24 +52,24 @@ class SignIn extends React.Component {
           validationCredentialInvalid={validationCredentialInvalid}
           serverError={serverError}
           onEnterEmailBox={() => dispatch(resetFormEmailValidation())}
-          onLeaveEmailBox={(email) => dispatch(validateFormSignInEmail(email))}
-          onEditEmail={(email) => {
+          onLeaveEmailBox={emailValue => dispatch(validateFormSignInEmail(emailValue))}
+          onEditEmail={emailValue => {
             dispatch(resetFormEmailValidation());
-            dispatch(editFormEmail(email));
+            dispatch(editFormEmail(emailValue));
           }}
           onEnterPasswordBox={() => dispatch(resetFormPasswordValidation())}
-          onLeavePasswordBox={(password) => dispatch(validateFormSignInPassword(password))}
-          onEditPassword={(password) => {
+          onLeavePasswordBox={passwordValue => dispatch(validateFormSignInPassword(passwordValue))}
+          onEditPassword={passwordValue => {
             dispatch(resetFormPasswordValidation());
-            dispatch(editFormPassword(password));
+            dispatch(editFormPassword(passwordValue));
           }}
-          onSubmitEmail={email => {
-            dispatch(validateFormSignInEmail(email));
-            dispatch(submitSignInEmail(email));
+          onSubmitEmail={emailValue => {
+            dispatch(validateFormSignInEmail(emailValue));
+            dispatch(submitSignInEmail(emailValue));
           }}
-          onSubmit={(email, password) => {
-            dispatch(validateFormSignInPassword(password));
-            dispatch(submitSignInForm(email, password));
+          onSubmit={(emailValue, passwordValue) => {
+            dispatch(validateFormSignInPassword(passwordValue));
+            dispatch(submitSignInForm(emailValue, passwordValue));
           }}
           onGoBackToEmail={() => dispatch(updateSignInFormStep(0))}
         />

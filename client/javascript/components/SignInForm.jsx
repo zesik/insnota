@@ -9,7 +9,7 @@ class SignInForm extends React.Component {
     this.handleSubmit = this.handleSubmit.bind(this);
   }
 
-  handleGoBack(e) {
+  handleGoBack() {
     this.props.onGoBackToEmail();
   }
 
@@ -50,12 +50,13 @@ class SignInForm extends React.Component {
         </div>
       </div>
     );
+    let form;
     if (formStep === 0) {
       const emailClasses = classNames({
         'form-element': true,
         error: validationEmailEmpty || validationEmailInvalid || validationEmailNotExist
       });
-      return (
+      form = (
         <form method="post" onSubmit={this.handleSubmit}>
           <div className={emailClasses}>
             <label htmlFor="signin-email">Email</label>
@@ -64,11 +65,11 @@ class SignInForm extends React.Component {
               id="signin-email"
               ref="email"
               value={email}
-              onFocus={(e) => onEnterEmailBox ? onEnterEmailBox(e.target.value) : null}
-              onBlur={(e) => onLeaveEmailBox ? onLeaveEmailBox(e.target.value) : null}
+              onFocus={(e) => (onEnterEmailBox ? onEnterEmailBox(e.target.value) : null)}
+              onBlur={(e) => (onLeaveEmailBox ? onLeaveEmailBox(e.target.value) : null)}
               onChange={(e) => onEditEmail(e.target.value)}
               disabled={formSubmitting}
-              autoFocus={true}
+              autoFocus
             />
             {validationEmailEmpty &&
               <div className="validation-error">Please type your email address to sign in.</div>
@@ -89,7 +90,7 @@ class SignInForm extends React.Component {
         'form-element': true,
         error: validationPasswordEmpty || validationCredentialInvalid
       });
-      return (
+      form = (
         <form method="post" onSubmit={this.handleSubmit}>
           <span className="go-back" onClick={this.handleGoBack}><i className="fa fa-arrow-left fa-2x" /></span>
           <div className="form-element user-info">
@@ -104,11 +105,11 @@ class SignInForm extends React.Component {
               id="signin-password"
               ref="password"
               value={password}
-              onFocus={(e) => onEnterPasswordBox ? onEnterPasswordBox(e.target.value) : null}
-              onBlur={(e) => onLeavePasswordBox ? onLeavePasswordBox(e.target.value) : null}
+              onFocus={(e) => (onEnterPasswordBox ? onEnterPasswordBox(e.target.value) : null)}
+              onBlur={(e) => (onLeavePasswordBox ? onLeavePasswordBox(e.target.value) : null)}
               onChange={(e) => onEditPassword(e.target.value)}
               disabled={formSubmitting}
-              autoFocus={true}
+              autoFocus
             />
             {validationPasswordEmpty && <div className="validation-error">Please type your password to sign in.</div>}
             {validationCredentialInvalid &&
@@ -122,6 +123,7 @@ class SignInForm extends React.Component {
         </form>
       );
     }
+    return form;
   }
 }
 
@@ -141,7 +143,7 @@ SignInForm.propTypes = {
   onLeaveEmailBox: React.PropTypes.func,
   onEditEmail: React.PropTypes.func.isRequired,
   onEnterPasswordBox: React.PropTypes.func,
-  OnLeavePasswordBox: React.PropTypes.func,
+  onLeavePasswordBox: React.PropTypes.func,
   onEditPassword: React.PropTypes.func.isRequired,
   onSubmitEmail: React.PropTypes.func.isRequired,
   onSubmit: React.PropTypes.func.isRequired,

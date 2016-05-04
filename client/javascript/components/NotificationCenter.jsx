@@ -7,7 +7,11 @@ class NotificationCenter extends React.Component {
   render() {
     return (
       <div className="notification-container">
-        <ReactCSSTransitionGroup transitionName="notification-item" transitionEnterTimeout={400} transitionLeaveTimeout={400}>
+        <ReactCSSTransitionGroup
+          transitionName="notification-item"
+          transitionEnterTimeout={400}
+          transitionLeaveTimeout={400}
+        >
           {this.props.notifications.map(item => {
             const classes = classNames({
               'notification-item': true,
