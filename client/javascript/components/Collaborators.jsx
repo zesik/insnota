@@ -1,13 +1,5 @@
 import React from 'react';
-import md5 from 'md5';
-
-function getAvatarURL(email) {
-  if (email) {
-    const hash = md5(email.trim().toLowerCase());
-    return `https://secure.gravatar.com/avatar/${hash}?s=128`;
-  }
-  return '';
-}
+import UserAvatar from './UserAvatar';
 
 function Collaborators({ collaborators }) {
   return (
@@ -15,16 +7,9 @@ function Collaborators({ collaborators }) {
       {collaborators.map(item => {
         const colors = item.color.split(':');
         const colorStyle = { backgroundColor: `#${colors[0]}` };
-        const avatarStyle = {};
-        const avatarURL = getAvatarURL(item.email);
-        if (avatarURL) {
-          avatarStyle.backgroundImage = avatarURL;
-        } else {
-          avatarStyle.backgroundColor = `#${colors[0]}`;
-        }
         return (
           <div className="collaborator" key={item.clientID} title={item.email || 'Anonymous'}>
-            <div className="collaborator-avatar" style={avatarStyle} />
+            <UserAvatar email={item.email} size={24} color={colors[0]} cornerRadius={0} />
             <div className="collaborator-color" style={colorStyle} />
           </div>
         );

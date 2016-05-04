@@ -10,9 +10,7 @@ class SignUpForm extends React.Component {
   handleSubmit(e) {
     const { name, email, password, passwordConfirm, onSubmit } = this.props;
     e.preventDefault();
-    if (onSubmit) {
-      onSubmit(name, email, password, passwordConfirm);
-    }
+    onSubmit(name, email, password, passwordConfirm);
   }
 
   render() {
@@ -28,7 +26,7 @@ class SignUpForm extends React.Component {
       validationEmailOccupied,
       validationPasswordEmpty,
       validationPasswordShort,
-      validationPasswordMismatch,
+      validationPasswordConfirmMismatch,
       serverError,
       onEnterNameBox,
       onLeaveNameBox,
@@ -43,7 +41,10 @@ class SignUpForm extends React.Component {
       onLeavePasswordConfirmBox,
       onEditPasswordConfirm
     } = this.props;
-    const nameClasses = classNames({ 'form-element': true, error: validationNameEmpty });
+    const nameClasses = classNames({
+      'form-element': true,
+      error: validationNameEmpty
+    });
     const emailClasses = classNames({
       'form-element': true,
       error: validationEmailEmpty || validationEmailInvalid || validationEmailOccupied
@@ -54,7 +55,7 @@ class SignUpForm extends React.Component {
     });
     const passwordConfirmClasses = classNames({
       'form-element': true,
-      error: validationPasswordMismatch
+      error: validationPasswordConfirmMismatch
     });
     return (
       <form method="post" onSubmit={this.handleSubmit}>
@@ -70,9 +71,7 @@ class SignUpForm extends React.Component {
             onChange={(e) => onEditName(e.target.value)}
             disabled={formSubmitting}
           />
-          <div className="validation">
-            {validationNameEmpty && <div className="error">Name cannot be blank.</div>}
-          </div>
+          {validationNameEmpty && <div className="validation-error">Name cannot be blank.</div>}
         </div>
         <div className={emailClasses}>
           <label htmlFor="signup-email">Email Address</label>
@@ -86,11 +85,9 @@ class SignUpForm extends React.Component {
             onChange={(e) => onEditEmail(e.target.value)}
             disabled={formSubmitting}
           />
-          <div className="validation">
-            {validationEmailEmpty && <div className="error">Email address cannot be blank.</div>}
-            {validationEmailInvalid && <div className="error">This is not a valid email address.</div>}
-            {validationEmailOccupied && <div className="error">This email address is already registered.</div>}
-          </div>
+          {validationEmailEmpty && <div className="validation-error">Email address cannot be blank.</div>}
+          {validationEmailInvalid && <div className="validation-error">This is not a valid email address.</div>}
+          {validationEmailOccupied && <div className="validation-error">This email address is occupied.</div>}
         </div>
         <div className={passwordClasses}>
           <label htmlFor="signup-password">Choose a Password</label>
@@ -104,10 +101,8 @@ class SignUpForm extends React.Component {
             onChange={(e) => onEditPassword(e.target.value)}
             disabled={formSubmitting}
           />
-          <div className="validation">
-            {validationPasswordEmpty && <div className="error">Password cannot be blank.</div>}
-            {validationPasswordShort && <div className="error">This password is too short.</div>}
-          </div>
+          {validationPasswordEmpty && <div className="validation-error">Password cannot be blank.</div>}
+          {validationPasswordShort && <div className="validation-error">This password is too short.</div>}
         </div>
         <div className={passwordConfirmClasses}>
           <label htmlFor="signup-password-confirm">Confirm Your Password</label>
@@ -121,15 +116,17 @@ class SignUpForm extends React.Component {
             onChange={(e) => onEditPasswordConfirm(e.target.value)}
             disabled={formSubmitting}
           />
-          <div className="validation">
-            {validationPasswordMismatch && <div className="error">
-              Password confirmation is different from password.
-            </div>}
-          </div>
+          {validationPasswordConfirmMismatch &&
+            <div className="validation-error">Password confirmation is different from password.</div>
+          }
         </div>
-        {serverError && <div className="error">
-          Unable to sign up due to an internal server error. Please try again in several minutes.
-        </div>}
+        {serverError &&
+          <div className="form-element error">
+            <div className="validation-error">
+              Unable to sign up due to an internal server error. Please try again in several minutes.
+            </div>
+          </div>
+        }
         <div className="form-submit">
           <button type="submit" disabled={formSubmitting}>Sign up</button>
         </div>
@@ -151,7 +148,7 @@ SignUpForm.propTypes = {
   validationEmailOccupied: React.PropTypes.bool,
   validationPasswordEmpty: React.PropTypes.bool,
   validationPasswordShort: React.PropTypes.bool,
-  validationPasswordMismatch: React.PropTypes.bool,
+  validationPasswordConfirmMismatch: React.PropTypes.bool,
   serverError: React.PropTypes.bool,
   onEnterNameBox: React.PropTypes.func,
   onLeaveNameBox: React.PropTypes.func,

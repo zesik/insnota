@@ -10,6 +10,8 @@ import {
   validateFormSignInPassword,
   resetFormEmailValidation,
   resetFormPasswordValidation,
+  updateSignInFormStep,
+  submitSignInEmail,
   submitSignInForm
 } from '../actions/home';
 
@@ -22,10 +24,13 @@ class SignIn extends React.Component {
   render() {
     const {
       formSubmitting,
+      formStep,
+      name,
       email,
       password,
       validationEmailEmpty,
       validationEmailInvalid,
+      validationEmailNotExist,
       validationPasswordEmpty,
       validationCredentialInvalid,
       serverError,
@@ -36,10 +41,13 @@ class SignIn extends React.Component {
         <h1>Sign in</h1>
         <SignInForm
           formSubmitting={formSubmitting}
+          formStep={formStep}
+          name={name}
           email={email}
           password={password}
           validationEmailEmpty={validationEmailEmpty}
           validationEmailInvalid={validationEmailInvalid}
+          validationEmailNotExist={validationEmailNotExist}
           validationPasswordEmpty={validationPasswordEmpty}
           validationCredentialInvalid={validationCredentialInvalid}
           serverError={serverError}
@@ -55,14 +63,17 @@ class SignIn extends React.Component {
             dispatch(resetFormPasswordValidation());
             dispatch(editFormPassword(password));
           }}
-          onSubmit={(email, password) => {
+          onSubmitEmail={email => {
             dispatch(validateFormSignInEmail(email));
+            dispatch(submitSignInEmail(email));
+          }}
+          onSubmit={(email, password) => {
             dispatch(validateFormSignInPassword(password));
             dispatch(submitSignInForm(email, password));
           }}
+          onGoBackToEmail={() => dispatch(updateSignInFormStep(0))}
         />
         <div className="form-footer">
-          <Link to="/forgot">Forgot Password?</Link>
           <Link to="/signup">Create an Account</Link>
         </div>
       </div>
@@ -72,10 +83,13 @@ class SignIn extends React.Component {
 
 SignIn.propTypes = {
   formSubmitting: React.PropTypes.bool,
+  formStep: React.PropTypes.number,
+  name: React.PropTypes.string,
   email: React.PropTypes.string,
   password: React.PropTypes.string,
   validationEmailEmpty: React.PropTypes.bool,
   validationEmailInvalid: React.PropTypes.bool,
+  validationEmailNotExist: React.PropTypes.bool,
   validationPasswordEmpty: React.PropTypes.bool,
   validationCredentialInvalid: React.PropTypes.bool,
   serverError: React.PropTypes.bool,
@@ -84,10 +98,13 @@ SignIn.propTypes = {
 
 const mapStateToProps = state => ({
   formSubmitting: state.home.formSubmitting,
+  formStep: state.home.formSignInStep,
+  name: state.home.formName,
   email: state.home.formEmail,
   password: state.home.formPassword,
   validationEmailEmpty: state.home.formValidationEmailEmpty,
   validationEmailInvalid: state.home.formValidationEmailInvalid,
+  validationEmailNotExist: state.home.formValidationEmailNotExist,
   validationPasswordEmpty: state.home.formValidationPasswordEmpty,
   validationCredentialInvalid: state.home.formValidationCredentialInvalid,
   serverError: state.home.serverError

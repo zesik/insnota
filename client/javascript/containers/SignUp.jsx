@@ -39,7 +39,7 @@ class SignUp extends React.Component {
       validationEmailOccupied,
       validationPasswordEmpty,
       validationPasswordShort,
-      validationPasswordMismatch,
+      validationPasswordConfirmMismatch,
       serverError,
       dispatch
     } = this.props;
@@ -59,7 +59,7 @@ class SignUp extends React.Component {
           validationEmailOccupied={validationEmailOccupied}
           validationPasswordEmpty={validationPasswordEmpty}
           validationPasswordShort={validationPasswordShort}
-          validationPasswordMismatch={validationPasswordMismatch}
+          validationPasswordConfirmMismatch={validationPasswordConfirmMismatch}
           serverError={serverError}
           onEnterNameBox={() => dispatch(resetFormNameValidation())}
           onLeaveNameBox={(name) => dispatch(validateFormName(name))}
@@ -94,7 +94,7 @@ class SignUp extends React.Component {
           }}
         />
         <div className="form-footer">
-          <Link to="/signin">Sign in</Link>
+          Already have an account? <Link to="/signin">Sign in</Link>
         </div>
       </div>
     );
@@ -114,7 +114,7 @@ SignUp.propTypes = {
   validationEmailOccupied: React.PropTypes.bool,
   validationPasswordEmpty: React.PropTypes.bool,
   validationPasswordShort: React.PropTypes.bool,
-  validationPasswordMismatch: React.PropTypes.bool,
+  validationPasswordConfirmMismatch: React.PropTypes.bool,
   serverError: React.PropTypes.bool,
   dispatch: React.PropTypes.func
 };
@@ -132,7 +132,7 @@ const mapStateToProps = state => ({
   validationEmailOccupied: state.home.formValidationEmailOccupied,
   validationPasswordEmpty: state.home.formValidationPasswordEmpty,
   validationPasswordShort: state.home.formValidationPasswordShort,
-  validationPasswordMismatch: state.home.formValidationPasswordMismatch,
+  validationPasswordConfirmMismatch: state.home.formValidationPasswordConfirmMismatch,
   serverError: state.home.serverError
 });
 

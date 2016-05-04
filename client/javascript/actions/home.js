@@ -9,7 +9,9 @@ import {
 
 export const UPDATE_VISITOR_IDENTITY = 'UPDATE_VISITOR_IDENTITY';
 export const RESET_FORM = 'RESET_FORM';
-export const UPDATE_FORM_STATUS = 'UPDATE_FORM_STATUS';
+export const UPDATE_FORM_SUBMITTING = 'UPDATE_FORM_SUBMITTING';
+export const UPDATE_FORM_VALIDATIONS = 'UPDATE_FORM_VALIDATIONS';
+export const UPDATE_SIGNIN_FORM_STEP = 'UPDATE_SIGNIN_FORM_STEP';
 export const EDIT_FORM_NAME = 'EDIT_FORM_NAME';
 export const EDIT_FORM_EMAIL = 'EDIT_FORM_EMAIL';
 export const EDIT_FORM_PASSWORD = 'EDIT_FORM_PASSWORD';
@@ -24,7 +26,7 @@ export function checkVisitorIdentity() {
       if (response.status >= 200 && response.status < 300) {
         return response.json();
       } else {
-        let error = new Error(response.statusText);
+        const error = new Error(response.statusText);
         error.response = response;
         throw error;
       }
@@ -41,12 +43,43 @@ function updateVisitorIdentity(checkingVisitorIdentity, visitorIdentity) {
   return { type: UPDATE_VISITOR_IDENTITY, checkingVisitorIdentity, visitorIdentity };
 }
 
+function getUserInformation(email) {
+  return new Promise(function (resolve, reject) {
+    fetch(`/api/users/${email}`, {
+      credentials: 'same-origin'
+    }).then(function (response) {
+      if (response.status >= 200 && response.status < 300) {
+        return response.json();
+      } else {
+        const error = new Error(response.statusText);
+        error.response = response;
+        throw error;
+      }
+    }).then(function (json) {
+      resolve(json);
+    }).catch(function (err) {
+      if (err.response.status === 404) {
+        return resolve(null);
+      }
+      reject(err);
+    });
+  });
+}
+
 export function resetForm() {
   return { type: RESET_FORM };
 }
 
-export function updateFormStatus(formSubmitting, validations) {
-  return { type: UPDATE_FORM_STATUS, formSubmitting, validations };
+export function updateFormSubmitting(formSubmitting) {
+  return { type: UPDATE_FORM_SUBMITTING, formSubmitting };
+}
+
+export function updateFormValidations(validations) {
+  return { type: UPDATE_FORM_VALIDATIONS, validations };
+}
+
+export function updateSignInFormStep(step) {
+  return { type: UPDATE_SIGNIN_FORM_STEP, step };
 }
 
 export function editFormName(formName) {
@@ -66,22 +99,20 @@ export function editFormPasswordConfirm(formPasswordConfirm) {
 }
 
 export function validateFormName(name) {
-  return updateFormStatus(false, validateName(name));
+  return updateFormValidations(validateName(name));
 }
 
 export function resetFormNameValidation() {
-  return updateFormStatus(false, {
-    formValidationNameEmpty: false
-  });
+  return updateFormValidations({ formValidationNameEmpty: false });
 }
 
 export function validateFormSignInEmail(email) {
-  return updateFormStatus(false, validateEmail(email));
+  return updateFormValidations(validateEmail(email));
 }
 
 export function validateFormSignUpEmail(email) {
   return (dispatch, getState) => {
-    dispatch(updateFormStatus(false, validateEmail(email)));
+    dispatch(updateFormValidations(validateEmail(email)));
     const { formValidationEmailEmpty, formValidationEmailInvalid } = getState().home;
     if (formValidationEmailEmpty || formValidationEmailInvalid) {
       return;
@@ -90,45 +121,40 @@ export function validateFormSignUpEmail(email) {
 }
 
 export function resetFormEmailValidation() {
-  return updateFormStatus(false, {
+  return updateFormValidations({
     formValidatingEmail: false,
     formValidationEmailEmpty: false,
     formValidationEmailInvalid: false,
-    formValidationEmailOccupied: false
+    formValidationEmailOccupied: false,
+    formValidationEmailNotExist: false
   });
 }
 
 export function validateFormSignInPassword(password) {
-  return updateFormStatus(false, validateSignInPassword(password));
+  return updateFormValidations(validateSignInPassword(password));
 }
 
 export function validateFormSignUpPassword(password) {
-  return updateFormStatus(false, validateSignUpPassword(password));
+  return updateFormValidations(validateSignUpPassword(password));
 }
 
 export function validateFormPasswordConfirm(password, passwordConfirm) {
-  return updateFormStatus(false, validatePasswordConfirm(password, passwordConfirm));
+  return updateFormValidations(validatePasswordConfirm(password, passwordConfirm));
 }
 
 export function resetFormPasswordValidation() {
-  return updateFormStatus(false, {
+  return updateFormValidations({
     formValidationPasswordEmpty: false,
     formValidationPasswordShort: false
   });
 }
 
 export function resetFormPasswordConfirmValidation() {
-  return updateFormStatus(false, {
-    formValidationPasswordMismatch: false
-  });
+  return updateFormValidations({ formValidationPasswordConfirmMismatch: false });
 }
 
 export function submitSignUpForm(name, email, password) {
   return (dispatch, getState) => {
-    dispatch(updateFormStatus(false, {
-      serverError: false,
-      formValidationCredentialInvalid: false
-    }));
     const {
       formValidationNameEmpty,
       formValidationEmailEmpty,
@@ -136,14 +162,16 @@ export function submitSignUpForm(name, email, password) {
       formValidationEmailOccupied,
       formValidationPasswordEmpty,
       formValidationPasswordShort,
-      formValidationPasswordMismatch
+      formValidationPasswordConfirmMismatch
     } = getState().home;
     if (formValidationNameEmpty ||
-      formValidationEmailEmpty || formValidationEmailInvalid || formValidationEmailOccupied ||
-      formValidationPasswordEmpty || formValidationPasswordShort || formValidationPasswordMismatch) {
+        formValidationEmailEmpty || formValidationEmailInvalid || formValidationEmailOccupied ||
+        formValidationPasswordEmpty || formValidationPasswordShort ||
+        formValidationPasswordConfirmMismatch) {
       return;
     }
-    dispatch(updateFormStatus(true, {}));
+    dispatch(updateFormValidations({ serverError: false }));
+    dispatch(updateFormSubmitting(true));
     fetch('/signup', {
       method: 'POST',
       headers: {
@@ -156,36 +184,61 @@ export function submitSignUpForm(name, email, password) {
       if (response.status >= 200 && response.status < 300) {
         return response;
       } else {
-        let error = new Error(response.statusText);
+        const error = new Error(response.statusText);
         error.response = response;
         throw error;
       }
     }).then(function () {
       window.location = '/notes';
     }).catch(function (err) {
+      dispatch(updateFormSubmitting(false));
       if (err.response.status === 400 || err.response.status === 409) {
         err.response.json().then(function (json) {
-          dispatch(updateFormStatus(false, json));
+          dispatch(updateFormValidations(json));
         });
       } else {
         console.error(err);
-        dispatch(updateFormStatus(false, { serverError: true }));
+        dispatch(updateFormValidations({ serverError: true }));
       }
+    });
+  };
+}
+
+export function submitSignInEmail(email) {
+  return (dispatch, getState) => {
+    const { formValidationEmailEmpty, formValidationEmailInvalid } = getState().home;
+    if (formValidationEmailEmpty || formValidationEmailInvalid) {
+      return;
+    }
+    dispatch(updateFormValidations({ serverError: false }));
+    dispatch(updateFormSubmitting(true));
+    getUserInformation(email).then(function (userInfo) {
+      dispatch(updateFormSubmitting(false));
+      if (userInfo) {
+        dispatch(editFormName(userInfo.name));
+        dispatch(updateSignInFormStep(1));
+      } else {
+        dispatch(updateFormValidations({ formValidationEmailNotExist: true }));
+      }
+    }, function (err) {
+      dispatch(updateFormSubmitting(false));
+      console.error(err);
+      dispatch(updateFormValidations({ serverError: true }));
     });
   };
 }
 
 export function submitSignInForm(email, password) {
   return (dispatch, getState) => {
-    dispatch(updateFormStatus(false, {
+    const { formValidationPasswordEmpty } = getState().home;
+    if (formValidationPasswordEmpty) {
+      return;
+    }
+    dispatch(updateFormValidations({
       serverError: false,
       formValidationCredentialInvalid: false
     }));
-    const { formValidationEmailEmpty, formValidationEmailInvalid, formValidationPasswordEmpty } = getState().home;
-    if (formValidationEmailEmpty || formValidationEmailInvalid || formValidationPasswordEmpty) {
-      return;
-    }
-    dispatch(updateFormStatus(true, {}));
+    dispatch(updateFormSubmitting(true));
     fetch('/signin', {
       method: 'POST',
       headers: {
@@ -198,20 +251,21 @@ export function submitSignInForm(email, password) {
       if (response.status >= 200 && response.status < 300) {
         return response;
       } else {
-        let error = new Error(response.statusText);
+        const error = new Error(response.statusText);
         error.response = response;
         throw error;
       }
     }).then(function () {
       window.location = '/notes';
     }).catch(function (err) {
+      dispatch(updateFormSubmitting(false));
       if (err.response.status === 400 || err.response.status === 403) {
         err.response.json().then(function (json) {
-          dispatch(updateFormStatus(false, json));
+          dispatch(updateFormValidations(json));
         });
       } else {
         console.error(err);
-        dispatch(updateFormStatus(false, { serverError: true }));
+        dispatch(updateFormValidations({ serverError: true }));
       }
     });
   };

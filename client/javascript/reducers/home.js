@@ -1,7 +1,9 @@
 import {
   UPDATE_VISITOR_IDENTITY,
   RESET_FORM,
-  UPDATE_FORM_STATUS,
+  UPDATE_FORM_SUBMITTING,
+  UPDATE_FORM_VALIDATIONS,
+  UPDATE_SIGNIN_FORM_STEP,
   EDIT_FORM_NAME,
   EDIT_FORM_EMAIL,
   EDIT_FORM_PASSWORD,
@@ -16,15 +18,18 @@ const initialState = {
   formEmail: '',
   formPassword: '',
   formPasswordConfirm: '',
+  formRemember: true,
+  formSignInStep: 0,
   formSubmitting: false,
   formValidatingEmail: false,
   formValidationNameEmpty: false,
   formValidationEmailEmpty: false,
   formValidationEmailInvalid: false,
+  formValidationEmailNotExist: false,
   formValidationEmailOccupied: false,
   formValidationPasswordEmpty: false,
   formValidationPasswordShort: false,
-  formValidationPasswordMismatch: false,
+  formValidationPasswordConfirmMismatch: false,
   formValidationCredentialInvalid: false
 };
 
@@ -38,14 +43,18 @@ function homeReducer(state = initialState, action) {
     case RESET_FORM:
       return Object.assign({}, initialState, {
         checkingVisitorIdentity: state.checkingVisitorIdentity,
-        visitorIdentity: state.visitorIdentity,
-        formName: state.formName,
-        formEmail: state.formEmail
+        visitorIdentity: state.visitorIdentity
       });
-    case UPDATE_FORM_STATUS:
+    case UPDATE_FORM_SUBMITTING:
       return Object.assign({}, state, {
         formSubmitting: action.formSubmitting
-      }, action.validations);
+      });
+    case UPDATE_FORM_VALIDATIONS:
+      return Object.assign({}, state, action.validations);
+    case UPDATE_SIGNIN_FORM_STEP:
+      return Object.assign({}, state, {
+        formSignInStep: action.step
+      });
     case EDIT_FORM_NAME:
       return Object.assign({}, state, {
         formName: action.formName

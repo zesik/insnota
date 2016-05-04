@@ -44,15 +44,7 @@ export function validateSignUpPassword(password) {
 
 export function validatePasswordConfirm(password, passwordConfirm) {
   if (password !== passwordConfirm) {
-    return { formValidationPasswordMismatch: true };
+    return { formValidationPasswordConfirmMismatch: true };
   }
   return {};
-}
-
-export function focusDOMElement(element, length) {
-  element.focus();
-  if (!length) {
-    length = element.value.length;
-  }
-  element.select(0, length);
 }

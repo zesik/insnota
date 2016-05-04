@@ -37,6 +37,7 @@
     "eslint-plugin-react": "^4.3.0",
     "legal-eagle": "^0.13.0",
     "md5": "^2.1.0",
+    "normalize-scss": "^4.2.1",
     "npm-run-all": "^1.7.0",
     "react": "^15.0.2",
     "react-addons-css-transition-group": "^15.0.2",
@@ -56,7 +57,7 @@
     "bundle": "webpack --config tools/webpack.config.js",
     "clean": "rm -rf build/",
     "copy": "cp node_modules/codemirror/lib/codemirror.css build/stylesheets/",
-    "css": "sass client/stylesheets/index.scss build/stylesheets/index.css",
+    "css": "sass client/stylesheets/index.scss:build/stylesheets/index.css client/stylesheets/notes.scss:build/stylesheets/notes.css",
     "license": "node ./tools/listlicense.js",
     "start": "node ./server/app.js"
   }
