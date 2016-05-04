@@ -52,13 +52,11 @@ class SignIn extends React.Component {
           validationCredentialInvalid={validationCredentialInvalid}
           serverError={serverError}
           onEnterEmailBox={() => dispatch(resetFormEmailValidation())}
-          onLeaveEmailBox={emailValue => dispatch(validateFormSignInEmail(emailValue))}
           onEditEmail={emailValue => {
             dispatch(resetFormEmailValidation());
             dispatch(editFormEmail(emailValue));
           }}
           onEnterPasswordBox={() => dispatch(resetFormPasswordValidation())}
-          onLeavePasswordBox={passwordValue => dispatch(validateFormSignInPassword(passwordValue))}
           onEditPassword={passwordValue => {
             dispatch(resetFormPasswordValidation());
             dispatch(editFormPassword(passwordValue));

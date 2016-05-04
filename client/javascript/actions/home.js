@@ -17,6 +17,32 @@ export const EDIT_FORM_EMAIL = 'EDIT_FORM_EMAIL';
 export const EDIT_FORM_PASSWORD = 'EDIT_FORM_PASSWORD';
 export const EDIT_FORM_PASSWORD_CONFIRM = 'EDIT_FORM_PASSWORD_CONFIRM';
 
+function getUserInformation(email) {
+  return new Promise(function (resolve, reject) {
+    fetch(`/api/users/${email}`, {
+      credentials: 'same-origin'
+    }).then(function (response) {
+      if (response.status >= 200 && response.status < 300) {
+        return response.json();
+      }
+      const error = new Error(response.statusText);
+      error.response = response;
+      throw error;
+    }).then(function (json) {
+      return resolve(json);
+    }).catch(function (err) {
+      if (err.response.status === 404) {
+        return resolve(null);
+      }
+      return reject(err);
+    });
+  });
+}
+
+function updateVisitorIdentity(checkingVisitorIdentity, visitorIdentity) {
+  return { type: UPDATE_VISITOR_IDENTITY, checkingVisitorIdentity, visitorIdentity };
+}
+
 export function checkVisitorIdentity() {
   return dispatch => {
     dispatch(updateVisitorIdentity(true, null));
@@ -25,45 +51,17 @@ export function checkVisitorIdentity() {
     }).then(function (response) {
       if (response.status >= 200 && response.status < 300) {
         return response.json();
-      } else {
-        const error = new Error(response.statusText);
-        error.response = response;
-        throw error;
       }
+      const error = new Error(response.statusText);
+      error.response = response;
+      throw error;
     }).then(function (json) {
       dispatch(updateVisitorIdentity(false, json.email || null));
     }).catch(function (err) {
       dispatch(updateVisitorIdentity(false, null));
       console.error(err);
     });
-  }
-}
-
-function updateVisitorIdentity(checkingVisitorIdentity, visitorIdentity) {
-  return { type: UPDATE_VISITOR_IDENTITY, checkingVisitorIdentity, visitorIdentity };
-}
-
-function getUserInformation(email) {
-  return new Promise(function (resolve, reject) {
-    fetch(`/api/users/${email}`, {
-      credentials: 'same-origin'
-    }).then(function (response) {
-      if (response.status >= 200 && response.status < 300) {
-        return response.json();
-      } else {
-        const error = new Error(response.statusText);
-        error.response = response;
-        throw error;
-      }
-    }).then(function (json) {
-      resolve(json);
-    }).catch(function (err) {
-      if (err.response.status === 404) {
-        return resolve(null);
-      }
-      reject(err);
-    });
-  });
+  };
 }
 
 export function resetForm() {
@@ -145,7 +143,8 @@ export function validateFormPasswordConfirm(password, passwordConfirm) {
 export function resetFormPasswordValidation() {
   return updateFormValidations({
     formValidationPasswordEmpty: false,
-    formValidationPasswordShort: false
+    formValidationPasswordShort: false,
+    formValidationCredentialInvalid: false
   });
 }
 
@@ -175,7 +174,7 @@ export function submitSignUpForm(name, email, password) {
     fetch('/signup', {
       method: 'POST',
       headers: {
-        'Accept': 'application/json',
+        Accept: 'application/json',
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({ name: name.trim(), email: email.trim(), password }),
@@ -183,11 +182,10 @@ export function submitSignUpForm(name, email, password) {
     }).then(function (response) {
       if (response.status >= 200 && response.status < 300) {
         return response;
-      } else {
-        const error = new Error(response.statusText);
-        error.response = response;
-        throw error;
       }
+      const error = new Error(response.statusText);
+      error.response = response;
+      throw error;
     }).then(function () {
       window.location = '/notes';
     }).catch(function (err) {
@@ -242,7 +240,7 @@ export function submitSignInForm(email, password) {
     fetch('/signin', {
       method: 'POST',
       headers: {
-        'Accept': 'application/json',
+        Accept: 'application/json',
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({ email: email.trim(), password }),
@@ -250,11 +248,10 @@ export function submitSignInForm(email, password) {
     }).then(function (response) {
       if (response.status >= 200 && response.status < 300) {
         return response;
-      } else {
-        const error = new Error(response.statusText);
-        error.response = response;
-        throw error;
       }
+      const error = new Error(response.statusText);
+      error.response = response;
+      throw error;
     }).then(function () {
       window.location = '/notes';
     }).catch(function (err) {

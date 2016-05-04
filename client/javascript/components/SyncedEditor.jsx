@@ -141,7 +141,7 @@ class SyncedEditor extends React.Component {
       idElement.style.color = `#${colors[1]}`;
       cursorContainer.appendChild(idElement);
       this.cursorElements.push(this.codeMirror.setBookmark(
-        CodeMirror.Pos(c.cursors[0].head.ln - 1, c.cursors[0].head.ch - 1),
+        new CodeMirror.Pos(c.cursors[0].head.ln - 1, c.cursors[0].head.ch - 1),
         { widget: cursorContainer }
       ));
     });

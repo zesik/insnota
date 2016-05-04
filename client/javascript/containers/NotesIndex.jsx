@@ -5,4 +5,8 @@ function Index({ children }) {
   return (<div className="full-screen-app">{children}</div>);
 }
 
+Index.propTypes = {
+  children: React.PropTypes.element.isRequired
+};
+
 export default connect(state => state)(Index);
