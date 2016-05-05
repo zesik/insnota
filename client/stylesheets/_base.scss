@@ -23,6 +23,7 @@ $white: #ffffff;
 $grey-50: #fafafa;
 $grey-100: #f5f5f5;
 $grey-200: #eeeeee;
+$grey-250: #e7e7e7;
 $grey-300: #e0e0e0;
 $grey-350: #cecece;
 $grey-400: #bdbdbd;
@@ -146,10 +147,12 @@ $brown-900: #3e2723;
 $dark-text-primary: rgba(0,0,0,0.87);
 $dark-text-secondary: rgba(0,0,0,0.54);
 $dark-text-disabled: rgba(0,0,0,0.38);
+$dark-text-divider: rgba(0,0,0,0.12);
 
 $light-text-primary: rgba(255,255,255,1);
 $light-text-secondary: rgba(255,255,255,0.7);
 $light-text-disabled: rgba(255,255,255,0.5);
+$light-text-divider: rgba(255,255,255,0.12);
 
 /* -------- Global Styles --------*/
 * {

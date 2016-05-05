@@ -33,11 +33,16 @@ class App extends React.Component {
   }
 
   render() {
-    const { dispatch } = this.props;
+    const { dispatch, userName, userEmail } = this.props;
+    let currentUser = null;
+    if (userEmail) {
+      currentUser = { name: userName, email: userEmail };
+    }
     return (
       <div className="full-size">
         <DocumentManager
           fetching={this.props.fetchingDocuments}
+          currentUser={currentUser}
           documents={this.props.documents}
           selectedDocumentID={this.props.selectedDocumentID}
           onNewDocumentClicked={() => dispatch(createDocument('untitled'))}
@@ -59,6 +64,8 @@ class App extends React.Component {
 App.propTypes = {
   fetchingDocuments: React.PropTypes.bool,
   creatingDocuments: React.PropTypes.bool,
+  userName: React.PropTypes.string,
+  userEmail: React.PropTypes.string,
   documents: React.PropTypes.arrayOf(React.PropTypes.shape({
     id: React.PropTypes.string.isRequired,
     title: React.PropTypes.string,
@@ -77,6 +84,8 @@ function mapStateToProps(state, ownProps) {
   return {
     fetchingDocuments: state.document.fetchingDocuments,
     creatingDocuments: state.document.creatingDocuments,
+    userName: state.document.userName,
+    userEmail: state.document.userEmail,
     documents: state.document.documents,
     selectedDocumentID: ownProps.params.splat,
     notifications: state.notification.notifications

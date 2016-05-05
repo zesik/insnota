@@ -8,6 +8,8 @@ import {
 const initialState = {
   fetchingDocuments: false,
   creatingDocument: false,
+  userName: '',
+  userEmail: '',
   documents: []
 };
 
@@ -16,6 +18,8 @@ function documentManagerReducer(state = initialState, action) {
     case LOAD_DOCUMENTS:
       return Object.assign({}, state, {
         fetchingDocuments: action.fetchingDocuments,
+        userName: action.userName,
+        userEmail: action.userEmail,
         documents: action.documents
       });
     case START_CREATING_DOCUMENT:

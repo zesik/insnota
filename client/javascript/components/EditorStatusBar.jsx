@@ -52,7 +52,7 @@ class EditorStatusBar extends React.Component {
     if (this.props.connectionRetries < 3) {
       // Won't display error when retry time less than 3
       if (this.props.documentState === DOC_SYNCED) {
-        syncStatus = (<div className="status-bar-item sync-status" title={syncTitle}>&#xf0c2;</div>);
+        syncStatus = (<div className="status-bar-item icon-button sync-status" title={syncTitle}>&#xf0c2;</div>);
       } else {
         syncStatus = (
           <div className="status-bar-item sync-status" title={syncTitle}>

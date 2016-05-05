@@ -44,7 +44,11 @@ router.get('/notes', function (req, res, next) {
     if (err) {
       return next(err);
     }
-    res.send(docs.map(doc => ({ id: doc._id, title: doc.title })));
+    res.send({
+      name: req.user.name,
+      email: req.user.email,
+      documents: docs.map(doc => ({ id: doc._id, title: doc.title }))
+    });
   });
 });
 

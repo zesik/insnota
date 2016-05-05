@@ -12,14 +12,40 @@ html, body {
   width: 242px;
   height: 100%;
   float: left;
-  background-color: #f5f5f5;
+  background-color: $grey-50;
 
   .document-list-header {
-    flex: 0 1 auto;
+    flex: 0 0 auto;
+    position: relative;
+    height: 48px;
+
+    .user-avatar {
+      float: left;
+      margin-left: 16px;
+      margin-top: 8px;
+    }
+
+    .user-info {
+      position: absolute;
+      top: 50%;
+      left: 64px;
+      transform: translateY(-50%);
+
+      .user-name {
+        font-size: 16px;
+        font-weight: $font-bold;
+      }
+
+      .user-email {
+        color: $dark-text-disabled;
+        font-size: 12px;
+      }
+    }
   }
 
-  .document-list-operation {
-    flex: 0 1 auto;
+  .document-list-status {
+    flex: 0 0 auto;
+    padding: 0;
   }
 
   .document-list {
@@ -29,16 +55,16 @@ html, body {
     .document-item {
       display: block;
       height: 32px;
-      color: black;
+      color: $dark-text-primary;
       text-decoration: none;
       padding: 8px;
 
-      &.document-item-selected, &.document-item-selected:hover {
-        background-color: #e0e0e0;
+      &:hover {
+        background-color: $grey-250;
       }
 
-      &:hover {
-        background-color: #e8e8e8;
+      &.document-item-selected, &.document-item-selected:hover {
+        background-color: $grey-300;
       }
     }
   }
@@ -51,7 +77,7 @@ html, body {
 
   .title-editor {
     height: 48px;
-    margin-right: 158px;
+    margin-right: 148px;
 
     .document-title {
       outline: none;
@@ -59,8 +85,8 @@ html, body {
       padding: 6px;
       cursor: pointer;
       font-size: 18px;
-      margin: 6px 4px;
-      height: 24px;
+      margin: 6px 6px;
+      height: 36px;
       width: 100%;
 
       &:hover {
@@ -77,6 +103,7 @@ html, body {
   .collaborator-list {
     float: right;
     width: 120px;
+    height: 30px;
     margin: 10px 8px 8px 8px;
     text-align: right;
 
@@ -98,39 +125,61 @@ html, body {
       height: 100%;
     }
   }
+}
 
-  .status-bar {
-    height: 30px;
-    display: flex;
-    flex-flow: row;
-    font-size: 12px;
-    line-height: 14px;
-    color: #757575;
-    vertical-align: baseline;
-    background-color: #fafafa;
+.status-bar {
+  display: flex;
+  flex-flow: row;
+  height: 30px;
+  padding: 0 8px;
+  font-size: 12px;
+  line-height: 14px;
+  vertical-align: baseline;
+  background-color: $grey-200;
+  color: $dark-text-secondary;
 
-    .status-bar-item {
-      flex: 0 1 auto;
-      margin-left: 4px;
-      margin-right: 4px;
-      padding: 8px 6px;
+  .status-bar-item {
+    flex: 0 1 auto;
+    margin: 0 4px;
+    padding: 8px 8px;
+    cursor: pointer;
+
+    &:hover {
+      background-color: $grey-300;
+    }
+
+    &.disabled {
+      background: none;
+      cursor: inherit;
+      color: $dark-text-disabled;
 
       &:hover {
-        background-color: #eeeeee;
-        cursor: pointer;
-      }
-
-      &.flex-width, &.flex-width:hover {
-        flex: 1 1 auto;
         background: none;
-        cursor: inherit;
       }
     }
 
-    .sync-status {
-      display: inline-block;
-      width: 16px;
+    &.flex-width, &.flex-width:hover {
+      flex: 1 1 auto;
+      background: none;
+      cursor: inherit;
+    }
+
+    &.icon-button {
+      width: 32px;
       text-align: center;
+    }
+
+    &.note-counter {
+      background: none;
+      cursor: inherit;
+
+      &:hover {
+        background: none;
+      }
+    }
+
+    &.sync-status {
+      display: inline-block;
       font-family: FontAwesome;
 
       .cloud-icon-fill {
@@ -140,7 +189,7 @@ html, body {
 
       &.disconnected {
         color: #ef5350;
-        text-shadow: 0 0 4px rgba(239,83,80,0.3);
+        text-shadow: 0 0 4px rgba(239, 83, 80, 0.3);
         animation: sync-status-icon-blink 3s step-end infinite;
       }
     }
