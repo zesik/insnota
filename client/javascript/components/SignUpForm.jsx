@@ -42,19 +42,19 @@ class SignUpForm extends React.Component {
       onEditPasswordConfirm
     } = this.props;
     const nameClasses = classNames({
-      'form-element': true,
+      'form-group': true,
       error: validationNameEmpty
     });
     const emailClasses = classNames({
-      'form-element': true,
+      'form-group': true,
       error: validationEmailEmpty || validationEmailInvalid || validationEmailOccupied
     });
     const passwordClasses = classNames({
-      'form-element': true,
+      'form-group': true,
       error: validationPasswordEmpty || validationPasswordShort
     });
     const passwordConfirmClasses = classNames({
-      'form-element': true,
+      'form-group': true,
       error: validationPasswordConfirmMismatch
     });
     return (
@@ -62,8 +62,8 @@ class SignUpForm extends React.Component {
         <div className={nameClasses}>
           <label htmlFor="signup-name">Name</label>
           <input
-            type="name"
-            id="signup-name"
+            type="text"
+            className="textbox"
             ref="name"
             value={name}
             onFocus={(e) => (onEnterNameBox ? onEnterNameBox(e.target.value) : null)}
@@ -76,8 +76,8 @@ class SignUpForm extends React.Component {
         <div className={emailClasses}>
           <label htmlFor="signup-email">Email Address</label>
           <input
-            type="email"
-            id="signup-email"
+            type="text"
+            className="textbox"
             ref="email"
             value={email}
             onFocus={(e) => (onEnterEmailBox ? onEnterEmailBox(e.target.value) : null)}
@@ -93,7 +93,7 @@ class SignUpForm extends React.Component {
           <label htmlFor="signup-password">Choose a Password</label>
           <input
             type="password"
-            id="signup-password"
+            className="textbox"
             ref="password"
             value={password}
             onFocus={(e) => (onEnterPasswordBox ? onEnterPasswordBox(e.target.value) : null)}
@@ -108,7 +108,7 @@ class SignUpForm extends React.Component {
           <label htmlFor="signup-password-confirm">Confirm Your Password</label>
           <input
             type="password"
-            id="signup-password-confirm"
+            className="textbox"
             ref="passwordConfirm"
             value={passwordConfirm}
             onFocus={(e) => (onEnterPasswordConfirmBox ? onEnterPasswordConfirmBox(e.target.value) : null)}
@@ -128,7 +128,7 @@ class SignUpForm extends React.Component {
           </div>
         }
         <div className="form-submit">
-          <button type="submit" disabled={formSubmitting}>Sign up</button>
+          <button className="btn btn-default" type="submit" disabled={formSubmitting}>Sign up</button>
         </div>
       </form>
     );

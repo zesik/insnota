@@ -9,8 +9,8 @@ function Home(props) {
           <h1>Collabnotes</h1>
           <p>A collaborative note-taking platform</p>
           <div className="signup">
-            <Link className="button" to="/signin">Sign in</Link>&nbsp;
-            <Link className="button" to="/signup">Sign up</Link>
+            <Link className="btn" to="/signin">Sign in</Link>&nbsp;
+            <Link className="btn btn-default" to="/signup">Sign up</Link>
           </div>
         </div>
       </div>

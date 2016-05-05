@@ -2,7 +2,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 
 function Index({ children }) {
-  return (<div className="full-screen-app">{children}</div>);
+  return (<div className="full-size">{children}</div>);
 }
 
 Index.propTypes = {
