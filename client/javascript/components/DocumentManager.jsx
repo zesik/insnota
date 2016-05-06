@@ -76,10 +76,10 @@ class DocumentManager extends React.Component {
 }
 
 DocumentManager.propTypes = {
-  currentUser: React.PropTypes.objectOf(React.PropTypes.shape({
+  currentUser: React.PropTypes.shape({
     name: React.PropTypes.string.isRequired,
     email: React.PropTypes.string.isRequired
-  })),
+  }),
   fetching: React.PropTypes.bool,
   creating: React.PropTypes.bool,
   documents: React.PropTypes.arrayOf(React.PropTypes.shape({

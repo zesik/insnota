@@ -67,8 +67,8 @@ function createUser(name, email, password, callback) {
   });
 }
 
-function verifyUser(email, password, callback) {
-  findUser(email, function (err, user) {
+function verifyUser(email, password, recaptcha, callback) {
+  User.findOneAndUpdate({ email }, { $inc: { login_attempts: 1 } }, function (err, user) {
     if (err) {
       return callback(err);
     }
@@ -90,8 +90,13 @@ function findUser(email, callback) {
   User.findOneByEmail(email, callback);
 }
 
+function resetLoginAttempts(email, callback) {
+  User.resetLoginAttempts(email, callback);
+}
+
 module.exports = {
   createUser,
   verifyUser,
-  findUser
+  findUser,
+  resetLoginAttempts
 };

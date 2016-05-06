@@ -1,7 +1,6 @@
 'use strict';
 
 const express = require('express');
-const passport = require('passport');
 const userService = require('../services/user');
 const handleShareDBConnection = require('../sharedb').handleSocketConnection;
 
@@ -62,12 +61,8 @@ router.post('/signup', function (req, res, next) {
       }
       return next(err);
     }
-    req.login(user, function (err) {
-      if (err) {
-        return next(err);
-      }
-      res.status(201).end();
-    });
+    req.session.email = user.email;
+    res.status(201).end();
   });
 });
 
@@ -77,20 +72,21 @@ router.post('/signin', function (req, res, next) {
     res.status(400).send(form.errors);
     return;
   }
-  passport.authenticate('local', function (err, user) {
+  userService.verifyUser(req.body.email, req.body.password, req.body.recaptcha, function (err, user) {
     if (err) {
       return next(err);
     }
     if (!user) {
       return res.status(403).send({ formValidationCredentialInvalid: true });
     }
-    req.login(user, function (err) {
+    userService.resetLoginAttempts(user.email, function (err) {
       if (err) {
         return next(err);
       }
+      req.session.email = user.email;
       res.status(204).end();
     });
-  })(req, res, next);
+  });
 });
 
 module.exports = router;

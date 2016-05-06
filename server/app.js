@@ -6,9 +6,6 @@ const express = require('express');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 const session = require('express-session');
-const passport = require('passport');
-const LocalStrategy = require('passport-local');
-
 const userService = require('./services/user');
 
 // Initialize express
@@ -51,8 +48,21 @@ function initializeExpress() {
     resave: false,
     saveUninitialized: false
   }));
-  app.use(passport.initialize());
-  app.use(passport.session());
+
+  // Deserialize user from session
+  app.use(function (req, res, next) {
+    if (req.session.email) {
+      userService.findUser(req.session.email, function (err, user) {
+        if (err) {
+          return next(err);
+        }
+        req.user = user;
+        return next();
+      });
+    } else {
+      return next();
+    }
+  });
 
   // Set up routers
   app.use('/', routes);
@@ -88,11 +98,6 @@ function initializeExpress() {
       error: {}
     });
   });
-
-  // Initialize passport
-  passport.use(new LocalStrategy({usernameField: 'email'}, userService.verifyUser));
-  passport.serializeUser((user, callback) => callback(null, user.email));
-  passport.deserializeUser(userService.findUser);
 
   // Listen
   const port = 3000;
