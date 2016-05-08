@@ -20,7 +20,7 @@ class DocumentManager extends React.Component {
   }
 
   handleNewDocumentClicked() {
-    const {fetching, creating, onNewDocumentClicked} = this.props;
+    const { fetching, creating, onNewDocumentClicked } = this.props;
     if (fetching || creating) {
       return;
     }
@@ -51,8 +51,8 @@ class DocumentManager extends React.Component {
             {this.props.fetching && <div className="loading">Loading...</div>}
             {(!this.props.fetching) && <div>{getNoteCounter(this.props.documents.length)}</div>}
           </div>
-          <div className="status-bar-item flex-width"/>
-          <div className={newDocClasses} onClick={this.handleNewDocumentClicked}><i className="fa fa-plus"/></div>
+          <div className="status-bar-item flex-width" />
+          <div className={newDocClasses} onClick={this.handleNewDocumentClicked}><i className="fa fa-plus" /></div>
         </div>
         <div className="document-list">
           {this.props.documents.map(function (item) {

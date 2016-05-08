@@ -129,10 +129,14 @@ class SignUpForm extends React.Component {
               className="textbox"
               value={this.props.passwordConfirm}
               onFocus={(e) => {
-                this.props.onEnterPasswordConfirmBox ? this.props.onEnterPasswordConfirmBox(e.target.value) : null;
+                if (this.props.onEnterPasswordConfirmBox) {
+                  this.props.onEnterPasswordConfirmBox(e.target.value);
+                }
               }}
               onBlur={(e) => {
-                this.props.onLeavePasswordConfirmBox ? this.props.onLeavePasswordConfirmBox(e.target.value) : null;
+                if (this.props.onLeavePasswordConfirmBox) {
+                  this.props.onLeavePasswordConfirmBox(e.target.value);
+                }
               }}
               onChange={(e) => this.props.onEditPasswordConfirm(e.target.value)}
             />
@@ -167,6 +171,7 @@ SignUpForm.propTypes = {
   email: React.PropTypes.string.isRequired,
   password: React.PropTypes.string.isRequired,
   passwordConfirm: React.PropTypes.string.isRequired,
+  recaptchaSiteKey: React.PropTypes.string,
   validationNameEmpty: React.PropTypes.bool,
   validatingEmail: React.PropTypes.bool,
   validationEmailEmpty: React.PropTypes.bool,

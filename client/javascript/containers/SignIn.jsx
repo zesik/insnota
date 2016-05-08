@@ -79,7 +79,7 @@ class SignIn extends React.Component {
         <div className="form-footer">
           {this.props.stage === FORM_STAGE_SIGN_IN_EMAIL && <Link to="/signup">Create an account</Link>}
           {this.props.stage === FORM_STAGE_SIGN_IN_PASSWORD &&
-            <a href onClick={this.handleSwitchAccountClicked}>Sign in with a different account</a>
+            <a href="" onClick={this.handleSwitchAccountClicked}>Sign in with a different account</a>
           }
         </div>
       </div>

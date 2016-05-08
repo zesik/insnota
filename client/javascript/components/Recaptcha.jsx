@@ -1,7 +1,7 @@
 import React from 'react';
 
 function renderRecaptcha(id, siteKey) {
-  return grecaptcha.render(id, { sitekey: siteKey });
+  return window.grecaptcha.render(id, { sitekey: siteKey });
 }
 
 class Recaptcha extends React.Component {
@@ -15,7 +15,9 @@ class Recaptcha extends React.Component {
     if (typeof grecaptcha !== 'undefined') {
       this.widgetID = renderRecaptcha(containerID, siteKey);
     } else {
-      window[callbackFunctionName] = () => this.widgetID = renderRecaptcha(containerID, siteKey);
+      window[callbackFunctionName] = function () {
+        this.widgetID = renderRecaptcha(containerID, siteKey);
+      }.bind(this);
     }
   }
 

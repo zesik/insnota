@@ -48,7 +48,7 @@ class SignInForm extends React.Component {
       form = (
         <form method="post" onSubmit={this.handleSubmitEmail}>
           <div className={emailClasses}>
-            <label class="title" htmlFor="signin-email">Email</label>
+            <label className="title" htmlFor="signin-email">Email</label>
             <input
               type="text"
               className="textbox"
@@ -70,7 +70,7 @@ class SignInForm extends React.Component {
           </div>
           {this.props.serverError && serverErrorElement}
           <div className="form-submit">
-            <button className="btn btn-default" type="submit" disabled={this.props.formSubmitting}>Next</button>
+            <button className="btn btn-default" type="submit" disabled={this.props.submitting}>Next</button>
           </div>
         </form>
       );

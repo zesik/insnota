@@ -65,7 +65,7 @@ function getSignUpResponse() {
       }
       return reject(err);
     });
-  })
+  });
 }
 
 function updateIdentity(checkingVisitorIdentity, visitorIdentity) {
@@ -97,6 +97,14 @@ export function resetForm() {
   return { type: RESET_FORM };
 }
 
+export function updateFormSubmitting(submitting) {
+  return { type: UPDATE_FORM_SUBMITTING, submitting };
+}
+
+export function updateFormValidations(validations) {
+  return { type: UPDATE_FORM_VALIDATIONS, validations };
+}
+
 export function resetServerValidations() {
   return updateFormValidations({
     serverError: false,
@@ -106,14 +114,6 @@ export function resetServerValidations() {
     validationCredentialInvalid: false,
     validationRecaptchaInvalid: false
   });
-}
-
-export function updateFormSubmitting(submitting) {
-  return { type: UPDATE_FORM_SUBMITTING, submitting };
-}
-
-export function updateFormValidations(validations) {
-  return { type: UPDATE_FORM_VALIDATIONS, validations };
 }
 
 export function updateFormStage(stage) {
@@ -219,7 +219,7 @@ export function initializeSignUpForm() {
       console.error(err);
       dispatch(updateFormValidations({ serverError: true }));
     });
-  }
+  };
 }
 
 export function submitSignUpForm(name, email, password, recaptcha) {
