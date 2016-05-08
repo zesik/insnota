@@ -299,7 +299,7 @@ export function submitSignInEmail(email) {
   };
 }
 
-export function submitSignInForm(email, password, recaptcha) {
+export function submitSignInForm(email, password, remember, recaptcha) {
   return (dispatch, getState) => {
     const { validationPasswordEmpty } = getState().home;
     if (validationPasswordEmpty) {
@@ -313,7 +313,7 @@ export function submitSignInForm(email, password, recaptcha) {
         Accept: 'application/json',
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ email: email.trim(), password, recaptcha }),
+      body: JSON.stringify({ email: email.trim(), password, remember, recaptcha }),
       credentials: 'same-origin'
     }).then(function (response) {
       if (response.status >= 200 && response.status < 300) {

@@ -70,9 +70,9 @@ class SignIn extends React.Component {
             dispatch(validateFormSignInEmail(email));
             dispatch(submitSignInEmail(email));
           }}
-          onSubmitPassword={(email, password, recaptcha) => {
+          onSubmitPassword={(email, password, rememberMe, recaptcha) => {
             dispatch(validateFormSignInPassword(password));
-            dispatch(submitSignInForm(email, password, recaptcha));
+            dispatch(submitSignInForm(email, password, rememberMe, recaptcha));
           }}
           onGoToEmailForm={() => dispatch(updateFormStage(FORM_STAGE_SIGN_IN_EMAIL))}
         />

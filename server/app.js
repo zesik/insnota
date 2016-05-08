@@ -7,6 +7,7 @@ const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 const session = require('express-session');
 const userService = require('./services/user');
+const config = require('./config');
 
 // Initialize express
 const app = express();
@@ -42,7 +43,7 @@ function initializeExpress() {
   app.use(express.static(path.join(__dirname, '..', 'build')));
   app.use(bodyParser.json());
   app.use(bodyParser.urlencoded({extended: false}));
-  app.use(cookieParser());
+  app.use(cookieParser(config.cookieSecret));
   app.use(session({
     secret: 'keyboard cat',
     resave: false,
@@ -51,6 +52,7 @@ function initializeExpress() {
 
   // Deserialize user from session
   app.use(function (req, res, next) {
+    // First try to check from session
     if (req.session.email) {
       userService.findUser(req.session.email, function (err, user) {
         if (err) {
@@ -59,9 +61,42 @@ function initializeExpress() {
         req.user = user;
         return next();
       });
-    } else {
-      return next();
+      return;
     }
+    // Check whether the user has login token
+    if (!req.upgrade && req.signedCookies.login) {
+      userService.verifyLoginToken(req.signedCookies.login, function (err, result) {
+        if (err) {
+          return next(err);
+        }
+        res.clearCookie(config.loginTokenName);
+        if (!result.valid) {
+          return next();
+        }
+        userService.findUser(result.email, function (err, user) {
+          if (err) {
+            return next(err);
+          }
+          if (!user) {
+            return next();
+          }
+          userService.issueLoginToken(user.email, function (err, token) {
+            if (err) {
+              return next(err);
+            }
+            req.session.email = user.email;
+            req.user = user;
+            res.cookie(config.loginTokenName, token._id, {
+              expires: token.expires,
+              signed: true
+            });
+            return next();
+          });
+        });
+      });
+      return;
+    }
+    return next();
   });
 
   // Set up routers

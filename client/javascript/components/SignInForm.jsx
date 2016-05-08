@@ -20,14 +20,14 @@ class SignInForm extends React.Component {
   }
 
   handleSubmitPassword(e) {
-    const { email, password, onSubmitPassword } = this.props;
+    const { email, password, rememberMe, onSubmitPassword } = this.props;
     e.preventDefault();
     let recaptcha = null;
     const elements = document.getElementsByName('g-recaptcha-response');
     if (elements.length) {
       recaptcha = elements[0].value;
     }
-    onSubmitPassword(email, password, recaptcha);
+    onSubmitPassword(email, password, rememberMe, recaptcha);
   }
 
   render() {

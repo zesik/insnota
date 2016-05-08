@@ -1,14 +1,18 @@
 'use strict';
 
 const crypto = require('crypto');
+const mongoose = require('mongoose');
 const recaptchaService = require('../services/recaptcha');
 const User = require('../models/user');
+const LoginToken = require('../models/loginToken');
 
 const PBKDF2_ALGORITHM = 'pbkdf2';
 const PBKDF2_DIGEST_METHOD = 'sha512';
 const PBKDF2_SALT_BYTE_SIZE = 64;
 const PBKDF2_ITERATIONS = 50000;
 const PBKDF2_KEY_BYTE_SIZE = 64;
+const TOKEN_BYTE_SIZE = 20;
+const LOGIN_TOKEN_EXPIRE_DAYS = 14;
 
 function generateHash(params, password, callback) {
   const algorithm = params[0];
@@ -41,22 +45,7 @@ function isStringEqual(str1, str2) {
   return diff === 0;
 }
 
-function createUser(name, email, password, recaptcha, callback) {
-  let recaptchaSiteKey = '';
-  if (recaptcha || recaptchaService.shouldCheckSignUp()) {
-    recaptchaSiteKey = recaptchaService.getSignUpSiteKey();
-    recaptchaService.verifySignUp(recaptcha, result => {
-      if (result) {
-        return createUserEntry(name, email, password, recaptchaSiteKey, callback);
-      }
-      callback(null, { recaptcha: 1, siteKey: recaptchaSiteKey });
-    });
-    return;
-  }
-  createUserEntry(name, email, password, recaptchaSiteKey, callback);
-}
-
-function createUserEntry(name, email, password, recaptchaSiteKey, callback) {
+function createUser(name, email, password, recaptchaSiteKey, callback) {
   const descriptor = [
     PBKDF2_ALGORITHM,
     PBKDF2_DIGEST_METHOD,
@@ -86,7 +75,22 @@ function createUserEntry(name, email, password, recaptchaSiteKey, callback) {
   });
 }
 
-function verifyUser(email, password, recaptcha, callback) {
+function createUserWithRecaptcha(name, email, password, recaptcha, callback) {
+  let recaptchaSiteKey = '';
+  if (recaptcha || recaptchaService.shouldCheckSignUp()) {
+    recaptchaSiteKey = recaptchaService.getSignUpSiteKey();
+    recaptchaService.verifySignUp(recaptcha, result => {
+      if (result) {
+        return createUser(name, email, password, recaptchaSiteKey, callback);
+      }
+      callback(null, { recaptcha: 1, siteKey: recaptchaSiteKey });
+    });
+    return;
+  }
+  createUser(name, email, password, recaptchaSiteKey, callback);
+}
+
+function verifyUserWithRecaptcha(email, password, recaptcha, callback) {
   User.findOneAndUpdate({ email }, { $inc: { login_attempts: 1 } }, function (err, user) {
     if (err) {
       return callback(err);
@@ -138,9 +142,43 @@ function resetLoginAttempts(email, callback) {
   User.resetLoginAttempts(email, callback);
 }
 
+function issueLoginToken(email, callback) {
+  const tokenID = (mongoose.Types.ObjectId().toString() +
+    crypto.randomBytes(TOKEN_BYTE_SIZE).toString('hex')).toLowerCase();
+  const date = new Date();
+  date.setDate(date.getDate() + LOGIN_TOKEN_EXPIRE_DAYS);
+  const token = new LoginToken();
+  token._id = tokenID;
+  token.expires = date;
+  token.email = email;
+  token.save(function (err) {
+    if (err) {
+      return callback(err);
+    }
+    callback(null, token);
+  });
+}
+
+function verifyLoginToken(token, callback) {
+  LoginToken.findOneAndUpdate({ _id: token }, { $set: { used: true } }, function (err, doc) {
+    if (err) {
+      return callback(err);
+    }
+    if (doc.used) {
+      return callback(null, { valid: false, reason: 'used' });
+    }
+    if (new Date() > doc.expires) {
+      return callback(null, { valid: false, reason: 'expired' });
+    }
+    return callback(null, { valid: true, email: doc.email });
+  });
+}
+
 module.exports = {
-  createUser,
-  verifyUser,
+  createUserWithRecaptcha,
+  verifyUserWithRecaptcha,
   findUser,
-  resetLoginAttempts
+  resetLoginAttempts,
+  issueLoginToken,
+  verifyLoginToken
 };

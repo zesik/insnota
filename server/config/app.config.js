@@ -28,6 +28,10 @@ module.exports = {
   },
   // Whether new users can sign up.
   allowSignUp: true,
+  // Controls secret for signed cookies.
+  cookieSecret: 'keyboard cat',
+  // Controls name of the login cookie.
+  loginTokenName: 'login',
   // TODO: Whether anonymous users (not signed in) can create documents.
   anonymousCreating: true,
   // TODO: Whether anonymous users (not signed in) can edit documents.

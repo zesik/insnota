@@ -24,10 +24,12 @@ ClientConnectionSchema.static('purgeSubscriptions', function (clientID, collecti
     promise = this.collection.remove(query);
   }
   promise.then(function (result) {
-    if (result.result.ok) {
-      callback();
-    } else {
-      callback(result);
+    if (callback) {
+      if (result.result.ok) {
+        callback();
+      } else {
+        callback(result);
+      }
     }
   });
 });

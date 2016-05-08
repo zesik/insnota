@@ -11,6 +11,7 @@ function verifyCredentialForm(req, signupForm) {
   const name = req.body.name;
   const email = req.body.email;
   const password = req.body.password;
+  const remember = req.body.remember;
   const recaptcha = req.body.recaptcha;
   const errors = {};
   if (!email || !email.trim().length) {
@@ -27,7 +28,7 @@ function verifyCredentialForm(req, signupForm) {
       errors.validationPasswordShort = true;
     }
   }
-  return { name, email, password, recaptcha, errors };
+  return { name, email, password, remember, recaptcha, errors };
 }
 
 function allValid(errors) {
@@ -59,7 +60,7 @@ router.post('/signup', function (req, res, next) {
     res.status(400).send(form.errors);
     return;
   }
-  userService.createUser(form.name, form.email, form.password, form.recaptcha, function (err, result) {
+  userService.createUserWithRecaptcha(form.name, form.email, form.password, form.recaptcha, function (err, result) {
     if (err) {
       return next(err);
     }
@@ -89,7 +90,7 @@ router.post('/signin', function (req, res, next) {
     res.status(400).send(form.errors);
     return;
   }
-  userService.verifyUser(form.email, form.password, form.recaptcha,
+  userService.verifyUserWithRecaptcha(form.email, form.password, form.recaptcha,
     function (err, result) {
       if (err) {
         return next(err);
@@ -113,8 +114,22 @@ router.post('/signin', function (req, res, next) {
         if (err) {
           return next(err);
         }
-        req.session.email = user.email;
-        res.status(204).end();
+        if (form.remember) {
+          userService.issueLoginToken(user.email, function (err, token) {
+            if (err) {
+              return next(err);
+            }
+            req.session.email = user.email;
+            res.cookie(config.loginTokenName, token._id, {
+              expires: token.expires,
+              signed: true
+            });
+            res.status(204).end();
+          });
+        } else {
+          req.session.email = user.email;
+          res.status(204).end();
+        }
       });
     });
 });
