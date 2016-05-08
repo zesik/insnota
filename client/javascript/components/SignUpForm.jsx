@@ -25,14 +25,14 @@ class SignUpForm extends React.Component {
 
   render() {
     const serverErrorElement = (
-      <div className="form-element error">
+      <div className="form-group error">
         <div className="validation-error">
           Unable to sign up due to an internal server error. Please try again in a few minutes.
         </div>
       </div>
     );
     const notAllowedElement = (
-      <div className="form-element error">
+      <div className="form-group error">
         <form className="validation-error">
           Signing up is currently not allowed. Please check back later.
         </form>
@@ -41,14 +41,14 @@ class SignUpForm extends React.Component {
     let form;
     if (this.props.stage === FORM_STAGE_SIGN_UP_INITIALIZING) {
       form = (
-        <div className="form-group">
+        <div className="form-info-container">
           {this.props.submitting && <div>Loading...</div>}
           {this.props.serverError && serverErrorElement}
         </div>
       );
     } else if (this.props.stage === FORM_STAGE_SIGN_UP_FORBIDDEN) {
       form = (
-        <div className="form-group">
+        <div className="form-info-container">
           {this.props.validationNotAllowed && notAllowedElement}
         </div>
       );
