@@ -4,6 +4,7 @@ import { Link } from 'react-router';
 import SignUpForm from '../components/SignUpForm';
 import {
   resetForm,
+  initializeSignUpForm,
   editFormName,
   editFormEmail,
   editFormPassword,
@@ -23,75 +24,66 @@ class SignUp extends React.Component {
   componentDidMount() {
     const { dispatch } = this.props;
     dispatch(resetForm());
+    dispatch(initializeSignUpForm());
   }
 
   render() {
-    const {
-      formSubmitting,
-      name,
-      email,
-      password,
-      passwordConfirm,
-      validationNameEmpty,
-      validatingEmail,
-      validationEmailEmpty,
-      validationEmailInvalid,
-      validationEmailOccupied,
-      validationPasswordEmpty,
-      validationPasswordShort,
-      validationPasswordConfirmMismatch,
-      serverError,
-      dispatch
-    } = this.props;
+    const { dispatch } = this.props;
     return (
       <div className="signup-form">
         <h1>Sign up</h1>
         <SignUpForm
-          formSubmitting={formSubmitting}
-          name={name}
-          email={email}
-          password={password}
-          passwordConfirm={passwordConfirm}
-          validationNameEmpty={validationNameEmpty}
-          validatingEmail={validatingEmail}
-          validationEmailEmpty={validationEmailEmpty}
-          validationEmailInvalid={validationEmailInvalid}
-          validationEmailOccupied={validationEmailOccupied}
-          validationPasswordEmpty={validationPasswordEmpty}
-          validationPasswordShort={validationPasswordShort}
-          validationPasswordConfirmMismatch={validationPasswordConfirmMismatch}
-          serverError={serverError}
+          submitting={this.props.submitting}
+          stage={this.props.stage}
+          name={this.props.name}
+          email={this.props.email}
+          password={this.props.password}
+          passwordConfirm={this.props.passwordConfirm}
+          recaptchaSiteKey={this.props.recaptchaSiteKey}
+          validationNameEmpty={this.props.validationNameEmpty}
+          validatingEmail={this.props.validatingEmail}
+          validationEmailEmpty={this.props.validationEmailEmpty}
+          validationEmailInvalid={this.props.validationEmailInvalid}
+          validationEmailOccupied={this.props.validationEmailOccupied}
+          validationPasswordEmpty={this.props.validationPasswordEmpty}
+          validationPasswordShort={this.props.validationPasswordShort}
+          validationPasswordConfirmMismatch={this.props.validationPasswordConfirmMismatch}
+          validationRecaptchaInvalid={this.props.validationRecaptchaInvalid}
+          validationNotAllowed={this.props.validationNotAllowed}
+          serverError={this.props.serverError}
           onEnterNameBox={() => dispatch(resetFormNameValidation())}
-          onLeaveNameBox={nameValue => dispatch(validateFormName(nameValue))}
-          onEditName={nameValue => {
+          onLeaveNameBox={name => dispatch(validateFormName(name))}
+          onEditName={name => {
             dispatch(resetFormNameValidation());
-            dispatch(editFormName(nameValue));
+            dispatch(editFormName(name));
           }}
           onEnterEmailBox={() => dispatch(resetFormEmailValidation())}
-          onLeaveEmailBox={emailValue => dispatch(validateFormSignUpEmail(emailValue))}
-          onEditEmail={emailValue => {
+          onLeaveEmailBox={email => dispatch(validateFormSignUpEmail(email))}
+          onEditEmail={email => {
             dispatch(resetFormEmailValidation());
-            dispatch(editFormEmail(emailValue));
+            dispatch(editFormEmail(email));
           }}
           onEnterPasswordBox={() => dispatch(resetFormPasswordValidation())}
-          onLeavePasswordBox={passwordValue => dispatch(validateFormSignUpPassword(passwordValue))}
-          onEditPassword={passwordValue => {
+          onLeavePasswordBox={password => dispatch(validateFormSignUpPassword(password))}
+          onEditPassword={password => {
             dispatch(resetFormPasswordValidation());
             dispatch(resetFormPasswordConfirmValidation());
-            dispatch(editFormPassword(passwordValue));
+            dispatch(editFormPassword(password));
           }}
           onEnterPasswordConfirmBox={() => dispatch(resetFormPasswordConfirmValidation())}
-          onLeavePasswordConfirmBox={pwdConfirm => dispatch(validateFormPasswordConfirm(password, pwdConfirm))}
-          onEditPasswordConfirm={pwdConfirm => {
-            dispatch(resetFormPasswordConfirmValidation());
-            dispatch(editFormPasswordConfirm(pwdConfirm));
+          onLeavePasswordConfirmBox={passwordConfirm => {
+            dispatch(validateFormPasswordConfirm(this.props.password, passwordConfirm));
           }}
-          onSubmit={(nameValue, emailValue, passwordValue, pwdConfirm) => {
-            dispatch(validateFormName(nameValue));
-            dispatch(validateFormSignUpEmail(emailValue));
-            dispatch(validateFormSignUpPassword(passwordValue));
-            dispatch(validateFormPasswordConfirm(passwordValue, pwdConfirm));
-            dispatch(submitSignUpForm(nameValue, emailValue, passwordValue));
+          onEditPasswordConfirm={passwordConfirm => {
+            dispatch(resetFormPasswordConfirmValidation());
+            dispatch(editFormPasswordConfirm(passwordConfirm));
+          }}
+          onSubmit={(name, email, password, passwordConfirm, recaptcha) => {
+            dispatch(validateFormName(name));
+            dispatch(validateFormSignUpEmail(email));
+            dispatch(validateFormSignUpPassword(password));
+            dispatch(validateFormPasswordConfirm(password, passwordConfirm));
+            dispatch(submitSignUpForm(name, email, password, recaptcha));
           }}
         />
         <div className="form-footer">
@@ -103,11 +95,13 @@ class SignUp extends React.Component {
 }
 
 SignUp.propTypes = {
-  formSubmitting: React.PropTypes.bool,
-  name: React.PropTypes.string,
-  email: React.PropTypes.string,
-  password: React.PropTypes.string,
-  passwordConfirm: React.PropTypes.string,
+  submitting: React.PropTypes.bool,
+  stage: React.PropTypes.string.isRequired,
+  name: React.PropTypes.string.isRequired,
+  email: React.PropTypes.string.isRequired,
+  password: React.PropTypes.string.isRequired,
+  passwordConfirm: React.PropTypes.string.isRequired,
+  recaptchaSiteKey: React.PropTypes.string,
   validationNameEmpty: React.PropTypes.bool,
   validatingEmail: React.PropTypes.bool,
   validationEmailEmpty: React.PropTypes.bool,
@@ -116,24 +110,30 @@ SignUp.propTypes = {
   validationPasswordEmpty: React.PropTypes.bool,
   validationPasswordShort: React.PropTypes.bool,
   validationPasswordConfirmMismatch: React.PropTypes.bool,
+  validationRecaptchaInvalid: React.PropTypes.bool,
+  validationNotAllowed: React.PropTypes.bool,
   serverError: React.PropTypes.bool,
-  dispatch: React.PropTypes.func
+  dispatch: React.PropTypes.func.isRequired
 };
 
 const mapStateToProps = state => ({
-  formSubmitting: state.home.formSubmitting,
-  name: state.home.formName,
-  email: state.home.formEmail,
-  password: state.home.formPassword,
-  passwordConfirm: state.home.formPasswordConfirm,
-  validationNameEmpty: state.home.formValidationNameEmpty,
-  validatingEmail: state.home.formValidatingEmail,
-  validationEmailEmpty: state.home.formValidationEmailEmpty,
-  validationEmailInvalid: state.home.formValidationEmailInvalid,
-  validationEmailOccupied: state.home.formValidationEmailOccupied,
-  validationPasswordEmpty: state.home.formValidationPasswordEmpty,
-  validationPasswordShort: state.home.formValidationPasswordShort,
-  validationPasswordConfirmMismatch: state.home.formValidationPasswordConfirmMismatch,
+  submitting: state.home.submitting,
+  stage: state.home.stage,
+  name: state.home.name,
+  email: state.home.email,
+  password: state.home.password,
+  passwordConfirm: state.home.passwordConfirm,
+  recaptchaSiteKey: state.home.recaptchaSiteKey,
+  validationNameEmpty: state.home.validationNameEmpty,
+  validatingEmail: state.home.validatingEmail,
+  validationEmailEmpty: state.home.validationEmailEmpty,
+  validationEmailInvalid: state.home.validationEmailInvalid,
+  validationEmailOccupied: state.home.validationEmailOccupied,
+  validationPasswordEmpty: state.home.validationPasswordEmpty,
+  validationPasswordShort: state.home.validationPasswordShort,
+  validationPasswordConfirmMismatch: state.home.validationPasswordConfirmMismatch,
+  validationRecaptchaInvalid: state.home.validationRecaptchaInvalid,
+  validationNotAllowed: state.home.validationNotAllowed,
   serverError: state.home.serverError
 });
 

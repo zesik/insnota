@@ -6,20 +6,27 @@ import {
   validateSignUpPassword,
   validatePasswordConfirm
 } from '../utils/form';
+import { FORM_STAGE_SIGN_IN_PASSWORD } from '../components/SignInForm';
+import {
+  FORM_STAGE_SIGN_UP_INITIALIZING,
+  FORM_STAGE_SIGN_UP_FORBIDDEN,
+  FORM_STAGE_SIGN_UP_READY
+} from '../components/SignUpForm';
 
-export const UPDATE_VISITOR_IDENTITY = 'UPDATE_VISITOR_IDENTITY';
+export const UPDATE_IDENTITY = 'UPDATE_IDENTITY';
 export const RESET_FORM = 'RESET_FORM';
 export const UPDATE_FORM_SUBMITTING = 'UPDATE_FORM_SUBMITTING';
 export const UPDATE_FORM_VALIDATIONS = 'UPDATE_FORM_VALIDATIONS';
-export const UPDATE_SIGNIN_FORM_STEP = 'UPDATE_SIGNIN_FORM_STEP';
+export const UPDATE_FORM_STAGE = 'UPDATE_FORM_STAGE';
 export const EDIT_FORM_NAME = 'EDIT_FORM_NAME';
 export const EDIT_FORM_EMAIL = 'EDIT_FORM_EMAIL';
 export const EDIT_FORM_PASSWORD = 'EDIT_FORM_PASSWORD';
 export const EDIT_FORM_PASSWORD_CONFIRM = 'EDIT_FORM_PASSWORD_CONFIRM';
+export const EDIT_FORM_REMEMBER_ME = 'EDIT_FORM_REMEMBER_ME';
 
-function getUserInformation(email) {
+function getSignInResponse(email) {
   return new Promise(function (resolve, reject) {
-    fetch(`/api/users/${email}`, {
+    fetch(`/api/signin/${email}`, {
       credentials: 'same-origin'
     }).then(function (response) {
       if (response.status >= 200 && response.status < 300) {
@@ -39,13 +46,35 @@ function getUserInformation(email) {
   });
 }
 
-function updateVisitorIdentity(checkingVisitorIdentity, visitorIdentity) {
-  return { type: UPDATE_VISITOR_IDENTITY, checkingVisitorIdentity, visitorIdentity };
+function getSignUpResponse() {
+  return new Promise(function (resolve, reject) {
+    fetch('/api/signup', {
+      credentials: 'same-origin'
+    }).then(function (response) {
+      if (response.status >= 200 && response.status < 300) {
+        return response.json();
+      }
+      const error = new Error(response.statusText);
+      error.response = response;
+      throw error;
+    }).then(function (json) {
+      return resolve(json);
+    }).catch(function (err) {
+      if (err.response.status === 403) {
+        return resolve({ forbidden: true });
+      }
+      return reject(err);
+    });
+  })
 }
 
-export function checkVisitorIdentity() {
+function updateIdentity(checkingVisitorIdentity, visitorIdentity) {
+  return { type: UPDATE_IDENTITY, checkingVisitorIdentity, visitorIdentity };
+}
+
+export function checkIdentity() {
   return dispatch => {
-    dispatch(updateVisitorIdentity(true, null));
+    dispatch(updateIdentity(true, null));
     fetch('/api/user', {
       credentials: 'same-origin'
     }).then(function (response) {
@@ -56,9 +85,9 @@ export function checkVisitorIdentity() {
       error.response = response;
       throw error;
     }).then(function (json) {
-      dispatch(updateVisitorIdentity(false, json.email || null));
+      dispatch(updateIdentity(false, json.email || null));
     }).catch(function (err) {
-      dispatch(updateVisitorIdentity(false, null));
+      dispatch(updateIdentity(false, null));
       console.error(err);
     });
   };
@@ -68,32 +97,47 @@ export function resetForm() {
   return { type: RESET_FORM };
 }
 
-export function updateFormSubmitting(formSubmitting) {
-  return { type: UPDATE_FORM_SUBMITTING, formSubmitting };
+export function resetServerValidations() {
+  return updateFormValidations({
+    serverError: false,
+    validationEmailOccupied: false,
+    validationEmailNotExist: false,
+    validationNotAllowed: false,
+    validationCredentialInvalid: false,
+    validationRecaptchaInvalid: false
+  });
+}
+
+export function updateFormSubmitting(submitting) {
+  return { type: UPDATE_FORM_SUBMITTING, submitting };
 }
 
 export function updateFormValidations(validations) {
   return { type: UPDATE_FORM_VALIDATIONS, validations };
 }
 
-export function updateSignInFormStep(step) {
-  return { type: UPDATE_SIGNIN_FORM_STEP, step };
+export function updateFormStage(stage) {
+  return { type: UPDATE_FORM_STAGE, stage };
 }
 
-export function editFormName(formName) {
-  return { type: EDIT_FORM_NAME, formName };
+export function editFormName(name) {
+  return { type: EDIT_FORM_NAME, name };
 }
 
-export function editFormEmail(formEmail) {
-  return { type: EDIT_FORM_EMAIL, formEmail };
+export function editFormEmail(email) {
+  return { type: EDIT_FORM_EMAIL, email };
 }
 
-export function editFormPassword(formPassword) {
-  return { type: EDIT_FORM_PASSWORD, formPassword };
+export function editFormPassword(password) {
+  return { type: EDIT_FORM_PASSWORD, password };
 }
 
-export function editFormPasswordConfirm(formPasswordConfirm) {
-  return { type: EDIT_FORM_PASSWORD_CONFIRM, formPasswordConfirm };
+export function editFormPasswordConfirm(passwordConfirm) {
+  return { type: EDIT_FORM_PASSWORD_CONFIRM, passwordConfirm };
+}
+
+export function editFormRememberMe(rememberMe) {
+  return { type: EDIT_FORM_REMEMBER_ME, rememberMe };
 }
 
 export function validateFormName(name) {
@@ -101,7 +145,9 @@ export function validateFormName(name) {
 }
 
 export function resetFormNameValidation() {
-  return updateFormValidations({ formValidationNameEmpty: false });
+  return updateFormValidations({
+    validationNameEmpty: false
+  });
 }
 
 export function validateFormSignInEmail(email) {
@@ -111,8 +157,8 @@ export function validateFormSignInEmail(email) {
 export function validateFormSignUpEmail(email) {
   return (dispatch, getState) => {
     dispatch(updateFormValidations(validateEmail(email)));
-    const { formValidationEmailEmpty, formValidationEmailInvalid } = getState().home;
-    if (formValidationEmailEmpty || formValidationEmailInvalid) {
+    const { validationEmailEmpty, validationEmailInvalid } = getState().home;
+    if (validationEmailEmpty || validationEmailInvalid) {
       return;
     }
   };
@@ -120,11 +166,11 @@ export function validateFormSignUpEmail(email) {
 
 export function resetFormEmailValidation() {
   return updateFormValidations({
-    formValidatingEmail: false,
-    formValidationEmailEmpty: false,
-    formValidationEmailInvalid: false,
-    formValidationEmailOccupied: false,
-    formValidationEmailNotExist: false
+    validatingEmail: false,
+    validationEmailEmpty: false,
+    validationEmailInvalid: false,
+    validationEmailOccupied: false,
+    validationEmailNotExist: false
   });
 }
 
@@ -142,42 +188,66 @@ export function validateFormPasswordConfirm(password, passwordConfirm) {
 
 export function resetFormPasswordValidation() {
   return updateFormValidations({
-    formValidationPasswordEmpty: false,
-    formValidationPasswordShort: false,
-    formValidationCredentialInvalid: false
+    validationPasswordEmpty: false,
+    validationPasswordShort: false,
+    validationCredentialInvalid: false
   });
 }
 
 export function resetFormPasswordConfirmValidation() {
-  return updateFormValidations({ formValidationPasswordConfirmMismatch: false });
+  return updateFormValidations({
+    validationPasswordConfirmMismatch: false
+  });
 }
 
-export function submitSignUpForm(name, email, password) {
+export function initializeSignUpForm() {
+  return (dispatch) => {
+    dispatch(updateFormSubmitting(true));
+    dispatch(resetServerValidations());
+    dispatch(updateFormStage(FORM_STAGE_SIGN_UP_INITIALIZING));
+    getSignUpResponse().then(function (signUpResponse) {
+      dispatch(updateFormSubmitting(false));
+      if (signUpResponse.forbidden) {
+        dispatch(updateFormValidations({ validationNotAllowed: true }));
+        dispatch(updateFormStage(FORM_STAGE_SIGN_UP_FORBIDDEN));
+        return;
+      }
+      dispatch(updateFormValidations({ recaptchaSiteKey: signUpResponse.recaptcha }));
+      dispatch(updateFormStage(FORM_STAGE_SIGN_UP_READY));
+    }, function (err) {
+      dispatch(updateFormSubmitting(false));
+      console.error(err);
+      dispatch(updateFormValidations({ serverError: true }));
+    });
+  }
+}
+
+export function submitSignUpForm(name, email, password, recaptcha) {
   return (dispatch, getState) => {
     const {
-      formValidationNameEmpty,
-      formValidationEmailEmpty,
-      formValidationEmailInvalid,
-      formValidationEmailOccupied,
-      formValidationPasswordEmpty,
-      formValidationPasswordShort,
-      formValidationPasswordConfirmMismatch
+      validationNameEmpty,
+      validationEmailEmpty,
+      validationEmailInvalid,
+      validationEmailOccupied,
+      validationPasswordEmpty,
+      validationPasswordShort,
+      validationPasswordConfirmMismatch
     } = getState().home;
-    if (formValidationNameEmpty ||
-        formValidationEmailEmpty || formValidationEmailInvalid || formValidationEmailOccupied ||
-        formValidationPasswordEmpty || formValidationPasswordShort ||
-        formValidationPasswordConfirmMismatch) {
+    if (validationNameEmpty ||
+        validationEmailEmpty || validationEmailInvalid || validationEmailOccupied ||
+        validationPasswordEmpty || validationPasswordShort ||
+        validationPasswordConfirmMismatch) {
       return;
     }
-    dispatch(updateFormValidations({ serverError: false }));
     dispatch(updateFormSubmitting(true));
+    dispatch(resetServerValidations());
     fetch('/signup', {
       method: 'POST',
       headers: {
         Accept: 'application/json',
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ name: name.trim(), email: email.trim(), password }),
+      body: JSON.stringify({ name: name.trim(), email: email.trim(), password, recaptcha }),
       credentials: 'same-origin'
     }).then(function (response) {
       if (response.status >= 200 && response.status < 300) {
@@ -190,7 +260,8 @@ export function submitSignUpForm(name, email, password) {
       window.location = '/notes';
     }).catch(function (err) {
       dispatch(updateFormSubmitting(false));
-      if (err.response.status === 400 || err.response.status === 409) {
+      dispatch(updateFormValidations({ recaptchaSiteKey: '' }));
+      if (err.response.status === 400 || err.response.status === 403 || err.response.status === 409) {
         err.response.json().then(function (json) {
           dispatch(updateFormValidations(json));
         });
@@ -204,19 +275,21 @@ export function submitSignUpForm(name, email, password) {
 
 export function submitSignInEmail(email) {
   return (dispatch, getState) => {
-    const { formValidationEmailEmpty, formValidationEmailInvalid } = getState().home;
-    if (formValidationEmailEmpty || formValidationEmailInvalid) {
+    const { validationEmailEmpty, validationEmailInvalid } = getState().home;
+    if (validationEmailEmpty || validationEmailInvalid) {
       return;
     }
-    dispatch(updateFormValidations({ serverError: false }));
     dispatch(updateFormSubmitting(true));
-    getUserInformation(email).then(function (userInfo) {
+    dispatch(resetServerValidations());
+    getSignInResponse(email).then(function (userInfo) {
       dispatch(updateFormSubmitting(false));
+      dispatch(updateFormValidations({ recaptchaSiteKey: '' }));
       if (userInfo) {
+        dispatch(updateFormValidations({ recaptchaSiteKey: userInfo.recaptcha }));
         dispatch(editFormName(userInfo.name));
-        dispatch(updateSignInFormStep(1));
+        dispatch(updateFormStage(FORM_STAGE_SIGN_IN_PASSWORD));
       } else {
-        dispatch(updateFormValidations({ formValidationEmailNotExist: true }));
+        dispatch(updateFormValidations({ validationEmailNotExist: true }));
       }
     }, function (err) {
       dispatch(updateFormSubmitting(false));
@@ -226,24 +299,21 @@ export function submitSignInEmail(email) {
   };
 }
 
-export function submitSignInForm(email, password) {
+export function submitSignInForm(email, password, recaptcha) {
   return (dispatch, getState) => {
-    const { formValidationPasswordEmpty } = getState().home;
-    if (formValidationPasswordEmpty) {
+    const { validationPasswordEmpty } = getState().home;
+    if (validationPasswordEmpty) {
       return;
     }
-    dispatch(updateFormValidations({
-      serverError: false,
-      formValidationCredentialInvalid: false
-    }));
     dispatch(updateFormSubmitting(true));
+    dispatch(resetServerValidations());
     fetch('/signin', {
       method: 'POST',
       headers: {
         Accept: 'application/json',
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ email: email.trim(), password }),
+      body: JSON.stringify({ email: email.trim(), password, recaptcha }),
       credentials: 'same-origin'
     }).then(function (response) {
       if (response.status >= 200 && response.status < 300) {
@@ -256,6 +326,7 @@ export function submitSignInForm(email, password) {
       window.location = '/notes';
     }).catch(function (err) {
       dispatch(updateFormSubmitting(false));
+      dispatch(updateFormValidations({ recaptchaSiteKey: '' }));
       if (err.response.status === 400 || err.response.status === 403) {
         err.response.json().then(function (json) {
           dispatch(updateFormValidations(json));

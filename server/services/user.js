@@ -1,6 +1,7 @@
 'use strict';
 
 const crypto = require('crypto');
+const recaptchaService = require('../services/recaptcha');
 const User = require('../models/user');
 
 const PBKDF2_ALGORITHM = 'pbkdf2';
@@ -40,7 +41,22 @@ function isStringEqual(str1, str2) {
   return diff === 0;
 }
 
-function createUser(name, email, password, callback) {
+function createUser(name, email, password, recaptcha, callback) {
+  let recaptchaSiteKey = '';
+  if (recaptcha || recaptchaService.shouldCheckSignUp()) {
+    recaptchaSiteKey = recaptchaService.getSignUpSiteKey();
+    recaptchaService.verifySignUp(recaptcha, result => {
+      if (result) {
+        return createUserEntry(name, email, password, recaptchaSiteKey, callback);
+      }
+      callback(null, { recaptcha: 1, siteKey: recaptchaSiteKey });
+    });
+    return;
+  }
+  createUserEntry(name, email, password, recaptchaSiteKey, callback);
+}
+
+function createUserEntry(name, email, password, recaptchaSiteKey, callback) {
   const descriptor = [
     PBKDF2_ALGORITHM,
     PBKDF2_DIGEST_METHOD,
@@ -60,9 +76,12 @@ function createUser(name, email, password, callback) {
     user.status = 'unverified';
     user.save((err) => {
       if (err) {
-        callback(err);
+        if (err.name === 'MongoError' && err.code === 11000) {
+          return callback(null, { duplicate: 1, siteKey: recaptchaSiteKey });
+        }
+        return callback(err);
       }
-      callback(null, user);
+      callback(null, { user });
     });
   });
 }
@@ -73,16 +92,41 @@ function verifyUser(email, password, recaptcha, callback) {
       return callback(err);
     }
     if (!user) {
-      return callback(null, false);
+      return callback();
     }
-    const params = user.password.split(':');
-    const expected = params.splice(params.length - 1, 1)[0];
-    generateHash(params, password, (err, key) => {
-      if (err) {
-        return callback(err);
-      }
-      callback(null, isStringEqual(key, expected) ? user : false);
-    });
+    let recaptchaSiteKey = '';
+    if (recaptcha || recaptchaService.shouldCheckSignIn(user.login_attempts)) {
+      recaptchaSiteKey = recaptchaService.getSignInSiteKey();
+      recaptchaService.verifySignIn(recaptcha, result => {
+        if (result) {
+          return verifyPassword(user, password, recaptchaSiteKey, callback);
+        }
+        callback(null, { recaptcha: 1, siteKey: recaptchaSiteKey });
+      });
+      return;
+    }
+    if (recaptchaService.shouldCheckSignIn(user.login_attempts + 1)) {
+      recaptchaSiteKey = recaptchaService.getSignInSiteKey();
+    }
+    verifyPassword(user, password, recaptchaSiteKey, callback);
+  });
+}
+
+function verifyPassword(user, password, recaptchaSiteKey, callback) {
+  const params = user.password.split(':');
+  const expected = params.splice(params.length - 1, 1)[0];
+  generateHash(params, password, (err, key) => {
+    if (err) {
+      return callback(err);
+    }
+    const result = {};
+    if (isStringEqual(key, expected)) {
+      result.user = user;
+    } else {
+      result.password = 1;
+      result.siteKey = recaptchaSiteKey;
+    }
+    callback(null, result);
   });
 }
 

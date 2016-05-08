@@ -1,6 +1,7 @@
 'use strict';
 
 const express = require('express');
+const config = require('../config');
 const userService = require('../services/user');
 const handleShareDBConnection = require('../sharedb').handleSocketConnection;
 
@@ -10,22 +11,23 @@ function verifyCredentialForm(req, signupForm) {
   const name = req.body.name;
   const email = req.body.email;
   const password = req.body.password;
+  const recaptcha = req.body.recaptcha;
   const errors = {};
   if (!email || !email.trim().length) {
-    errors.formValidationEmailEmpty = true;
+    errors.validationEmailEmpty = true;
   }
   if (!password) {
-    errors.formValidationPasswordEmpty = true;
+    errors.validationPasswordEmpty = true;
   }
   if (signupForm) {
     if (!name || !name.trim().length) {
-      errors.formValidationNameEmpty = true;
+      errors.validationNameEmpty = true;
     }
     if (password && password.length < 6) {
-      errors.formValidationPasswordShort = true;
+      errors.validationPasswordShort = true;
     }
   }
-  return { name, email, password, errors };
+  return { name, email, password, recaptcha, errors };
 }
 
 function allValid(errors) {
@@ -48,19 +50,34 @@ router.get('/notes', (req, res) => res.render('notes'));
 router.get('/notes/*', (req, res) => res.render('notes'));
 
 router.post('/signup', function (req, res, next) {
+  if (!config.allowSignUp) {
+    res.status(403).send({ validationNotAllowed: true });
+    return;
+  }
   const form = verifyCredentialForm(req, true);
   if (!allValid(form.errors)) {
     res.status(400).send(form.errors);
     return;
   }
-  userService.createUser(form.name, form.email, form.password, function (err, user) {
+  userService.createUser(form.name, form.email, form.password, form.recaptcha, function (err, result) {
     if (err) {
-      if (err.name === 'MongoError' && err.code === 11000) {
-        res.status(409).send({ formValidationEmailOccupied: true });
-        return;
-      }
       return next(err);
     }
+    if (result.recaptcha === 1) {
+      res.status(403).send({
+        validationRecaptchaInvalid: true,
+        recaptchaSiteKey: result.siteKey
+      });
+      return;
+    }
+    if (result.duplicate === 1) {
+      res.status(409).send({
+        validationEmailOccupied: true,
+        recaptchaSiteKey: result.siteKey
+      });
+      return;
+    }
+    const user = result.user;
     req.session.email = user.email;
     res.status(201).end();
   });
@@ -72,21 +89,34 @@ router.post('/signin', function (req, res, next) {
     res.status(400).send(form.errors);
     return;
   }
-  userService.verifyUser(req.body.email, req.body.password, req.body.recaptcha, function (err, user) {
-    if (err) {
-      return next(err);
-    }
-    if (!user) {
-      return res.status(403).send({ formValidationCredentialInvalid: true });
-    }
-    userService.resetLoginAttempts(user.email, function (err) {
+  userService.verifyUser(form.email, form.password, form.recaptcha,
+    function (err, result) {
       if (err) {
         return next(err);
       }
-      req.session.email = user.email;
-      res.status(204).end();
+      if (result.recaptcha === 1) {
+        res.status(403).send({
+          validationRecaptchaInvalid: true,
+          recaptchaSiteKey: result.siteKey
+        });
+        return;
+      }
+      if (result.password === 1) {
+        res.status(403).send({
+          validationCredentialInvalid: true,
+          recaptchaSiteKey: result.siteKey
+        });
+        return;
+      }
+      const user = result.user;
+      userService.resetLoginAttempts(user.email, function (err) {
+        if (err) {
+          return next(err);
+        }
+        req.session.email = user.email;
+        res.status(204).end();
+      });
     });
-  });
 });
 
 module.exports = router;

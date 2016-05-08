@@ -1,75 +1,84 @@
 import {
-  UPDATE_VISITOR_IDENTITY,
+  UPDATE_IDENTITY,
   RESET_FORM,
   UPDATE_FORM_SUBMITTING,
   UPDATE_FORM_VALIDATIONS,
-  UPDATE_SIGNIN_FORM_STEP,
+  UPDATE_FORM_STAGE,
   EDIT_FORM_NAME,
   EDIT_FORM_EMAIL,
   EDIT_FORM_PASSWORD,
-  EDIT_FORM_PASSWORD_CONFIRM
+  EDIT_FORM_PASSWORD_CONFIRM,
+  EDIT_FORM_REMEMBER_ME
 } from '../actions/home';
 
 const initialState = {
-  checkingVisitorIdentity: false,
-  visitorIdentity: null,
+  checkingIdentity: false,
+  identity: null,
+  stage: '',
+  name: '',
+  email: '',
+  password: '',
+  passwordConfirm: '',
+  rememberMe: false,
+  recaptchaSiteKey: '',
+  submitting: false,
   serverError: false,
-  formName: '',
-  formEmail: '',
-  formPassword: '',
-  formPasswordConfirm: '',
-  formRemember: true,
-  formSignInStep: 0,
-  formSubmitting: false,
-  formValidatingEmail: false,
-  formValidationNameEmpty: false,
-  formValidationEmailEmpty: false,
-  formValidationEmailInvalid: false,
-  formValidationEmailNotExist: false,
-  formValidationEmailOccupied: false,
-  formValidationPasswordEmpty: false,
-  formValidationPasswordShort: false,
-  formValidationPasswordConfirmMismatch: false,
-  formValidationCredentialInvalid: false
+  validatingEmail: false,
+  validationNameEmpty: false,
+  validationEmailEmpty: false,
+  validationEmailInvalid: false,
+  validationEmailNotExist: false,
+  validationEmailOccupied: false,
+  validationPasswordEmpty: false,
+  validationPasswordShort: false,
+  validationPasswordConfirmMismatch: false,
+  validationRecaptchaInvalid: false,
+  validationCredentialInvalid: false,
+  validationNotAllowed: false
 };
 
 function homeReducer(state = initialState, action) {
   switch (action.type) {
-    case UPDATE_VISITOR_IDENTITY:
+    case UPDATE_IDENTITY:
       return Object.assign({}, state, {
-        checkingVisitorIdentity: action.checkingVisitorIdentity,
-        visitorIdentity: action.visitorIdentity
+        checkingIdentity: action.checkingIdentity,
+        identity: action.identity
+      });
+    case UPDATE_FORM_STAGE:
+      return Object.assign({}, state, {
+        stage: action.stage
       });
     case RESET_FORM:
       return Object.assign({}, initialState, {
-        checkingVisitorIdentity: state.checkingVisitorIdentity,
-        visitorIdentity: state.visitorIdentity
+        checkingIdentity: state.checkingIdentity,
+        identity: state.identity,
+        stage: state.stage
       });
     case UPDATE_FORM_SUBMITTING:
       return Object.assign({}, state, {
-        formSubmitting: action.formSubmitting
+        submitting: action.submitting
       });
     case UPDATE_FORM_VALIDATIONS:
       return Object.assign({}, state, action.validations);
-    case UPDATE_SIGNIN_FORM_STEP:
-      return Object.assign({}, state, {
-        formSignInStep: action.step
-      });
     case EDIT_FORM_NAME:
       return Object.assign({}, state, {
-        formName: action.formName
+        name: action.name
       });
     case EDIT_FORM_EMAIL:
       return Object.assign({}, state, {
-        formEmail: action.formEmail
+        email: action.email
       });
     case EDIT_FORM_PASSWORD:
       return Object.assign({}, state, {
-        formPassword: action.formPassword
+        password: action.password
       });
     case EDIT_FORM_PASSWORD_CONFIRM:
       return Object.assign({}, state, {
-        formPasswordConfirm: action.formPasswordConfirm
+        passwordConfirm: action.passwordConfirm
+      });
+    case EDIT_FORM_REMEMBER_ME:
+      return Object.assign({}, state, {
+        rememberMe: action.rememberMe
       });
     default:
       return state;

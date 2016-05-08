@@ -1,11 +1,11 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { checkVisitorIdentity } from '../actions/home';
+import { checkIdentity } from '../actions/home';
 
 class Index extends React.Component {
   componentDidMount() {
     const { dispatch } = this.props;
-    dispatch(checkVisitorIdentity());
+    dispatch(checkIdentity());
   }
 
   render() {
