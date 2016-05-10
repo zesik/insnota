@@ -40,8 +40,12 @@ class DocumentManager extends React.Component {
       'icon-button': true,
       disabled: this.props.fetching || this.props.creating
     });
+    const containerClasses = classNames({
+      'document-list-container': true,
+      collapsed: this.props.collapsed
+    });
     return (
-      <div className="document-list-container">
+      <div className={containerClasses}>
         <div className="document-list-header">
           {this.props.currentUser &&
           <div>
@@ -84,6 +88,7 @@ class DocumentManager extends React.Component {
 }
 
 DocumentManager.propTypes = {
+  collapsed: React.PropTypes.bool,
   currentUser: React.PropTypes.shape({
     name: React.PropTypes.string.isRequired,
     email: React.PropTypes.string.isRequired

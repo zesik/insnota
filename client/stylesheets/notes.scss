@@ -15,6 +15,10 @@ html, body {
   float: left;
   background-color: $grey-50;
 
+  &.collapsed {
+    display: none;
+  }
+
   .document-list-header {
     flex: 0 0 auto;
     position: relative;
@@ -90,6 +94,10 @@ html, body {
   position: relative;
   height: 100%;
   margin-left: 242px;
+
+  &.full-screen {
+    margin-left: 0;
+  }
 
   .title-editor {
     height: 48px;

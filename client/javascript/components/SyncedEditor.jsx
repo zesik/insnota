@@ -1,4 +1,5 @@
 import React from 'react';
+import classNames from 'classnames';
 import EditorOverlay from './EditorOverlay';
 import EditorStatusBar from './EditorStatusBar';
 import Collaborators from './Collaborators';
@@ -606,8 +607,12 @@ class SyncedEditor extends React.Component {
   }
 
   render() {
+    const containerClasses = classNames({
+      'editor-container': true,
+      'full-screen': this.props.fullScreen
+    });
     return (
-      <div className="editor-container">
+      <div className={containerClasses}>
         <EditorOverlay state={this.state.documentState} />
         <Collaborators collaborators={this.state.documentCollaborators} />
         <div className="title-editor">
@@ -635,6 +640,7 @@ class SyncedEditor extends React.Component {
 }
 
 SyncedEditor.propTypes = {
+  fullScreen: React.PropTypes.bool,
   socketURL: React.PropTypes.string.isRequired,
   collection: React.PropTypes.string,
   documentID: React.PropTypes.string,

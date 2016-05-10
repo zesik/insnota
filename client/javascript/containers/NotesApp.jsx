@@ -47,6 +47,7 @@ class App extends React.Component {
     return (
       <div className="full-size">
         <DocumentManager
+          collapsed={!this.props.userEmail}
           fetching={this.props.fetchingDocuments}
           currentUser={currentUser}
           documents={this.props.documents}
@@ -55,6 +56,7 @@ class App extends React.Component {
           onDeleteDocumentClicked={(documentID, isOpened) => dispatch(deleteDocument(documentID, isOpened))}
         />
         <SyncedEditor
+          fullScreen={!this.props.userEmail}
           socketURL={createWebSocketURL()}
           collection={COLLECTION_NAME}
           documentID={this.props.selectedDocumentID}
