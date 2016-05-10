@@ -17,6 +17,7 @@ class DocumentManager extends React.Component {
   constructor(props) {
     super(props);
     this.handleNewDocumentClicked = this.handleNewDocumentClicked.bind(this);
+    this.handleDeleteDocumentClicked = this.handleDeleteDocumentClicked.bind(this);
   }
 
   handleNewDocumentClicked() {
@@ -25,6 +26,12 @@ class DocumentManager extends React.Component {
       return;
     }
     onNewDocumentClicked();
+  }
+
+  handleDeleteDocumentClicked(e, documentID) {
+    const { selectedDocumentID, onDeleteDocumentClicked } = this.props;
+    e.preventDefault();
+    onDeleteDocumentClicked(documentID, selectedDocumentID === documentID);
   }
 
   render() {
@@ -65,6 +72,7 @@ class DocumentManager extends React.Component {
                 <Document
                   title={item.title}
                   lastModified={item.lastModified}
+                  onDeleteClicked={e => this.handleDeleteDocumentClicked(e, item.id)}
                 />
               </Link>
             );
@@ -88,7 +96,8 @@ DocumentManager.propTypes = {
     lastModified: React.PropTypes.string
   })),
   selectedDocumentID: React.PropTypes.string,
-  onNewDocumentClicked: React.PropTypes.func.isRequired
+  onNewDocumentClicked: React.PropTypes.func.isRequired,
+  onDeleteDocumentClicked: React.PropTypes.func.isRequired
 };
 
 export default DocumentManager;

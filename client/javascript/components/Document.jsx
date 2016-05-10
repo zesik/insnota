@@ -1,26 +1,20 @@
 import React from 'react';
-import classNames from 'classnames';
 
-class Document extends React.Component {
-  render() {
-    const elementClasses = classNames({
-      document: true,
-      selected: this.props.selected
-    });
-    return (
-      <div className={elementClasses}>
-        <div className="title">{this.props.title}</div>
-        <div className="last-modified">{this.props.lastModified}</div>
-        <div className="permission"></div>
-      </div>
-    );
-  }
+function Document(props) {
+  return (
+    <div className="document">
+      <div className="delete-button" onClick={e => props.onDeleteClicked(e)}><i className="fa fa-trash-o" /></div>
+      <div className="title">{props.title}</div>
+      <div className="last-modified">{props.lastModified}</div>
+      <div className="permission"></div>
+    </div>
+  );
 }
 
 Document.propTypes = {
-  title: React.PropTypes.string,
+  title: React.PropTypes.string.isRequired,
   lastModified: React.PropTypes.string,
-  selected: React.PropTypes.bool
+  onDeleteClicked: React.PropTypes.func.isRequired
 };
 
 export default Document;

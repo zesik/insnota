@@ -1,4 +1,6 @@
 @import 'base';
+//@import url(https://fonts.googleapis.com/css?family=Inconsolata:400,700);
+@import url("https://fonts.googleapis.com/css?family=Fira+Mono:400,700");
 
 html, body {
   width: 100%;
@@ -54,17 +56,32 @@ html, body {
 
     .document-item {
       display: block;
-      height: 32px;
       color: $dark-text-primary;
       text-decoration: none;
       padding: 8px;
 
       &:hover {
         background-color: $grey-250;
+
+        .document .delete-button {
+          display: inherit;
+        }
       }
 
       &.document-item-selected, &.document-item-selected:hover {
         background-color: $grey-300;
+      }
+
+      .document .delete-button {
+        display: none;
+        float: right;
+        width: 16px;
+        text-align: center;
+        color: $grey-600;
+
+        &:hover {
+          color: $black;
+        }
       }
     }
   }
@@ -121,8 +138,13 @@ html, body {
 
   .editor {
     height: calc(100vh - 78px);
+
     .CodeMirror {
       height: 100%;
+      font-family: "Fira Mono";
+      font-size: 14px;
+      line-height: 1.4;
+      font-variant-ligatures: no-common-ligatures;
     }
   }
 }

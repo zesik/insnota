@@ -1,6 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { getDocuments, createDocument, changeDocumentTitle } from '../actions/documentManager';
+import { getDocuments, createDocument, changeDocumentTitle, deleteDocument } from '../actions/documentManager';
 import { showInformation, showError } from '../actions/notificationCenter';
 import { getModeName } from '../utils/editorLanguageModes';
 import DocumentManager from '../components/DocumentManager';
@@ -45,7 +45,8 @@ class App extends React.Component {
           currentUser={currentUser}
           documents={this.props.documents}
           selectedDocumentID={this.props.selectedDocumentID}
-          onNewDocumentClicked={() => dispatch(createDocument('untitled'))}
+          onNewDocumentClicked={() => dispatch(createDocument())}
+          onDeleteDocumentClicked={(documentID, isOpened) => dispatch(deleteDocument(documentID, isOpened))}
         />
         <SyncedEditor
           socketURL={createWebSocketURL()}

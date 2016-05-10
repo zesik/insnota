@@ -72,3 +72,11 @@ export function changeDocumentTitle(title) {
     title
   };
 }
+
+export function deleteDocument(documentID, isOpened) {
+  return dispatch => {
+    if (isOpened) {
+      dispatch(push('/notes'));
+    }
+  };
+}
