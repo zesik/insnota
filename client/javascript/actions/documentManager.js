@@ -66,9 +66,10 @@ export function createDocument() {
   };
 }
 
-export function changeDocumentTitle(title) {
+export function changeDocumentTitle(documentID, title) {
   return {
     type: CHANGE_DOCUMENT_TITLE,
+    documentID,
     title
   };
 }

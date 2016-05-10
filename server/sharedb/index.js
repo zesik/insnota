@@ -5,8 +5,8 @@ const config = require('../config');
 const sharedb = require('sharedb');
 const sharedbDatabase = require('sharedb-mongo')(config.mongo);
 const SocketStream = require('./socket-stream');
-
 const ClientConnection = require('../models/clientConnection');
+const Document = require('../models/document');
 
 const DEFAULT_DOCUMENT = {
   a: {},                // Collaborators
@@ -126,6 +126,14 @@ function handleShareDBReceive(req, next) {
         handleClientDisconnected(req.agent.clientId, req.data.c, req.data.d, next);
       }
       break;
+    case 'op':
+      for (let i = 0; i < req.data.op.length; ++i) {
+        if (req.data.op[i].p[0] === 't') {
+          let newTitle = req.data.op[i].oi;
+          Document.update({ _id: req.data.d }, { title: newTitle }).exec();
+        }
+      }
+      return next();
     default:
       return next();
   }

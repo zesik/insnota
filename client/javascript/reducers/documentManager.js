@@ -42,7 +42,7 @@ function documentManagerReducer(state = initialState, action) {
     case CHANGE_DOCUMENT_TITLE:
       return Object.assign({}, state, {
         documents: state.documents.map((doc) => {
-          if (doc.id === state.selectedDocumentID) {
+          if (doc.id === action.documentID) {
             return Object.assign({}, doc, {
               title: action.title
             });

@@ -18,6 +18,7 @@ class App extends React.Component {
   constructor(props) {
     super(props);
     this.handleLanguageModeChanged = this.handleLanguageModeChanged.bind(this);
+    this.handleTitleChanged = this.handleTitleChanged.bind(this);
   }
 
   componentDidMount() {
@@ -30,6 +31,11 @@ class App extends React.Component {
     if (remote === REMOTE_REMOTE) {
       dispatch(showInformation(`Language mode is changed to ${getModeName(mimeType)} by remote user.`));
     }
+  }
+
+  handleTitleChanged(newTitle) {
+    const { dispatch, selectedDocumentID } = this.props;
+    dispatch(changeDocumentTitle(selectedDocumentID, newTitle));
   }
 
   render() {
@@ -52,7 +58,7 @@ class App extends React.Component {
           socketURL={createWebSocketURL()}
           collection={COLLECTION_NAME}
           documentID={this.props.selectedDocumentID}
-          onTitleChanged={title => dispatch(changeDocumentTitle(title))}
+          onTitleChanged={this.handleTitleChanged}
           onLanguageModeChanged={this.handleLanguageModeChanged}
           onDocumentError={error => dispatch(showError(JSON.stringify(error)))}
         />
