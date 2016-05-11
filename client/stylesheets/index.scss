@@ -139,21 +139,6 @@ html, body {
   }
 }
 
-.signin-form {
-  .go-back {
-    color: $grey-600;
-    cursor: pointer;
-
-    &:hover, &:focus {
-      color: $grey-700;
-    }
-
-    &:active {
-      color: $grey-750;
-    }
-  }
-}
-
 .user-info {
   text-align: center;
   margin: 16px auto;

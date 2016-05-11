@@ -127,10 +127,12 @@ function handleShareDBReceive(req, next) {
       }
       break;
     case 'op':
-      for (let i = 0; i < req.data.op.length; ++i) {
-        if (req.data.op[i].p[0] === 't') {
-          let newTitle = req.data.op[i].oi;
-          Document.update({ _id: req.data.d }, { title: newTitle }).exec();
+      if (req.data.op) {
+        for (let i = 0; i < req.data.op.length; ++i) {
+          if (req.data.op[i].p[0] === 't') {
+            const newTitle = req.data.op[i].oi;
+            Document.update({ _id: req.data.d }, { title: newTitle }).exec();
+          }
         }
       }
       return next();

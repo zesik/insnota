@@ -201,7 +201,6 @@ a {
 .btn {
   border: none;
   padding: 8px 24px;
-  outline: none;
   background-color: $grey-600;
   color: $light-text-primary;
 
@@ -225,28 +224,75 @@ a {
     color: $light-text-primary;
   }
 
+  &.btn-link {
+    color: transparentize($dark-text-primary, 0.4);
+    background: transparent;
+    padding: 0;
+
+    &:disabled, &.btn-disabled {
+      color: $dark-text-disabled;
+
+      &:hover, &:focus, &:active {
+        color: $dark-text-disabled;
+      }
+    }
+
+    &:hover, &:focus {
+      color: transparentize($dark-text-primary, 0.15);
+    }
+
+    &:active {
+      color: $dark-text-primary;
+    }
+  }
+
   &.btn-default {
     background-color: $blue-500;
-    color: $white;
+    color: $light-text-primary;
 
     &:disabled, &.btn-disabled {
       background-color: $blue-100;
-      color: $white;
+      color: $light-text-primary;
 
       &:hover, &:focus, &:active {
         background-color: $blue-100;
-        color: $white;
+        color: $light-text-primary;
       }
     }
 
     &:hover, &:focus {
       background-color: $blue-600;
-      color: $white;
+      color: $light-text-primary;
     }
 
     &:active {
       background-color: $blue-700;
-      color: $white;
+      color: $light-text-primary;
+    }
+  }
+
+  &.btn-danger {
+    background-color: $red-500;
+    color: $light-text-primary;
+
+    &:disabled, &.btn-disabled {
+      background-color: $red-100;
+      color: $light-text-primary;
+
+      &:hover, &:focus, &:active {
+        background-color: $red-100;
+        color: $light-text-primary;
+      }
+    }
+
+    &:hover, &:focus {
+      background-color: $red-600;
+      color: $light-text-primary;
+    }
+
+    &:active {
+      background-color: $red-700;
+      color: $light-text-primary;
     }
   }
 }

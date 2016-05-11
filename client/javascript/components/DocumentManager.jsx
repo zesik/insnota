@@ -29,15 +29,15 @@ class DocumentManager extends React.Component {
   }
 
   handleDeleteDocumentClicked(e, documentID) {
-    const { selectedDocumentID, onDeleteDocumentClicked } = this.props;
     e.preventDefault();
-    onDeleteDocumentClicked(documentID, selectedDocumentID === documentID);
+    this.props.onDeleteDocumentClicked(documentID);
   }
 
   render() {
     const newDocClasses = classNames({
-      'status-bar-item': true,
-      'icon-button': true,
+      'btn': true,
+      'btn-link': true,
+      'tool-bar-item': true,
       disabled: this.props.fetching || this.props.creating
     });
     const containerClasses = classNames({
@@ -57,13 +57,15 @@ class DocumentManager extends React.Component {
           </div>
           }
         </div>
-        <div className="document-list-status status-bar">
-          <div className="status-bar-item note-counter">
+        <div className="document-list-status tool-bar">
+          <div className="tool-bar-item note-counter">
             {this.props.fetching && <div className="loading">Loading...</div>}
             {(!this.props.fetching) && <div>{getNoteCounter(this.props.documents.length)}</div>}
           </div>
-          <div className="status-bar-item flex-width" />
-          <div className={newDocClasses} onClick={this.handleNewDocumentClicked}><i className="fa fa-plus" /></div>
+          <div className="tool-bar-item flex-width" />
+          <button className={newDocClasses} onClick={this.handleNewDocumentClicked}>
+            <i className="fa fa-plus" />
+          </button>
         </div>
         <div className="document-list">
           {this.props.documents.map(function (item) {

@@ -1,9 +1,17 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { getDocuments, createDocument, changeDocumentTitle, deleteDocument } from '../actions/documentManager';
+import {
+   getDocuments,
+   createDocument,
+   changeDocumentTitle,
+   deleteDocument,
+   showDeleteDocumentModal,
+   hideDeleteDocumentModal
+} from '../actions/documentManager';
 import { showInformation, showError } from '../actions/notificationCenter';
 import { getModeName } from '../utils/editorLanguageModes';
 import DocumentManager from '../components/DocumentManager';
+import DeleteDocumentModal from '../components/DeleteDocumentModal';
 import SyncedEditor, { REMOTE_REMOTE } from '../components/SyncedEditor';
 import NotificationCenter from '../components/NotificationCenter';
 
@@ -19,6 +27,7 @@ class App extends React.Component {
     super(props);
     this.handleLanguageModeChanged = this.handleLanguageModeChanged.bind(this);
     this.handleTitleChanged = this.handleTitleChanged.bind(this);
+    this.handleDeleteDocumentClicked = this.handleDeleteDocumentClicked.bind(this);
   }
 
   componentDidMount() {
@@ -38,6 +47,11 @@ class App extends React.Component {
     dispatch(changeDocumentTitle(selectedDocumentID, newTitle));
   }
 
+  handleDeleteDocumentClicked(documentID) {
+    const { dispatch, selectedDocumentID } = this.props;
+    dispatch(deleteDocument(documentID, selectedDocumentID === documentID));
+  }
+
   render() {
     const { dispatch, userName, userEmail } = this.props;
     let currentUser = null;
@@ -53,7 +67,14 @@ class App extends React.Component {
           documents={this.props.documents}
           selectedDocumentID={this.props.selectedDocumentID}
           onNewDocumentClicked={() => dispatch(createDocument())}
-          onDeleteDocumentClicked={(documentID, isOpened) => dispatch(deleteDocument(documentID, isOpened))}
+          onDeleteDocumentClicked={documentID => dispatch(showDeleteDocumentModal(documentID))}
+        />
+        <DeleteDocumentModal
+          visible={this.props.modalDeleteDocument.visible}
+          documentID={this.props.modalDeleteDocument.documentID}
+          title={this.props.modalDeleteDocument.title}
+          onConfirmClicked={this.handleDeleteDocumentClicked}
+          onCancelClicked={() => dispatch(hideDeleteDocumentModal())}
         />
         <SyncedEditor
           fullScreen={!this.props.userEmail}
@@ -65,6 +86,7 @@ class App extends React.Component {
           onDocumentError={error => dispatch(showError(JSON.stringify(error)))}
         />
         <NotificationCenter notifications={this.props.notifications} />
+
       </div>
     );
   }
@@ -81,6 +103,11 @@ App.propTypes = {
     lastModified: React.PropTypes.string
   })),
   selectedDocumentID: React.PropTypes.string,
+  modalDeleteDocument: React.PropTypes.shape({
+    visible: React.PropTypes.bool,
+    documentID: React.PropTypes.string,
+    title: React.PropTypes.string
+  }),
   notifications: React.PropTypes.arrayOf(React.PropTypes.shape({
     id: React.PropTypes.number.isRequired,
     level: React.PropTypes.string.isRequired,
@@ -97,6 +124,7 @@ function mapStateToProps(state, ownProps) {
     userEmail: state.document.userEmail,
     documents: state.document.documents,
     selectedDocumentID: ownProps.params.splat,
+    modalDeleteDocument: state.document.modalDeleteDocument,
     notifications: state.notification.notifications
   };
 }
