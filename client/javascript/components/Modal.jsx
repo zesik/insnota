@@ -23,9 +23,28 @@ class Modal extends React.Component {
   }
 
   handleKeyDown(e) {
+    let element = e.target;
     switch (e.keyCode) {
       case 9:
-        e.preventDefault();
+        if (element === this.refs.closeButton && e.shiftKey) {
+          e.preventDefault();
+          this.refs.confirmButton.focus();
+        } else if (element === this.refs.confirmButton && !e.shiftKey) {
+          e.preventDefault();
+          this.refs.closeButton.focus();
+        } else {
+          while (element && element !== this.refs.dialog) {
+            element = element.parentNode;
+          }
+          if (!element) {
+            e.preventDefault();
+            if (e.shiftKey) {
+              this.refs.confirmButton.focus();
+            } else {
+              this.refs.closeButton.focus();
+            }
+          }
+        }
         break;
       case 27:
         this.handleCancel();
@@ -37,8 +56,13 @@ class Modal extends React.Component {
     if (this.props.focusCancelButton) {
       this.refs.cancelButton.focus();
     } else {
-      this.refs.defaultButton.focus();
+      this.refs.confirmButton.focus();
     }
+    document.addEventListener('keydown', this.handleKeyDown);
+  }
+
+  componentWillUnmount() {
+    document.removeEventListener('keydown', this.handleKeyDown);
   }
 
   render() {
@@ -49,8 +73,8 @@ class Modal extends React.Component {
     });
     return (
       <div className="modal-backdrop">
-        <div className="modal-dialog" onKeyDown={this.handleKeyDown}>
-          <button className="btn btn-link modal-dialog-close" onClick={this.handleCancel}>
+        <div className="modal-dialog" ref="dialog">
+          <button className="btn btn-link modal-dialog-close" onClick={this.handleCancel} ref="closeButton">
             <i className="fa fa-close" />
           </button>
           {this.props.titleElement ?
@@ -65,7 +89,7 @@ class Modal extends React.Component {
             <button className="btn" onClick={this.handleCancel}>
               {this.props.cancelButtonTitle || 'Cancel'}
             </button>
-            <button className={defaultButtonClasses} onClick={this.handleConfirm} ref="defaultButton">
+            <button className={defaultButtonClasses} onClick={this.handleConfirm} ref="confirmButton">
               {this.props.defaultButtonTitle || 'OK'}
             </button>
           </div>
