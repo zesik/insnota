@@ -12,6 +12,10 @@
 $base-font-family: "Lato", sans-serif;
 $base-font-size: 14px;
 $base-line-height: 1.4;
+$h1-font-size: 18px;
+$h2-font-size: 16px;
+$h3-font-size: 14px;
+$small-font-size: 12px;
 $font-light: 300;
 $font-regular: 400;
 $font-bold: 700;
@@ -203,6 +207,7 @@ a {
   padding: 8px 24px;
   background-color: $grey-600;
   color: $light-text-primary;
+  cursor: pointer;
 
   &:disabled, &.btn-disabled {
     background-color: $grey-300;

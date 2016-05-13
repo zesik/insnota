@@ -51,6 +51,8 @@ class SyncedEditor extends React.Component {
     this.handleContentChanged = this.handleContentChanged.bind(this);
     this.handleContentCursorActivity = this.handleContentCursorActivity.bind(this);
     this.handleLanguageModeChanged = this.handleLanguageModeChanged.bind(this);
+    this.handleToggleLanguageModeList = this.handleToggleLanguageModeList.bind(this);
+    this.handleEditLanguageModeFilter = this.handleEditLanguageModeFilter.bind(this);
     this.handleTitleKeyUp = this.handleTitleKeyUp.bind(this);
     this.handleTitleBoxBlur = this.handleTitleBoxBlur.bind(this);
     this.handleEditorGotFocus = this.handleFocusChanged.bind(this, true);
@@ -68,6 +70,8 @@ class SyncedEditor extends React.Component {
       documentShowCursorChars: false,
       documentLanguageMode: '',
       documentLanguageModeList: LANGUAGE_MODES,
+      documentLanguageModeListFilter: '',
+      documentLanguageModeListVisible: false,
       documentCollaborators: []
     };
   }
@@ -282,10 +286,18 @@ class SyncedEditor extends React.Component {
   }
 
   handleFocusChanged(focus) {
+    if (focus) {
+      this.setState({
+        documentLanguageModeListVisible: false
+      });
+    }
   }
 
   handleLanguageModeChanged(languageMode) {
-    this.setState({ documentLanguageMode: languageMode });
+    this.setState({
+      documentLanguageModeListVisible: false,
+      documentLanguageMode: languageMode
+    });
 
     // Event is not raised if not subscribing to remote document
     if (!this.shareDBDoc) {
@@ -299,6 +311,14 @@ class SyncedEditor extends React.Component {
 
     this.setState({ documentState: DOC_SYNCING });
     this.submitLanguageModeChange(languageMode);
+  }
+
+  handleToggleLanguageModeList() {
+    this.setState({ documentLanguageModeListVisible: !this.state.documentLanguageModeListVisible});
+  }
+
+  handleEditLanguageModeFilter(value) {
+    this.setState({ documentLanguageModeListFilter: value });
   }
 
   handleTitleBoxBlur(event) {
@@ -630,9 +650,13 @@ class SyncedEditor extends React.Component {
           documentState={this.state.documentState}
           cursors={this.state.documentCursors}
           showCursorChars={this.state.documentShowCursorChars}
-          languageModeList={this.state.documentLanguageModeList}
           languageMode={this.state.documentLanguageMode}
+          languageModeList={this.state.documentLanguageModeList}
+          languageModeListFilter={this.state.documentLanguageModeListFilter}
+          languageModeListVisible={this.state.documentLanguageModeListVisible}
+          onEditLanguageModeListFilter={this.handleEditLanguageModeFilter}
           onLanguageModeChanged={this.handleLanguageModeChanged}
+          onToggleLanguageModeList={this.handleToggleLanguageModeList}
         />
       </div>
     );

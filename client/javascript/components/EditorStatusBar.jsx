@@ -1,4 +1,5 @@
 import React from 'react';
+import LanguageModePopup from './LanguageModePopup';
 import {
   CONNECTION_CONNECTING,
   CONNECTION_WAITING,
@@ -114,22 +115,28 @@ class EditorStatusBar extends React.Component {
     const cursorStatus = (<div className="status-bar-item cursor-status">{cursorPositions}{cursorSelections}</div>);
 
     // Language mode selections
-    const languageModeSelection = (
-      <div className="status-bar-item language-selection">
-        <select value={this.props.languageMode} onChange={this.handleLanguageModeChanged}>
-          {this.props.languageModeList.map(item => (
-            <option key={item.mimeType} value={item.mimeType}>{item.name}</option>
-          ))}
-        </select>
-      </div>
-    );
-
+    let currentLanguageMode = this.props.languageModeList.find(item => item.mimeType === this.props.languageMode);
+    if (!currentLanguageMode) {
+      currentLanguageMode = this.props.languageModeList.find(item => item.mimeType === 'text/plain');
+    }
     return (
       <div className="status-bar">
         {syncStatus}
         {cursorStatus}
         <div className="status-bar-item flex-width" />
-        {languageModeSelection}
+        <div className="status-bar-item language-selection" onClick={this.props.onToggleLanguageModeList}>
+          {currentLanguageMode.name}
+        </div>
+        {this.props.languageModeListVisible &&
+          <LanguageModePopup
+            currentMode={currentLanguageMode}
+            fullModeList={this.props.languageModeList}
+            filterText={this.props.languageModeListFilter}
+            onEditFilterText={this.props.onEditLanguageModeListFilter}
+            onModeChanged={this.props.onLanguageModeChanged}
+            onClosePopup={this.props.onToggleLanguageModeList}
+          />
+        }
       </div>
     );
   }
@@ -155,11 +162,15 @@ EditorStatusBar.propTypes = {
     primary: React.PropTypes.bool
   })),
   showCursorChars: React.PropTypes.bool,
+  languageMode: React.PropTypes.string,
+  languageModeListVisible: React.PropTypes.bool,
+  languageModeListFilter: React.PropTypes.string,
   languageModeList: React.PropTypes.arrayOf(React.PropTypes.shape({
     name: React.PropTypes.string.isRequired,
     mimeType: React.PropTypes.string.isRequired
   })),
-  languageMode: React.PropTypes.string,
+  onEditLanguageModeListFilter: React.PropTypes.func,
+  onToggleLanguageModeList: React.PropTypes.func,
   onLanguageModeChanged: React.PropTypes.func
 };
 
