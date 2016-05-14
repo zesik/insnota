@@ -50,9 +50,12 @@ class SyncedEditor extends React.Component {
     this.handleConnectionStateChanged = this.handleConnectionStateChanged.bind(this);
     this.handleContentChanged = this.handleContentChanged.bind(this);
     this.handleContentCursorActivity = this.handleContentCursorActivity.bind(this);
-    this.handleLanguageModeChanged = this.handleLanguageModeChanged.bind(this);
     this.handleToggleLanguageModeList = this.handleToggleLanguageModeList.bind(this);
     this.handleEditLanguageModeFilter = this.handleEditLanguageModeFilter.bind(this);
+    this.handleLanguageModeChanged = this.handleLanguageModeChanged.bind(this);
+    this.handleToggleNavigationPopup = this.handleToggleNavigationPopup.bind(this);
+    this.handleConfirmNavigation = this.handleConfirmNavigation.bind(this);
+    this.handleEditNavigationText = this.handleEditNavigationText.bind(this);
     this.handleTitleKeyUp = this.handleTitleKeyUp.bind(this);
     this.handleTitleBoxBlur = this.handleTitleBoxBlur.bind(this);
     this.handleEditorGotFocus = this.handleFocusChanged.bind(this, true);
@@ -68,6 +71,8 @@ class SyncedEditor extends React.Component {
       documentReadOnly: false,
       documentCursors: [],
       documentShowCursorChars: false,
+      navigationText: '',
+      navigationPopupVisible: false,
       documentLanguageMode: '',
       documentLanguageModeList: LANGUAGE_MODES,
       documentLanguageModeListFilter: '',
@@ -288,7 +293,8 @@ class SyncedEditor extends React.Component {
   handleFocusChanged(focus) {
     if (focus) {
       this.setState({
-        documentLanguageModeListVisible: false
+        documentLanguageModeListVisible: false,
+        navigationPopupVisible: false
       });
     }
   }
@@ -314,11 +320,36 @@ class SyncedEditor extends React.Component {
   }
 
   handleToggleLanguageModeList() {
-    this.setState({ documentLanguageModeListVisible: !this.state.documentLanguageModeListVisible});
+    this.setState({
+      documentLanguageModeListFilter: '',
+      documentLanguageModeListVisible: !this.state.documentLanguageModeListVisible,
+      navigationPopupVisible: false
+    });
   }
 
   handleEditLanguageModeFilter(value) {
     this.setState({ documentLanguageModeListFilter: value });
+  }
+
+  handleToggleNavigationPopup() {
+    this.setState({
+      navigationText: '',
+      navigationPopupVisible: !this.state.navigationPopupVisible,
+      documentLanguageModeListVisible: false
+    });
+  }
+
+  handleEditNavigationText(value) {
+    this.setState({ navigationText: value });
+  }
+
+  handleConfirmNavigation(target) {
+    this.setState({ navigationPopupVisible: false });
+    const line = parseInt(target, 10);
+    if (line) {
+      this.codeMirror.setCursor(line - 1);
+      this.codeMirror.focus();
+    }
   }
 
   handleTitleBoxBlur(event) {
@@ -650,13 +681,18 @@ class SyncedEditor extends React.Component {
           documentState={this.state.documentState}
           cursors={this.state.documentCursors}
           showCursorChars={this.state.documentShowCursorChars}
+          navigationText={this.state.navigationText}
+          navigationPopupVisible={this.state.navigationPopupVisible}
+          onToggleNavigationPopup={this.handleToggleNavigationPopup}
+          onEditNavigationText={this.handleEditNavigationText}
+          onConfirmNavigation={this.handleConfirmNavigation}
           languageMode={this.state.documentLanguageMode}
           languageModeList={this.state.documentLanguageModeList}
           languageModeListFilter={this.state.documentLanguageModeListFilter}
           languageModeListVisible={this.state.documentLanguageModeListVisible}
-          onEditLanguageModeListFilter={this.handleEditLanguageModeFilter}
-          onLanguageModeChanged={this.handleLanguageModeChanged}
           onToggleLanguageModeList={this.handleToggleLanguageModeList}
+          onEditLanguageModeListFilter={this.handleEditLanguageModeFilter}
+          onChangeLanguageMode={this.handleLanguageModeChanged}
         />
       </div>
     );

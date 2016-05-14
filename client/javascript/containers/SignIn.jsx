@@ -38,7 +38,7 @@ class SignIn extends React.Component {
   render() {
     const { dispatch } = this.props;
     return (
-      <div className="signin-form">
+      <div id="signin-form">
         <h1>Sign in</h1>
         <SignInForm
           submitting={this.props.submitting}

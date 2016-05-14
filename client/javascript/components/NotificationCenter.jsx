@@ -6,7 +6,7 @@ import { NOTIFICATION_INFORMATION, NOTIFICATION_WARNING, NOTIFICATION_ERROR } fr
 class NotificationCenter extends React.Component {
   render() {
     return (
-      <div className="notification-container">
+      <div id="notification-container">
         <ReactCSSTransitionGroup
           transitionName="notification-item"
           transitionEnterTimeout={400}

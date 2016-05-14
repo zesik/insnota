@@ -125,7 +125,7 @@ html, body {
   }
 }
 
-.signin-form, .signup-form {
+#signin-form, #signup-form {
   width: 302px;
   margin: 0 auto;
   padding: 60px 0;
@@ -157,4 +157,3 @@ html, body {
     color: $dark-text-disabled;
   }
 }
-

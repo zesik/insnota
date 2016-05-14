@@ -1,5 +1,7 @@
 import React from 'react';
+import classNames from 'classnames';
 import LanguageModePopup from './LanguageModePopup';
+import NavigationPopup from './NavigationPopup';
 import {
   CONNECTION_CONNECTING,
   CONNECTION_WAITING,
@@ -53,10 +55,14 @@ class EditorStatusBar extends React.Component {
     if (this.props.connectionRetries < 3) {
       // Won't display error when retry time less than 3
       if (this.props.documentState === DOC_SYNCED) {
-        syncStatus = (<div className="status-bar-item icon-button sync-status" title={syncTitle}>&#xf0c2;</div>);
+        syncStatus = (
+          <div className="status-bar-item-content icon-button" title={syncTitle}>
+            <i className="fa fa-cloud" />
+          </div>
+        );
       } else {
         syncStatus = (
-          <div className="status-bar-item icon-button sync-status" title={syncTitle}>
+          <div className="status-bar-item-content icon-button" title={syncTitle}>
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="14" viewBox="0 0 16 14">
               <clipPath id="cloud-icon-clip">
                 <text textAnchor="middle" x="50%" y="50%" dy=".35em">&#xf0c2;</text>
@@ -76,77 +82,95 @@ class EditorStatusBar extends React.Component {
       }
     } else {
       syncStatus = (
-        <div className="status-bar-item icon-button sync-status disconnected" title={syncTitle}>
+        <div className="status-bar-item-content icon-button disconnected" title={syncTitle}>
           <i className="fa fa-exclamation-circle" />
         </div>
       );
     }
 
+    let cursorInformation;
     // Cursor positions
-    let cursorPositions;
     if (this.props.cursors.length === 0) {
-      cursorPositions = (<div className="cursor-position" />);
+      cursorInformation = '';
     } else if (this.props.cursors.length === 1) {
       const cursor = this.props.cursors[0].head;
-      let content;
       if (this.props.showCursorChars) {
-        content = `Ln ${cursor.ln}, Col ${cursor.col}, Ch ${cursor.ch}`;
+        cursorInformation = `Ln ${cursor.ln}, Col ${cursor.col}, Ch ${cursor.ch}`;
       } else {
-        content = `Ln ${cursor.ln}, Col ${cursor.col}`;
+        cursorInformation = `Ln ${cursor.ln}, Col ${cursor.col}`;
       }
-      cursorPositions = (<div className="cursor-position">{content}</div>);
     } else {
-      cursorPositions = (<div className="cursor-position">{this.props.cursors.length} selections</div>);
+      cursorInformation = `${this.props.cursors.length} selections`;
     }
-
     // Cursor selections
-    let cursorSelections;
     let selectionLength = 0;
     for (let i = 0; i < this.props.cursors.length; ++i) {
       selectionLength += this.props.cursors[i].length;
     }
-    if (selectionLength === 0) {
-      cursorSelections = (<div className="cursor-selection" />);
-    } else {
-      cursorSelections = (<div className="cursor-selection">&nbsp;({selectionLength} selected)</div>);
+    if (selectionLength > 0) {
+      cursorInformation += ` (${selectionLength} selected)`;
     }
-
-    // Combining cursor information
-    const cursorStatus = (<div className="status-bar-item cursor-status">{cursorPositions}{cursorSelections}</div>);
+    const cursorStatusClasses = classNames({
+      'status-bar-item': true,
+      'popup-open': this.props.navigationPopupVisible
+    });
 
     // Language mode selections
     let currentLanguageMode = this.props.languageModeList.find(item => item.mimeType === this.props.languageMode);
     if (!currentLanguageMode) {
       currentLanguageMode = this.props.languageModeList.find(item => item.mimeType === 'text/plain');
     }
+    const languageSelectionClasses = classNames({
+      'status-bar-item': true,
+      'popup-open': this.props.languageModeListVisible
+    });
+
     return (
       <div className="status-bar">
-        {syncStatus}
-        {cursorStatus}
-        <div className="status-bar-item flex-width" />
-        <div className="status-bar-item language-selection" onClick={this.props.onToggleLanguageModeList}>
-          {currentLanguageMode.name}
+        <div className="status-bar-item" id="sync-status">
+          {syncStatus}
         </div>
-        {this.props.languageModeListVisible &&
-          <LanguageModePopup
-            currentMode={currentLanguageMode}
-            fullModeList={this.props.languageModeList}
-            filterText={this.props.languageModeListFilter}
-            onEditFilterText={this.props.onEditLanguageModeListFilter}
-            onModeChanged={this.props.onLanguageModeChanged}
-            onClosePopup={this.props.onToggleLanguageModeList}
-          />
-        }
+        <div className={cursorStatusClasses}>
+          <div className="status-bar-item-content" onClick={this.props.onToggleNavigationPopup}>
+            {cursorInformation}
+          </div>
+          {this.props.navigationPopupVisible &&
+            <NavigationPopup
+              navigationText={this.props.navigationText}
+              onEditNavigationText={this.props.onEditNavigationText}
+              onConfirmNavigation={this.props.onConfirmNavigation}
+              onClosePopup={this.props.onToggleNavigationPopup}
+            />
+          }
+        </div>
+        <div className="status-bar-item flex-width" />
+        <div className={languageSelectionClasses}>
+          <div className="status-bar-item-content" onClick={this.props.onToggleLanguageModeList}>
+            {currentLanguageMode.name}
+          </div>
+          {this.props.languageModeListVisible &&
+            <LanguageModePopup
+              currentMode={currentLanguageMode}
+              fullModeList={this.props.languageModeList}
+              filterText={this.props.languageModeListFilter}
+              onEditFilterText={this.props.onEditLanguageModeListFilter}
+              onChangeLanguageMode={this.props.onChangeLanguageMode}
+              onClosePopup={this.props.onToggleLanguageModeList}
+            />
+          }
+        </div>
       </div>
     );
   }
 }
 
 EditorStatusBar.propTypes = {
-  connectionState: React.PropTypes.string,
-  connectionRetries: React.PropTypes.number,
-  connectionWaitSeconds: React.PropTypes.number,
-  documentState: React.PropTypes.string,
+  // Document sync status
+  connectionState: React.PropTypes.string.isRequired,
+  connectionRetries: React.PropTypes.number.isRequired,
+  connectionWaitSeconds: React.PropTypes.number.isRequired,
+  documentState: React.PropTypes.string.isRequired,
+  // Cursor information
   cursors: React.PropTypes.arrayOf(React.PropTypes.shape({
     anchor: React.PropTypes.shape({
       ln: React.PropTypes.number.isRequired,
@@ -160,18 +184,25 @@ EditorStatusBar.propTypes = {
     }).isRequired,
     length: React.PropTypes.number.isRequired,
     primary: React.PropTypes.bool
-  })),
+  })).isRequired,
   showCursorChars: React.PropTypes.bool,
-  languageMode: React.PropTypes.string,
-  languageModeListVisible: React.PropTypes.bool,
-  languageModeListFilter: React.PropTypes.string,
+  // Navigation
+  navigationPopupVisible: React.PropTypes.bool.isRequired,
+  navigationText: React.PropTypes.string.isRequired,
+  onToggleNavigationPopup: React.PropTypes.func.isRequired,
+  onEditNavigationText: React.PropTypes.func.isRequired,
+  onConfirmNavigation: React.PropTypes.func.isRequired,
+  // Language mode
+  languageMode: React.PropTypes.string.isRequired,
+  languageModeListVisible: React.PropTypes.bool.isRequired,
+  languageModeListFilter: React.PropTypes.string.isRequired,
   languageModeList: React.PropTypes.arrayOf(React.PropTypes.shape({
     name: React.PropTypes.string.isRequired,
     mimeType: React.PropTypes.string.isRequired
-  })),
-  onEditLanguageModeListFilter: React.PropTypes.func,
-  onToggleLanguageModeList: React.PropTypes.func,
-  onLanguageModeChanged: React.PropTypes.func
+  })).isRequired,
+  onToggleLanguageModeList: React.PropTypes.func.isRequired,
+  onEditLanguageModeListFilter: React.PropTypes.func.isRequired,
+  onChangeLanguageMode: React.PropTypes.func.isRequired
 };
 
 export default EditorStatusBar;

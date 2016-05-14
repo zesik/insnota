@@ -35,9 +35,10 @@ class DocumentManager extends React.Component {
 
   render() {
     const newDocClasses = classNames({
-      'btn': true,
+      btn: true,
       'btn-link': true,
       'tool-bar-item': true,
+      'icon-button': true,
       disabled: this.props.fetching || this.props.creating
     });
     const containerClasses = classNames({
@@ -58,7 +59,7 @@ class DocumentManager extends React.Component {
           }
         </div>
         <div className="document-list-status tool-bar">
-          <div className="tool-bar-item note-counter">
+          <div className="tool-bar-item">
             {this.props.fetching && <div className="loading">Loading...</div>}
             {(!this.props.fetching) && <div>{getNoteCounter(this.props.documents.length)}</div>}
           </div>

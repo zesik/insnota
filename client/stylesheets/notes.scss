@@ -200,8 +200,7 @@ $status-bar-line-height:
   .status-bar-item {
     flex: 0 1 auto;
     margin: $status-bar-item-margin-top $status-bar-item-margin-right;
-    padding: $status-bar-item-padding-top $status-bar-item-padding-right;
-    cursor: pointer;
+    position: relative;
 
     &:hover {
       background-color: $grey-300;
@@ -223,39 +222,37 @@ $status-bar-line-height:
       cursor: inherit;
     }
 
-    &.icon-button {
+    &.popup-open {
+      background-color: $white;
+      @include drop-shadow(0, 0, 2px, rgba(0, 0, 0, 0.5));
+      z-index: 1050;
+    }
+
+    .status-bar-item-content {
+      padding: $status-bar-item-padding-top $status-bar-item-padding-right;
+      cursor: pointer;
+    }
+
+    .icon-button {
       width: 32px;
       text-align: center;
     }
+  }
+}
 
-    &.note-counter {
-      background: none;
-      cursor: inherit;
+#sync-status {
+  display: inline-block;
+  font-family: FontAwesome;
 
-      &:hover {
-        background: none;
-      }
-    }
+  .cloud-icon-fill {
+    fill: url("#cloud-icon-pattern");
+    animation: cloud-icon-pattern-animation 0.25s infinite linear;
+  }
 
-    &.sync-status {
-      display: inline-block;
-      font-family: FontAwesome;
-
-      .cloud-icon-fill {
-        fill: url("#cloud-icon-pattern");
-        animation: cloud-icon-pattern-animation 0.25s infinite linear;
-      }
-
-      &.disconnected i {
-        color: $red-600;
-        text-shadow: 0 0 4px rgba($red-600, 0.3);
-        animation: sync-status-icon-blink 3s step-end infinite;
-      }
-    }
-
-    .cursor-position, .cursor-selection {
-      display: inline-block;
-    }
+  .disconnected i {
+    color: $red-600;
+    text-shadow: 0 0 4px rgba($red-600, 0.3);
+    animation: sync-status-icon-blink 3s step-end infinite;
   }
 }
 
@@ -274,56 +271,34 @@ $status-bar-line-height:
   }
 }
 
+.status-popup {
+  position: absolute;
+  width: 320px;
+  padding: 12px;
+  background-color: $white;
+  color: $dark-text-primary;
+  font-size: $status-bar-font-size;
+  line-height: $status-bar-line-height;
 
-.status-popup-container {
-  position: relative;
+  &.popup-top-left {
+    bottom: $status-bar-height;
+    right: 0;
+  }
 
-  .status-popup {
-    display: none;
-    position: absolute;
-    padding: 12px;
-    width: 320px;
-    font-size: $base-font-size;
-    line-height: $base-line-height;
-    background-color: $grey-200;
-    color: $dark-text-primary;
-    @include drop-shadow(0, 0, 4px, rgba(0,0,0,0.4));
+  &.popup-top-right {
+    bottom: $status-bar-height;
+    left: 0;
+  }
 
-    .popup-title {
-      margin: 0 16px 10px 0;
-      font-size: $h3-font-size;
-      font-weight: $font-bold;
-    }
+  .popup-title {
+    margin: 0 16px 10px 0;
+    font-size: $h3-font-size;
+    font-weight: $font-bold;
+  }
 
-    .popup-close-button {
-      float: right;
-      font-size: $h3-font-size;
-    }
-
-    .popup-tab {
-      position: absolute;
-      height: $status-bar-height;
-      margin: $status-bar-item-margin-top $status-bar-item-margin-right;
-      padding: $status-bar-item-padding-top $status-bar-item-padding-right;
-      font-size: $status-bar-font-size;
-      line-height: $status-bar-line-height;
-      background-color: inherit;
-      cursor: pointer;
-    }
-
-    &.popup-open {
-      display: inherit;
-    }
-
-    &.popup-top-left {
-      bottom: $status-bar-height;
-      right: $status-bar-item-margin-right;
-
-      .popup-tab {
-        bottom: -$status-bar-height;
-        right: -$status-bar-item-margin-right;
-      }
-    }
+  .popup-close-button {
+    float: right;
+    font-size: $h3-font-size;
   }
 }
 
@@ -334,6 +309,8 @@ $status-bar-line-height:
 
 #language-selection-list {
   position: relative;
+  margin: 12px 0;
+  padding: 0;
   height: 300px;
   overflow-y: auto;
 
@@ -345,12 +322,12 @@ $status-bar-line-height:
     cursor: pointer;
 
     &:hover, &:focus {
-      background-color: $grey-300;
+      background-color: $grey-200;
       color: $dark-text-primary;
     }
 
     &:active {
-      background-color: $grey-350;
+      background-color: $grey-300;
       color: $dark-text-primary;
     }
 
@@ -374,19 +351,34 @@ $status-bar-line-height:
   }
 }
 
+#popup-navigation {
+  width: 240px;
+}
+
+#popup-navigation-content {
+  display: flex;
+  flex-flow: row;
+  margin: 12px 0 0;
+}
+
+#navigation-text {
+  flex: 1 1 auto;
+  margin-right: 12px;
+}
+
 .modal-backdrop {
   position: fixed;
   height: 100%;
   width: 100%;
   background: rgba(0,0,0,0.5);
-  z-index: 5000;
+  z-index: 2000;
 
   .modal-dialog {
     width: 540px;
     margin: 128px auto 0;
     padding: 16px;
     background: $white;
-    @include drop-shadow(0, 0, 4px, rgba(0,0,0,0.4));
+    @include drop-shadow(0, 0, 4px, rgba(0,0,0,0.5));
 
     .modal-dialog-close {
       float: right;
@@ -418,7 +410,7 @@ $status-bar-line-height:
   }
 }
 
-.notification-container {
+#notification-container {
   position: fixed;
   top: 0;
   right: 0;
@@ -426,29 +418,30 @@ $status-bar-line-height:
   z-index: 1000;
 
   .notification-item {
-    position: relative;
     display: block;
+    position: relative;
     margin: 20px 20px 0 0;
     padding: 16px;
     max-height: 200px;
-    border-left: 4px solid $grey-600;
+    border-left: 6px solid $grey-600;
     background-color: $grey-300;
     color: $dark-text-primary;
+    @include drop-shadow(0, 0, 2px, rgba(0,0,0,0.5));
 
     &.notification-information {
-      border-left: 4px solid $blue-600;
+      border-left-color: $blue-600;
       background-color: $blue-50;
       color: $blue-900;
     }
 
     &.notification-warning {
-      border-left: 4px solid $orange-600;
+      border-left-color: $orange-600;
       background-color: $orange-50;
       color: $orange-900;
     }
 
     &.notification-error {
-      border-left: 4px solid $red-600;
+      border-left-color: $red-600;
       background-color: $red-50;
       color: $red-900;
     }
@@ -501,8 +494,8 @@ $status-bar-line-height:
 }
 
 .collaborator-cursor-container {
-  position: absolute;
   display: inline-block;
+  position: absolute;
 
   .collaborator-cursor {
     position: absolute;
