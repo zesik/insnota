@@ -68,8 +68,8 @@ class Modal extends React.Component {
   render() {
     const defaultButtonClasses = classNames({
       btn: true,
-      'btn-default': !this.props.defaultButtonDestructive,
-      'btn-danger': this.props.defaultButtonDestructive
+      'btn-default': !this.props.confirmButtonDestructive,
+      'btn-danger': this.props.confirmButtonDestructive
     });
     return (
       <div className="modal-backdrop">
@@ -90,7 +90,7 @@ class Modal extends React.Component {
               {this.props.cancelButtonTitle || 'Cancel'}
             </button>
             <button className={defaultButtonClasses} onClick={this.handleConfirm} ref="confirmButton">
-              {this.props.defaultButtonTitle || 'OK'}
+              {this.props.confirmButtonTitle || 'OK'}
             </button>
           </div>
         </div>
@@ -104,9 +104,9 @@ Modal.propTypes = {
   body: React.PropTypes.string,
   titleElement: React.PropTypes.element,
   bodyElement: React.PropTypes.element,
-  defaultButtonDestructive: React.PropTypes.bool,
+  confirmButtonDestructive: React.PropTypes.bool,
   focusCancelButton: React.PropTypes.bool,
-  defaultButtonTitle: React.PropTypes.string,
+  confirmButtonTitle: React.PropTypes.string,
   cancelButtonTitle: React.PropTypes.string,
   onCancelClicked: React.PropTypes.func,
   onConfirmClicked: React.PropTypes.func

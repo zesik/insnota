@@ -368,6 +368,8 @@ $status-bar-line-height:
 
 .modal-backdrop {
   position: fixed;
+  top: 0;
+  left: 0;
   height: 100%;
   width: 100%;
   background: rgba(0,0,0,0.5);
@@ -388,11 +390,6 @@ $status-bar-line-height:
     .modal-title {
       margin: 0 30px 30px 0;
       font-size: $h1-font-size;
-      font-weight: $font-bold;
-
-      &.modal-title-regular-font {
-        font-weight: $font-regular;
-      }
     }
 
     .modal-buttons {
@@ -406,6 +403,34 @@ $status-bar-line-height:
       .btn:last-child {
         margin-right: 0;
       }
+    }
+  }
+}
+
+#permission-modal-body {
+  .modal-body-section-title {
+    margin: 20px 0 8px;
+  }
+
+  .modal-body-section {
+    .form-checkbox {
+      margin-bottom: 4px;
+    }
+  }
+}
+
+#collaborator-permission-list {
+  margin: 8px 0;
+  max-height: 120px;
+  overflow-y: auto;
+  border: 1px solid $grey-300;
+
+  .collaborator-permission-item {
+    padding: 8px;
+    border-bottom: 1px solid $dark-text-divider;
+
+    &:last-child {
+      border-bottom: none;
     }
   }
 }

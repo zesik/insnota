@@ -159,6 +159,11 @@ class EditorStatusBar extends React.Component {
             />
           }
         </div>
+        <div className="status-bar-item">
+          <div className="status-bar-item-content icon-button" onClick={this.props.onOpenPermissionModal}>
+            <i className="fa fa-lock" />
+          </div>
+        </div>
       </div>
     );
   }
@@ -202,7 +207,10 @@ EditorStatusBar.propTypes = {
   })).isRequired,
   onToggleLanguageModeList: React.PropTypes.func.isRequired,
   onEditLanguageModeListFilter: React.PropTypes.func.isRequired,
-  onChangeLanguageMode: React.PropTypes.func.isRequired
+  onChangeLanguageMode: React.PropTypes.func.isRequired,
+  // Permissions
+  permission: React.PropTypes.string.isRequired,
+  onOpenPermissionModal: React.PropTypes.func.isRequired
 };
 
 export default EditorStatusBar;

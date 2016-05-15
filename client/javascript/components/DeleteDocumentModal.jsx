@@ -3,7 +3,7 @@ import Modal from '../components/Modal';
 
 function DeleteDocumentModal(props) {
   const titleElement = (
-    <div className="modal-title modal-title-regular-font">
+    <div className="modal-title">
       Are you sure you want to delete <strong>{props.title}</strong>?
     </div>
   );
@@ -15,8 +15,8 @@ function DeleteDocumentModal(props) {
         <Modal
           titleElement={titleElement}
           body={body}
-          defaultButtonDestructive
-          defaultButtonTitle="Delete Note"
+          confirmButtonDestructive
+          confirmButtonTitle="Delete Note"
           onConfirmClicked={() => props.onConfirmClicked(props.documentID)}
           onCancelClicked={() => props.onCancelClicked()}
         />

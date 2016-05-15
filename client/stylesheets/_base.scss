@@ -301,3 +301,59 @@ a {
     }
   }
 }
+
+.form-group, .form-checkbox {
+  margin-bottom: 12px;
+}
+
+.form-group {
+  label {
+    display: block;
+    font-weight: $font-bold;
+    padding-bottom: 6px;
+  }
+
+  .textbox {
+    width: 100%;
+  }
+
+  &.error {
+    .textbox {
+      border-color: $red-600;
+    }
+
+    .validation-error {
+      font-size: 12px;
+      margin-top: 4px;
+      color: $red-600;
+    }
+  }
+}
+
+.form-checkbox {
+  position: relative;
+
+  label {
+    padding-left: 20px;
+    cursor: pointer;
+  }
+
+  input[type="checkbox"], input[type="radio"] {
+    position: absolute;
+    margin-top: 4px;
+    margin-left: -20px;
+    cursor: inherit;
+  }
+}
+
+.form-submit {
+  margin: 16px 0;
+
+  .btn {
+    width: 100%;
+  }
+}
+
+.form-footer {
+  text-align: center;
+}
