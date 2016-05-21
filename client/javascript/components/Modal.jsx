@@ -9,23 +9,32 @@ class Modal extends React.Component {
     this.handleKeyDown = this.handleKeyDown.bind(this);
   }
 
-  handleCancel() {
-    if (this.props.onCancelClicked) {
-      this.props.onCancelClicked();
+  componentDidMount() {
+    if (this.props.cancelButtonFocused) {
+      this.refs.cancelButton.focus();
+    } else {
+      this.refs.confirmButton.focus();
     }
+    document.addEventListener('keydown', this.handleKeyDown);
+  }
+
+  componentWillUnmount() {
+    document.removeEventListener('keydown', this.handleKeyDown);
+  }
+
+  handleCancel() {
+    this.props.onCancelClicked();
   }
 
   handleConfirm(e) {
     e.preventDefault();
-    if (this.props.onConfirmClicked) {
-      this.props.onConfirmClicked();
-    }
+    this.props.onConfirmClicked();
   }
 
   handleKeyDown(e) {
     let element = e.target;
     switch (e.keyCode) {
-      case 9:
+      case 9:   // TAB key
         if (element === this.refs.closeButton && e.shiftKey) {
           e.preventDefault();
           this.refs.confirmButton.focus();
@@ -33,6 +42,7 @@ class Modal extends React.Component {
           e.preventDefault();
           this.refs.closeButton.focus();
         } else {
+          // Keep focus inside the dialog
           while (element && element !== this.refs.dialog) {
             element = element.parentNode;
           }
@@ -46,23 +56,12 @@ class Modal extends React.Component {
           }
         }
         break;
-      case 27:
+      case 27:  // ESC key
         this.handleCancel();
         break;
+      default:
+        break;
     }
-  }
-
-  componentDidMount() {
-    if (this.props.focusCancelButton) {
-      this.refs.cancelButton.focus();
-    } else {
-      this.refs.confirmButton.focus();
-    }
-    document.addEventListener('keydown', this.handleKeyDown);
-  }
-
-  componentWillUnmount() {
-    document.removeEventListener('keydown', this.handleKeyDown);
   }
 
   render() {
@@ -71,25 +70,38 @@ class Modal extends React.Component {
       'btn-default': !this.props.confirmButtonDestructive,
       'btn-danger': this.props.confirmButtonDestructive
     });
+    const titleElement = this.props.titleElement ? this.props.titleElement :
+      (<div className="modal-title">{this.props.title}</div>);
+    const bodyElement = this.props.bodyElement ? this.props.bodyElement :
+      (<div className="modal-title">{this.props.body}</div>);
     return (
       <div className="modal-backdrop">
         <div className="modal-dialog" ref="dialog">
-          <button className="btn btn-link modal-dialog-close" onClick={this.handleCancel} ref="closeButton">
+          <button
+            className="btn btn-link modal-dialog-close"
+            onClick={this.handleCancel}
+            disabled={this.props.cancelButtonDisabled}
+            ref="closeButton"
+          >
             <i className="fa fa-close" />
           </button>
-          {this.props.titleElement ?
-            this.props.titleElement :
-            <div className="modal-title">{this.props.title}</div>
-          }
-          {this.props.bodyElement ?
-            this.props.bodyElement :
-            <div className="modal-body">{this.props.body}</div>
-          }
-          <div className="modal-buttons" ref="cancelButton">
-            <button className="btn" onClick={this.handleCancel}>
+          {titleElement}
+          {bodyElement}
+          <div className="modal-buttons">
+            <button
+              className="btn"
+              onClick={this.handleCancel}
+              disabled={this.props.cancelButtonDisabled}
+              ref="cancelButton"
+            >
               {this.props.cancelButtonTitle || 'Cancel'}
             </button>
-            <button className={defaultButtonClasses} onClick={this.handleConfirm} ref="confirmButton">
+            <button
+              className={defaultButtonClasses}
+              onClick={this.handleConfirm}
+              disabled={this.props.confirmButtonDisabled}
+              ref="confirmButton"
+            >
               {this.props.confirmButtonTitle || 'OK'}
             </button>
           </div>
@@ -104,12 +116,14 @@ Modal.propTypes = {
   body: React.PropTypes.string,
   titleElement: React.PropTypes.element,
   bodyElement: React.PropTypes.element,
-  confirmButtonDestructive: React.PropTypes.bool,
-  focusCancelButton: React.PropTypes.bool,
   confirmButtonTitle: React.PropTypes.string,
+  confirmButtonDestructive: React.PropTypes.bool,
+  confirmButtonDisabled: React.PropTypes.bool,
   cancelButtonTitle: React.PropTypes.string,
-  onCancelClicked: React.PropTypes.func,
-  onConfirmClicked: React.PropTypes.func
+  cancelButtonFocused: React.PropTypes.bool,
+  cancelButtonDisabled: React.PropTypes.bool,
+  onCancelClicked: React.PropTypes.func.isRequired,
+  onConfirmClicked: React.PropTypes.func.isRequired
 };
 
 export default Modal;
