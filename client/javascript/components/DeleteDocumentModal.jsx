@@ -3,9 +3,7 @@ import Modal from '../components/Modal';
 
 function DeleteDocumentModal(props) {
   const titleElement = (
-    <div className="modal-title">
-      Are you sure you want to delete <strong>{props.title}</strong>?
-    </div>
+    <div className="modal-title">Are you sure you want to delete <strong>{props.documentTitle}</strong>?</div>
   );
   const body = 'You cannot undo this operation. All other collaborators will no longer be able to view or edit ' +
     'this file.';
@@ -18,7 +16,7 @@ function DeleteDocumentModal(props) {
           confirmButtonDestructive
           confirmButtonTitle="Delete Note"
           onConfirmClicked={() => props.onConfirmClicked(props.documentID)}
-          onCancelClicked={() => props.onCancelClicked()}
+          onCancelClicked={props.onCancelClicked}
         />
       }
     </div>
@@ -27,10 +25,10 @@ function DeleteDocumentModal(props) {
 
 DeleteDocumentModal.propTypes = {
   visible: React.PropTypes.bool.isRequired,
-  documentID: React.PropTypes.string,
-  title: React.PropTypes.string,
-  onConfirmClicked: React.PropTypes.func,
-  onCancelClicked: React.PropTypes.func
+  documentID: React.PropTypes.string.isRequired,
+  documentTitle: React.PropTypes.string.isRequired,
+  onConfirmClicked: React.PropTypes.func.isRequired,
+  onCancelClicked: React.PropTypes.func.isRequired
 };
 
 export default DeleteDocumentModal;
