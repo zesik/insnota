@@ -5,7 +5,6 @@ import ShareDB from 'sharedb/lib/client';
 import EditorOverlay from './EditorOverlay';
 import EditorStatusBar from './EditorStatusBar';
 import Collaborators from './Collaborators';
-import DocumentPermissionModal from './DocumentPermissionModal';
 import { LANGUAGE_MODES } from '../utils/editorLanguageModes';
 
 export const CONNECTION_DISCONNECTED = 'CONNECTION_DISCONNECTED';
@@ -56,10 +55,8 @@ class SyncedEditor extends React.Component {
     this.handleLanguageModeChanged = this.handleLanguageModeChanged.bind(this);
     this.handleToggleNavigationPopup = this.handleToggleNavigationPopup.bind(this);
     this.handleConfirmNavigation = this.handleConfirmNavigation.bind(this);
-    this.handleOpenPermissionModal = this.handleOpenPermissionModal.bind(this);
-    this.handleClosePermissionModal = this.handleClosePermissionModal.bind(this);
-    this.handleSavePermission = this.handleSavePermission.bind(this);
     this.handleEditNavigationText = this.handleEditNavigationText.bind(this);
+    this.handleOpenPermissionModal = this.handleOpenPermissionModal.bind(this);
     this.handleTitleKeyUp = this.handleTitleKeyUp.bind(this);
     this.handleTitleBoxBlur = this.handleTitleBoxBlur.bind(this);
     this.handleEditorGotFocus = this.handleFocusChanged.bind(this, true);
@@ -81,8 +78,7 @@ class SyncedEditor extends React.Component {
       documentLanguageModeList: LANGUAGE_MODES,
       documentLanguageModeListFilter: '',
       documentLanguageModeListVisible: false,
-      documentCollaborators: [],
-      documentPermissionModalVisible: false
+      documentCollaborators: []
     };
   }
 
@@ -358,15 +354,7 @@ class SyncedEditor extends React.Component {
   }
 
   handleOpenPermissionModal() {
-    this.setState({ documentPermissionModalVisible: true });
-  }
-
-  handleClosePermissionModal() {
-    this.setState({ documentPermissionModalVisible: false });
-  }
-
-  handleSavePermission() {
-    this.setState({ documentPermissionModalVisible: false });
+    this.props.onOpenPermissionModal(this.props.documentID);
   }
 
   handleTitleBoxBlur(event) {
@@ -712,11 +700,6 @@ class SyncedEditor extends React.Component {
           onChangeLanguageMode={this.handleLanguageModeChanged}
           onOpenPermissionModal={this.handleOpenPermissionModal}
         />
-        <DocumentPermissionModal
-          visible={this.state.documentPermissionModalVisible}
-          onConfirmClicked={this.handleSavePermission}
-          onCancelClicked={this.handleClosePermissionModal}
-        />
       </div>
     );
   }
@@ -731,7 +714,8 @@ SyncedEditor.propTypes = {
   onContentChanged: React.PropTypes.func,
   onCursorActivity: React.PropTypes.func,
   onLanguageModeChanged: React.PropTypes.func,
-  onDocumentError: React.PropTypes.func
+  onDocumentError: React.PropTypes.func,
+  onOpenPermissionModal: React.PropTypes.func
 };
 
 export default SyncedEditor;

@@ -28,9 +28,9 @@ class DocumentManager extends React.Component {
     onNewDocumentClicked();
   }
 
-  handleDeleteDocumentClicked(e, documentID) {
+  handleDeleteDocumentClicked(e, documentID, title) {
     e.preventDefault();
-    this.props.onDeleteDocumentClicked(documentID);
+    this.props.onDeleteDocumentClicked(documentID, title);
   }
 
   render() {
@@ -79,7 +79,7 @@ class DocumentManager extends React.Component {
                 <Document
                   title={item.title}
                   lastModified={item.lastModified}
-                  onDeleteClicked={e => this.handleDeleteDocumentClicked(e, item.id)}
+                  onDeleteClicked={e => this.handleDeleteDocumentClicked(e, item.id, item.title)}
                 />
               </Link>
             );

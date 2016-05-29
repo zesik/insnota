@@ -5,8 +5,6 @@ export const LOAD_DOCUMENTS = 'LOAD_DOCUMENTS';
 export const START_CREATING_DOCUMENT = 'START_CREATING_DOCUMENT';
 export const FINISH_CREATING_DOCUMENT = 'FINISH_CREATING_DOCUMENT';
 export const CHANGE_DOCUMENT_TITLE = 'CHANGE_DOCUMENT_TITLE';
-export const SHOW_DELETE_DOCUMENT_MODAL = 'SHOW_DELETE_DOCUMENT_MODAL';
-export const HIDE_DELETE_DOCUMENT_MODAL = 'HIDE_DELETE_DOCUMENT_MODAL';
 
 function loadDocuments(fetchingDocuments, userName, userEmail, documents) {
   return {
@@ -75,26 +73,3 @@ export function changeDocumentTitle(documentID, title) {
     title
   };
 }
-
-export function showDeleteDocumentModal(documentID) {
-  return {
-    type: SHOW_DELETE_DOCUMENT_MODAL,
-    documentID
-  };
-}
-
-export function hideDeleteDocumentModal() {
-  return {
-    type: HIDE_DELETE_DOCUMENT_MODAL
-  };
-}
-
-export function deleteDocument(documentID, isOpened) {
-  return dispatch => {
-    if (isOpened) {
-      dispatch(push('/notes'));
-    }
-    dispatch(hideDeleteDocumentModal());
-  };
-}
-

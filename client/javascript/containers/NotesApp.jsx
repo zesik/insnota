@@ -1,17 +1,24 @@
 import React from 'react';
 import { connect } from 'react-redux';
+import { getDocuments, createDocument, changeDocumentTitle } from '../actions/documentManager';
+import { openDeleteDocumentModal, closeDeleteDocumentModal, deleteDocument } from '../actions/documentDelete';
 import {
-   getDocuments,
-   createDocument,
-   changeDocumentTitle,
-   deleteDocument,
-   showDeleteDocumentModal,
-   hideDeleteDocumentModal
-} from '../actions/documentManager';
+  openPermissionModal,
+  closePermissionModal,
+  editCollaboratorPermission,
+  editEditorInviting,
+  editAnonymousEditing,
+  addCollaborator,
+  editNewCollaborator,
+  confirmAddCollaborator,
+  cancelAddCollaborator,
+  removeCollaborator
+} from '../actions/documentPermission';
 import { showInformation, showError } from '../actions/notificationCenter';
 import { getModeName } from '../utils/editorLanguageModes';
 import DocumentManager from '../components/DocumentManager';
 import DeleteDocumentModal from '../components/DeleteDocumentModal';
+import DocumentPermissionModal from '../components/DocumentPermissionModal';
 import SyncedEditor, { REMOTE_REMOTE } from '../components/SyncedEditor';
 import NotificationCenter from '../components/NotificationCenter';
 
@@ -27,7 +34,19 @@ class App extends React.Component {
     super(props);
     this.handleLanguageModeChanged = this.handleLanguageModeChanged.bind(this);
     this.handleTitleChanged = this.handleTitleChanged.bind(this);
-    this.handleDeleteDocumentClicked = this.handleDeleteDocumentClicked.bind(this);
+    this.handleDeleteDocument = this.handleDeleteDocument.bind(this);
+
+    // Permission modal
+    this.handleOpenPermissionModal = this.handleOpenPermissionModal.bind(this);
+    this.handleClosePermissionModal = this.handleClosePermissionModal.bind(this);
+    this.handleEditCollaboratorPermission = this.handleEditCollaboratorPermission.bind(this);
+    this.handleEditEditorInviting = this.handleEditEditorInviting.bind(this);
+    this.handleEditAnonymousEditing = this.handleEditAnonymousEditing.bind(this);
+    this.handleAddCollaborator = this.handleAddCollaborator.bind(this);
+    this.handleEditNewCollaborator = this.handleEditNewCollaborator.bind(this);
+    this.handleConfirmAddCollaborator = this.handleConfirmAddCollaborator.bind(this);
+    this.handleCancelAddCollaborator = this.handleCancelAddCollaborator.bind(this);
+    this.handleRemoveCollaborator = this.handleRemoveCollaborator.bind(this);
   }
 
   componentDidMount() {
@@ -47,9 +66,59 @@ class App extends React.Component {
     dispatch(changeDocumentTitle(selectedDocumentID, newTitle));
   }
 
-  handleDeleteDocumentClicked(documentID) {
+  handleDeleteDocument(documentID) {
     const { dispatch, selectedDocumentID } = this.props;
     dispatch(deleteDocument(documentID, selectedDocumentID === documentID));
+  }
+
+  handleOpenPermissionModal(documentID) {
+    const { dispatch } = this.props;
+    dispatch(openPermissionModal(documentID));
+  }
+
+  handleClosePermissionModal() {
+    const { dispatch } = this.props;
+    dispatch(closePermissionModal());
+  }
+
+  handleEditCollaboratorPermission(email, permission) {
+    const { dispatch } = this.props;
+    dispatch(editCollaboratorPermission(email, permission));
+  }
+
+  handleEditEditorInviting(editorInviting) {
+    const { dispatch } = this.props;
+    dispatch(editEditorInviting(editorInviting));
+  }
+
+  handleEditAnonymousEditing(anonymousEditing) {
+    const { dispatch } = this.props;
+    dispatch(editAnonymousEditing(anonymousEditing));
+  }
+
+  handleAddCollaborator() {
+    const { dispatch } = this.props;
+    dispatch(addCollaborator());
+  }
+
+  handleEditNewCollaborator(email) {
+    const { dispatch } = this.props;
+    dispatch(editNewCollaborator(email));
+  }
+
+  handleConfirmAddCollaborator(email) {
+    const { dispatch } = this.props;
+    dispatch(confirmAddCollaborator(email));
+  }
+
+  handleCancelAddCollaborator() {
+    const { dispatch } = this.props;
+    dispatch(cancelAddCollaborator());
+  }
+
+  handleRemoveCollaborator(email) {
+    const { dispatch } = this.props;
+    dispatch(removeCollaborator(email));
   }
 
   render() {
@@ -67,14 +136,7 @@ class App extends React.Component {
           documents={this.props.documents}
           selectedDocumentID={this.props.selectedDocumentID}
           onNewDocumentClicked={() => dispatch(createDocument())}
-          onDeleteDocumentClicked={documentID => dispatch(showDeleteDocumentModal(documentID))}
-        />
-        <DeleteDocumentModal
-          visible={this.props.modalDeleteDocument.visible}
-          documentID={this.props.modalDeleteDocument.documentID}
-          title={this.props.modalDeleteDocument.title}
-          onConfirmClicked={this.handleDeleteDocumentClicked}
-          onCancelClicked={() => dispatch(hideDeleteDocumentModal())}
+          onDeleteDocumentClicked={(documentID, title) => dispatch(openDeleteDocumentModal(documentID, title))}
         />
         <SyncedEditor
           fullScreen={!this.props.userEmail}
@@ -84,9 +146,40 @@ class App extends React.Component {
           onTitleChanged={this.handleTitleChanged}
           onLanguageModeChanged={this.handleLanguageModeChanged}
           onDocumentError={error => dispatch(showError(JSON.stringify(error)))}
+          onOpenPermissionModal={documentID => dispatch(openPermissionModal(documentID))}
+        />
+        <DeleteDocumentModal
+          opened={this.props.modalDeleteDocument.opened}
+          documentID={this.props.modalDeleteDocument.documentID}
+          documentTitle={this.props.modalDeleteDocument.title}
+          onConfirm={this.handleDeleteDocument}
+          onCancel={() => dispatch(closeDeleteDocumentModal())}
+        />
+        <DocumentPermissionModal
+          opened={this.props.modalDocumentPermission.opened}
+          documentID={this.props.modalDocumentPermission.documentID}
+          title={this.props.modalDocumentPermission.title}
+          loading={this.props.modalDocumentPermission.loading}
+          saving={this.props.modalDocumentPermission.saving}
+          canEdit={this.props.modalDocumentPermission.canEdit}
+          ownerName={this.props.modalDocumentPermission.ownerName}
+          ownerEmail={this.props.modalDocumentPermission.ownerEmail}
+          collaborators={this.props.modalDocumentPermission.collaborators}
+          editorInviting={this.props.modalDocumentPermission.editorInviting}
+          anonymousEditing={this.props.modalDocumentPermission.anonymousEditing}
+          editingNewCollaborator={this.props.modalDocumentPermission.editingNewCollaborator}
+          newCollaboratorEmail={this.props.modalDocumentPermission.newCollaboratorEmail}
+          onEditCollaboratorPermission={this.handleEditCollaboratorPermission}
+          onEditEditorInviting={this.handleEditEditorInviting}
+          onEditAnonymousEditing={this.handleEditAnonymousEditing}
+          onAddCollaborator={this.handleAddCollaborator}
+          onEditNewCollaborator={this.handleEditNewCollaborator}
+          onConfirmAddCollaborator={this.handleConfirmAddCollaborator}
+          onCancelAddCollaborator={this.handleCancelAddCollaborator}
+          onRemoveCollaborator={this.handleRemoveCollaborator}
+          onCancel={this.handleClosePermissionModal}
         />
         <NotificationCenter notifications={this.props.notifications} />
-
       </div>
     );
   }
@@ -104,10 +197,31 @@ App.propTypes = {
   })),
   selectedDocumentID: React.PropTypes.string,
   modalDeleteDocument: React.PropTypes.shape({
-    visible: React.PropTypes.bool,
-    documentID: React.PropTypes.string,
-    title: React.PropTypes.string
-  }),
+    opened: React.PropTypes.bool.isRequired,
+    documentID: React.PropTypes.string.isRequired,
+    title: React.PropTypes.string.isRequired,
+    deleting: React.PropTypes.bool.isRequired
+  }).isRequired,
+  modalDocumentPermission: React.PropTypes.shape({
+    opened: React.PropTypes.bool.isRequired,
+    documentID: React.PropTypes.string.isRequired,
+    title: React.PropTypes.string,
+    loading: React.PropTypes.bool.isRequired,
+    saving: React.PropTypes.bool.isRequired,
+    error: React.PropTypes.string,
+    canEdit: React.PropTypes.string,
+    ownerName: React.PropTypes.string.isRequired,
+    ownerEmail: React.PropTypes.string.isRequired,
+    collaborators: React.PropTypes.arrayOf(React.PropTypes.shape({
+      name: React.PropTypes.string.isRequired,
+      email: React.PropTypes.string.isRequired,
+      permission: React.PropTypes.string.isRequired
+    })).isRequired,
+    editorInviting: React.PropTypes.bool.isRequired,
+    anonymousEditing: React.PropTypes.string.isRequired,
+    editingNewCollaborator: React.PropTypes.bool.isRequired,
+    newCollaboratorEmail: React.PropTypes.string.isRequired
+  }).isRequired,
   notifications: React.PropTypes.arrayOf(React.PropTypes.shape({
     id: React.PropTypes.number.isRequired,
     level: React.PropTypes.string.isRequired,
@@ -124,7 +238,8 @@ function mapStateToProps(state, ownProps) {
     userEmail: state.document.userEmail,
     documents: state.document.documents,
     selectedDocumentID: ownProps.params.splat,
-    modalDeleteDocument: state.document.modalDeleteDocument,
+    modalDeleteDocument: state.deleteModal,
+    modalDocumentPermission: state.permissionModal,
     notifications: state.notification.notifications
   };
 }

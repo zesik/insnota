@@ -9,8 +9,8 @@ const DocumentSchema = new Schema({
   owner: { type: String, required: true, index: true },
   viewable: { type: [String], index: true },
   editable: { type: [String], index: true },
-  public_viewable: Boolean,
-  public_editable: Boolean,
+  public_access: { type: String },
+  editor_inviting: { type: Boolean },
   created_at: { type: Date, default: Date.now },
   updated_at: { type: Date, default: Date.now }
 });

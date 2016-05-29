@@ -27,6 +27,19 @@ router.get('/user', function (req, res, next) {
   }
 });
 
+router.get('/users/:email', function (req, res, next) {
+  userService.findUser(req.params.email, function (err, user) {
+    if (err) {
+      return next(err);
+    }
+    if (user) {
+      res.send({ email: user.email, name: user.name });
+    } else {
+      res.status(404).end();
+    }
+  })
+});
+
 router.get('/signup', function (req, res, next) {
   if (!config.allowSignUp) {
     res.status(403).end();
@@ -77,6 +90,75 @@ router.post('/notes', function (req, res, next) {
       res.send({ id, title: doc.t });
     });
   })
+});
+
+router.get('/notes/:docID', function (req, res, next) {
+  documentService.findByID(req.params.docID, function (err, doc) {
+    if (err) {
+      return next(err);
+    }
+    if (!doc) {
+      return res.send(404).end();
+    }
+    const permission = {
+      owner: { email: doc.owner },
+      collaborators: []
+    };
+    if (doc.public_access === 'edit') {
+      permission.anonymousEditing = 'edit';
+    } else if (doc.public_access === 'view') {
+      permission.anonymousEditing = 'view';
+    } else {
+      permission.anonymousEditing = 'deny';
+    }
+    permission.editorInviting = !!doc.editor_inviting;
+    const emails = [doc.owner];
+    Array.prototype.push.apply(emails, doc.viewable);
+    Array.prototype.push.apply(emails, doc.editable);
+    userService.findUsersIn(emails, function (err, users) {
+      if (err) {
+        return next(err);
+      }
+      const userMap = users.reduce(function (map, item) {
+        map[item.email] = item;
+        return map;
+      }, {});
+      if (typeof userMap[doc.owner] !== 'undefined') {
+        permission.owner = { email: doc.owner, name: userMap[doc.owner].name };
+      }
+      const collaborators = {};
+      doc.viewable.forEach(function (item) {
+        if (typeof userMap[item] !== 'undefined') {
+          collaborators[item] = { email: item, name: userMap[item].name, permission: 'view' };
+        }
+      });
+      doc.editable.forEach(function (item) {
+        if (typeof userMap[item] !== 'undefined') {
+          collaborators[item] = { email: item, name: userMap[item].name, permission: 'edit' };
+        }
+      });
+      for (const email in collaborators) {
+        if (collaborators.hasOwnProperty(email)) {
+          permission.collaborators.push(collaborators[email]);
+        }
+      }
+      permission.collaborators.sort((a, b) => a.email.toLowerCase().localeCompare(b.email.toLowerCase()));
+      res.send(permission);
+    });
+  });
+});
+
+router.get('/users/:email', function (req, res, next) {
+  userService.findUser(req.params.email, function (err, user) {
+    if (err) {
+      return next(err);
+    }
+    if (user) {
+      res.send({ email: user.email, name: user.name });
+    } else {
+      res.send(404).end();
+    }
+  });
 });
 
 module.exports = router;

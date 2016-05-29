@@ -9,14 +9,15 @@ function DeleteDocumentModal(props) {
     'this file.';
   return (
     <div>
-      {props.visible &&
+      {props.opened &&
         <Modal
           titleElement={titleElement}
           body={body}
           confirmButtonDestructive
           confirmButtonTitle="Delete Note"
-          onConfirmClicked={() => props.onConfirmClicked(props.documentID)}
-          onCancelClicked={props.onCancelClicked}
+          cancelButtonFocused
+          onConfirm={() => props.onConfirm(props.documentID)}
+          onCancel={props.onCancel}
         />
       }
     </div>
@@ -24,11 +25,11 @@ function DeleteDocumentModal(props) {
 }
 
 DeleteDocumentModal.propTypes = {
-  visible: React.PropTypes.bool.isRequired,
+  opened: React.PropTypes.bool.isRequired,
   documentID: React.PropTypes.string.isRequired,
-  documentTitle: React.PropTypes.string.isRequired,
-  onConfirmClicked: React.PropTypes.func.isRequired,
-  onCancelClicked: React.PropTypes.func.isRequired
+  documentTitle: React.PropTypes.string,
+  onConfirm: React.PropTypes.func.isRequired,
+  onCancel: React.PropTypes.func.isRequired
 };
 
 export default DeleteDocumentModal;

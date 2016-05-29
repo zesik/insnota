@@ -10,7 +10,7 @@ class Modal extends React.Component {
   }
 
   componentDidMount() {
-    if (this.props.cancelButtonFocused) {
+    if (this.props.cancelButtonFocused || !this.props.confirmButtonHidden) {
       this.refs.cancelButton.focus();
     } else {
       this.refs.confirmButton.focus();
@@ -23,12 +23,15 @@ class Modal extends React.Component {
   }
 
   handleCancel() {
-    this.props.onCancelClicked();
+    if (this.props.cancelButtonDisabled) {
+      return;
+    }
+    this.props.onCancel();
   }
 
   handleConfirm(e) {
     e.preventDefault();
-    this.props.onConfirmClicked();
+    this.props.onConfirm();
   }
 
   handleKeyDown(e) {
@@ -73,7 +76,7 @@ class Modal extends React.Component {
     const titleElement = this.props.titleElement ? this.props.titleElement :
       (<div className="modal-title">{this.props.title}</div>);
     const bodyElement = this.props.bodyElement ? this.props.bodyElement :
-      (<div className="modal-title">{this.props.body}</div>);
+      (<div className="modal-body">{this.props.body}</div>);
     return (
       <div className="modal-backdrop">
         <div className="modal-dialog" ref="dialog">
@@ -96,14 +99,16 @@ class Modal extends React.Component {
             >
               {this.props.cancelButtonTitle || 'Cancel'}
             </button>
-            <button
-              className={defaultButtonClasses}
-              onClick={this.handleConfirm}
-              disabled={this.props.confirmButtonDisabled}
-              ref="confirmButton"
-            >
-              {this.props.confirmButtonTitle || 'OK'}
-            </button>
+            {!this.props.confirmButtonHidden &&
+              <button
+                className={defaultButtonClasses}
+                onClick={this.handleConfirm}
+                disabled={this.props.confirmButtonDisabled}
+                ref="confirmButton"
+              >
+                {this.props.confirmButtonTitle || 'OK'}
+              </button>
+            }
           </div>
         </div>
       </div>
@@ -119,11 +124,12 @@ Modal.propTypes = {
   confirmButtonTitle: React.PropTypes.string,
   confirmButtonDestructive: React.PropTypes.bool,
   confirmButtonDisabled: React.PropTypes.bool,
+  confirmButtonHidden: React.PropTypes.bool,
   cancelButtonTitle: React.PropTypes.string,
   cancelButtonFocused: React.PropTypes.bool,
   cancelButtonDisabled: React.PropTypes.bool,
-  onCancelClicked: React.PropTypes.func.isRequired,
-  onConfirmClicked: React.PropTypes.func.isRequired
+  onConfirm: React.PropTypes.func.isRequired,
+  onCancel: React.PropTypes.func.isRequired
 };
 
 export default Modal;

@@ -2,20 +2,17 @@ import {
   LOAD_DOCUMENTS,
   START_CREATING_DOCUMENT,
   FINISH_CREATING_DOCUMENT,
-  CHANGE_DOCUMENT_TITLE,
-  SHOW_DELETE_DOCUMENT_MODAL,
-  HIDE_DELETE_DOCUMENT_MODAL
+  CHANGE_DOCUMENT_TITLE
 } from '../actions/documentManager';
 
 const initialState = {
-  fetchingDocuments: false,
-  creatingDocument: false,
-  userName: '',
-  userEmail: '',
+  // User information
+  userName: null,
+  userEmail: null,
+  // Document list
   documents: [],
-  modalDeleteDocument: {
-    visible: false
-  }
+  documentsFetching: false,
+  documentCreating: false
 };
 
 function documentManagerReducer(state = initialState, action) {
@@ -54,25 +51,6 @@ function documentManagerReducer(state = initialState, action) {
           }
           return doc;
         })
-      });
-    case SHOW_DELETE_DOCUMENT_MODAL: {
-      const document = state.documents.find(item => item.id === action.documentID);
-      if (!document) {
-        return state;
-      }
-      return Object.assign({}, state, {
-        modalDeleteDocument: {
-          visible: true,
-          documentID: action.documentID,
-          title: document.title
-        }
-      });
-    }
-    case HIDE_DELETE_DOCUMENT_MODAL:
-      return Object.assign({}, state, {
-        modalDeleteDocument: {
-          visible: false
-        }
       });
     default:
       return state;

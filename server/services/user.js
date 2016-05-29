@@ -138,6 +138,10 @@ function findUser(email, callback) {
   User.findOneByEmail(email, callback);
 }
 
+function findUsersIn(emails, callback) {
+  User.find({ email: { $in: emails }}, callback);
+}
+
 function resetLoginAttempts(email, callback) {
   User.resetLoginAttempts(email, callback);
 }
@@ -178,6 +182,7 @@ module.exports = {
   createUserWithRecaptcha,
   verifyUserWithRecaptcha,
   findUser,
+  findUsersIn,
   resetLoginAttempts,
   issueLoginToken,
   verifyLoginToken

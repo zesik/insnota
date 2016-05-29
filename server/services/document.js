@@ -6,6 +6,10 @@ function findByOwner(email, callback) {
   Document.findByOwner(email, callback);
 }
 
+function findByID(id, callback) {
+  Document.findOne({ _id: id }, callback);
+}
+
 function create(id, owner, title, callback) {
   const document = new Document();
   document._id = id;
@@ -16,5 +20,6 @@ function create(id, owner, title, callback) {
 
 module.exports = {
   findByOwner,
+  findByID,
   create
 };

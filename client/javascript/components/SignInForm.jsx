@@ -85,9 +85,9 @@ class SignInForm extends React.Component {
       });
       form = (
         <form method="post" onSubmit={this.handleSubmitPassword}>
-          <button className="btn btn-link" onClick={this.props.onGoToEmailForm}>
+          <a className="btn btn-link" onClick={this.props.onGoToEmailForm}>
             <i className="fa fa-arrow-left fa-2x" />
-          </button>
+          </a>
           <div className="user-info">
             <UserAvatar email={this.props.email} size={96} cornerRadius={96} />
             <div className="user-name">{this.props.name}</div>
