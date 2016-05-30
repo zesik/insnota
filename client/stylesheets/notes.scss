@@ -613,7 +613,11 @@ $status-bar-line-height:
   .collaborator-identity {
     display: none;
     position: absolute;
-    bottom: 0;
+    bottom: -1px;
+    left: -1px;
+    padding: 1px 4px;
+    font-family: $base-font-family;
+    font-size: $small-font-size;
     pointer-events: none;
   }
 
