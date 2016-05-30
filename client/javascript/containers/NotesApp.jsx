@@ -12,7 +12,8 @@ import {
   editCollaboratorPlaceholder,
   startAddCollaborator,
   cancelAddCollaborator,
-  removeCollaborator
+  removeCollaborator,
+  startSubmitPermission
 } from '../actions/documentPermission';
 import { showInformation, showError } from '../actions/notificationCenter';
 import { getModeName } from '../utils/editorLanguageModes';
@@ -47,6 +48,7 @@ class App extends React.Component {
     this.handleConfirmAddCollaborator = this.handleConfirmAddCollaborator.bind(this);
     this.handleCancelAddCollaborator = this.handleCancelAddCollaborator.bind(this);
     this.handleRemoveCollaborator = this.handleRemoveCollaborator.bind(this);
+    this.handleSavePermission = this.handleSavePermission.bind(this);
   }
 
   componentDidMount() {
@@ -121,6 +123,11 @@ class App extends React.Component {
     dispatch(removeCollaborator(email));
   }
 
+  handleSavePermission() {
+    const { dispatch } = this.props;
+    dispatch(startSubmitPermission());
+  }
+
   render() {
     const { dispatch, userName, userEmail } = this.props;
     let currentUser = null;
@@ -178,6 +185,7 @@ class App extends React.Component {
           onCancelAddCollaborator={this.handleCancelAddCollaborator}
           onRemoveCollaborator={this.handleRemoveCollaborator}
           onCancel={this.handleClosePermissionModal}
+          onConfirm={this.handleSavePermission}
         />
         <NotificationCenter notifications={this.props.notifications} />
       </div>

@@ -194,8 +194,10 @@ class DocumentPermissionModal extends React.Component {
             bodyElement={bodyElement}
             confirmButtonTitle="Save"
             confirmButtonHidden={this.props.loading || this.props.canEdit === 'none'}
+            confirmButtonDisabled={this.props.editingNewCollaborator === 'adding'}
             cancelButtonTitle={cancelButtonTitle}
             onCancel={this.props.onCancel}
+            onConfirm={this.props.onConfirm}
           />
         }
       </div>

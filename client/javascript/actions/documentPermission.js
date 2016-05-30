@@ -12,6 +12,7 @@ export const UPDATE_COLLABORATOR_PLACEHOLDER_STATUS = 'UPDATE_COLLABORATOR_PLACE
 export const FINISH_ADD_COLLABORATOR = 'FINISH_ADD_COLLABORATOR';
 export const CANCEL_ADD_COLLABORATOR = 'CANCEL_ADD_COLLABORATOR';
 export const REMOVE_COLLABORATOR = 'REMOVE_COLLABORATOR';
+export const UPDATE_SUBMISSION_STATUS = 'UPDATE_SUBMISSION_STATUS';
 
 function showPermissionModal(documentID) {
   return {
@@ -55,7 +56,7 @@ export function openPermissionModal(documentID) {
         } else if (json.editorInviting) {
           for (let i = 0; i < json.collaborators.length; ++i) {
             if (json.collaborators[i].email === userEmail && json.collaborators[i].permission === 'edit') {
-              permission = 'edit';
+              permission = 'collaborator';
               break;
             }
           }
@@ -145,4 +146,53 @@ export function removeCollaborator(email) {
     type: REMOVE_COLLABORATOR,
     email
   };
+}
+
+function updateSubmissionStatus(submitting, error) {
+  return {
+    type: UPDATE_SUBMISSION_STATUS,
+    submitting,
+    error
+  };
+}
+
+export function startSubmitPermission() {
+  return (dispatch, getState) => {
+    dispatch(updateSubmissionStatus(true));
+    const modalData = getState().permissionModal;
+    const data = {
+      collaborators: modalData.collaborators.map(item => ({ email: item.email, permission: item.permission }))
+    };
+    if (modalData.canEdit === 'owner') {
+      data.editorInviting = modalData.editorInviting;
+      data.anonymousEditing = modalData.anonymousEditing;
+    }
+    fetch(`/api/notes/${modalData.documentID}`, {
+      method: 'PUT',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data),
+      credentials: 'same-origin'
+    }).then(function (response) {
+      if (response.status >= 200 && response.status < 300) {
+        return response;
+      }
+      const error = new Error(response.statusText);
+      error.response = response;
+      throw error;
+    }).then(function () {
+      dispatch(closePermissionModal());
+    }).catch(function (err) {
+      if (err.response.status >= 500) {
+        console.error(err);
+        dispatch(updateSubmissionStatus(false, 'Server error'));
+        return;
+      }
+      err.response.json().then(function (json) {
+        dispatch(updateSubmissionStatus(false, json));
+      });
+    });
+  }
 }

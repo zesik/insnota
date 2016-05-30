@@ -10,7 +10,7 @@ class Modal extends React.Component {
   }
 
   componentDidMount() {
-    if (this.props.cancelButtonFocused || !this.props.confirmButtonHidden) {
+    if (this.props.cancelButtonFocused || this.props.confirmButtonHidden) {
       this.refs.cancelButton.focus();
     } else {
       this.refs.confirmButton.focus();

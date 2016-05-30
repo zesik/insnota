@@ -148,6 +148,36 @@ router.get('/notes/:docID', function (req, res, next) {
   });
 });
 
+router.put('/notes/:docID', function (req, res, next) {
+  documentService.findByID(req.params.docID, function (err, doc) {
+    if (err) {
+      return next(err);
+    }
+    if (!doc) {
+      return res.send(404).end();
+    }
+    const editable = [];
+    const viewable = [];
+    req.body.collaborators.forEach(item => {
+      if (item.permission === 'edit') {
+        editable.push(item.email);
+      } else {
+        viewable.push(item.email);
+      }
+    });
+    doc.viewable = viewable;
+    doc.editable = editable;
+    doc.public_access = req.body.anonymousEditing;
+    doc.editor_inviting = !!req.body.editorInviting;
+    doc.save(function (err) {
+      if (err) {
+        return next(err);
+      }
+      res.status(200).end();
+    });
+  });
+});
+
 router.get('/users/:email', function (req, res, next) {
   userService.findUser(req.params.email, function (err, user) {
     if (err) {
