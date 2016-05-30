@@ -2,15 +2,16 @@ import 'whatwg-fetch';
 
 export const SHOW_PERMISSION_MODAL = 'SHOW_PERMISSION_MODAL';
 export const HIDE_PERMISSION_MODAL = 'HIDE_PERMISSION_MODAL';
+export const INITIALIZE_PERMISSION_MODAL = 'INITIALIZE_PERMISSION_MODAL';
 export const EDIT_COLLABORATOR_PERMISSION = 'EDIT_COLLABORATOR_PERMISSION';
 export const EDIT_EDITOR_INVITING = 'EDIT_EDITOR_INVITING';
 export const EDIT_ANONYMOUS_EDITING = 'EDIT_ANONYMOUS_EDITING';
-export const ADD_COLLABORATOR = 'ADD_COLLABORATOR';
-export const EDIT_NEW_COLLABORATOR = 'EDIT_NEW_COLLABORATOR';
-export const CONFIRM_ADD_COLLABORATOR = 'CONFIRM_ADD_COLLABORATOR';
+export const ADD_COLLABORATOR_PLACEHOLDER = 'ADD_COLLABORATOR_PLACEHOLDER';
+export const EDIT_COLLABORATOR_PLACEHOLDER = 'EDIT_COLLABORATOR_PLACEHOLDER';
+export const UPDATE_COLLABORATOR_PLACEHOLDER_STATUS = 'UPDATE_COLLABORATOR_PLACEHOLDER_STATUS';
+export const FINISH_ADD_COLLABORATOR = 'FINISH_ADD_COLLABORATOR';
 export const CANCEL_ADD_COLLABORATOR = 'CANCEL_ADD_COLLABORATOR';
 export const REMOVE_COLLABORATOR = 'REMOVE_COLLABORATOR';
-export const INITIALIZE_PERMISSION_MODAL = 'INITIALIZE_PERMISSION_MODAL';
 
 function showPermissionModal(documentID) {
   return {
@@ -96,22 +97,40 @@ export function editAnonymousEditing(anonymousEditing) {
   };
 }
 
-export function addCollaborator() {
+export function addCollaboratorPlaceholder() {
   return {
-    type: ADD_COLLABORATOR
+    type: ADD_COLLABORATOR_PLACEHOLDER
   };
 }
 
-export function editNewCollaborator(email) {
+export function editCollaboratorPlaceholder(email) {
   return {
-    type: EDIT_NEW_COLLABORATOR,
+    type: EDIT_COLLABORATOR_PLACEHOLDER,
     email
   };
 }
 
-export function confirmAddCollaborator(email) {
-  return dispatch => {
+function updateCollaboratorPlaceholderStatus(adding, error) {
+  return {
+    type: UPDATE_COLLABORATOR_PLACEHOLDER_STATUS,
+    adding,
+    error
+  };
+}
 
+function finishAddCollaborator(email, name) {
+  return {
+    type: FINISH_ADD_COLLABORATOR,
+    email,
+    name
+  };
+}
+
+export function startAddCollaborator(email) {
+  return dispatch => {
+    dispatch(updateCollaboratorPlaceholderStatus(true));
+    // TODO: validate email address
+    dispatch(finishAddCollaborator(email, ''));
   };
 }
 

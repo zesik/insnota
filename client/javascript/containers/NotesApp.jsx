@@ -8,9 +8,9 @@ import {
   editCollaboratorPermission,
   editEditorInviting,
   editAnonymousEditing,
-  addCollaborator,
-  editNewCollaborator,
-  confirmAddCollaborator,
+  addCollaboratorPlaceholder,
+  editCollaboratorPlaceholder,
+  startAddCollaborator,
   cancelAddCollaborator,
   removeCollaborator
 } from '../actions/documentPermission';
@@ -98,17 +98,17 @@ class App extends React.Component {
 
   handleAddCollaborator() {
     const { dispatch } = this.props;
-    dispatch(addCollaborator());
+    dispatch(addCollaboratorPlaceholder());
   }
 
   handleEditNewCollaborator(email) {
     const { dispatch } = this.props;
-    dispatch(editNewCollaborator(email));
+    dispatch(editCollaboratorPlaceholder(email));
   }
 
   handleConfirmAddCollaborator(email) {
     const { dispatch } = this.props;
-    dispatch(confirmAddCollaborator(email));
+    dispatch(startAddCollaborator(email));
   }
 
   handleCancelAddCollaborator() {
@@ -219,7 +219,7 @@ App.propTypes = {
     })).isRequired,
     editorInviting: React.PropTypes.bool.isRequired,
     anonymousEditing: React.PropTypes.string.isRequired,
-    editingNewCollaborator: React.PropTypes.bool.isRequired,
+    editingNewCollaborator: React.PropTypes.string.isRequired,
     newCollaboratorEmail: React.PropTypes.string.isRequired
   }).isRequired,
   notifications: React.PropTypes.arrayOf(React.PropTypes.shape({

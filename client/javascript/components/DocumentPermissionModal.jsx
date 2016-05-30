@@ -12,7 +12,7 @@ class DocumentPermissionModal extends React.Component {
   }
 
   componentDidUpdate(prevProps) {
-    if (!prevProps.editingNewCollaborator && this.props.editingNewCollaborator) {
+    if (prevProps.editingNewCollaborator !== 'editing' && this.props.editingNewCollaborator === 'editing') {
       this.refs.newCollaborator.focus();
     }
   }
@@ -105,7 +105,7 @@ class DocumentPermissionModal extends React.Component {
                         type="text"
                         className="textbox"
                         value={this.props.newCollaboratorEmail}
-                        onChange={e => e.onEditNewCollaborator(e.target.value)}
+                        onChange={e => this.props.onEditNewCollaborator(e.target.value)}
                       />
                     </div>
                     <div className="collaborator-operations">
@@ -219,7 +219,7 @@ DocumentPermissionModal.propTypes = {
   })).isRequired,
   editorInviting: React.PropTypes.bool.isRequired,
   anonymousEditing: React.PropTypes.string.isRequired,
-  editingNewCollaborator: React.PropTypes.bool.isRequired,
+  editingNewCollaborator: React.PropTypes.string.isRequired,
   newCollaboratorEmail: React.PropTypes.string.isRequired,
   onEditCollaboratorPermission: React.PropTypes.func.isRequired,
   onEditEditorInviting: React.PropTypes.func.isRequired,

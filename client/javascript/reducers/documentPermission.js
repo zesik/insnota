@@ -4,8 +4,10 @@ import {
   EDIT_COLLABORATOR_PERMISSION,
   EDIT_EDITOR_INVITING,
   EDIT_ANONYMOUS_EDITING,
-  ADD_COLLABORATOR,
-  EDIT_NEW_COLLABORATOR,
+  ADD_COLLABORATOR_PLACEHOLDER,
+  EDIT_COLLABORATOR_PLACEHOLDER,
+  UPDATE_COLLABORATOR_PLACEHOLDER_STATUS,
+  FINISH_ADD_COLLABORATOR,
   CANCEL_ADD_COLLABORATOR,
   REMOVE_COLLABORATOR,
   INITIALIZE_PERMISSION_MODAL
@@ -25,7 +27,7 @@ const initialState = {
   collaborators: [],
   editorInviting: false,
   anonymousEditing: '',
-  editingNewCollaborator: false,
+  editingNewCollaborator: '',
   newCollaboratorEmail: ''
 };
 
@@ -71,18 +73,36 @@ function documentPermissionReducer(state = initialState, action) {
       return Object.assign({}, state, {
         anonymousEditing: action.anonymousEditing
       });
-    case ADD_COLLABORATOR:
+    case ADD_COLLABORATOR_PLACEHOLDER:
       return Object.assign({}, state, {
-        editingNewCollaborator: true,
+        editingNewCollaborator: 'editing',
         newCollaboratorEmail: ''
       });
-    case EDIT_NEW_COLLABORATOR:
+    case EDIT_COLLABORATOR_PLACEHOLDER:
       return Object.assign({}, state, {
         newCollaboratorEmail: action.email
       });
+    case UPDATE_COLLABORATOR_PLACEHOLDER_STATUS:
+      return Object.assign({}, state, {
+        editingNewCollaborator: action.adding ? 'adding' : 'editing',
+        errorAdding: action.error || ''
+      });
+    case FINISH_ADD_COLLABORATOR:
+      return Object.assign({}, state, {
+        editingNewCollaborator: '',
+        newCollaboratorEmail: '',
+        collaborators: [
+          ...state.collaborators,
+          {
+            email: action.email,
+            name: action.name,
+            permission: 'view'
+          }
+        ]
+      });
     case CANCEL_ADD_COLLABORATOR:
       return Object.assign({}, state, {
-        editingNewCollaborator: false,
+        editingNewCollaborator: '',
         newCollaboratorEmail: ''
       });
     case REMOVE_COLLABORATOR:
