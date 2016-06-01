@@ -1,14 +1,34 @@
 import React from 'react';
+import { connect } from 'react-redux';
 import classNames from 'classnames';
-import Modal from './Modal';
-import UserAvatar from './UserAvatar';
+import Modal from '../components/Modal';
+import UserAvatar from '../components/UserAvatar';
+import {
+  closePermissionModal,
+  editCollaboratorPermission,
+  addCollaboratorPlaceholder,
+  editCollaboratorPlaceholder,
+  startAddCollaborator,
+  cancelAddCollaborator,
+  removeCollaborator,
+  editEditorInviting,
+  editAnonymousEditing,
+  startSubmitPermission
+} from '../actions/permissionModal';
 
-class DocumentPermissionModal extends React.Component {
+class PermissionModal extends React.Component {
   constructor(props) {
     super(props);
-    this.handleAddCollaborator = this.handleAddCollaborator.bind(this);
-    this.handleConfirmAddCollaborator = this.handleConfirmAddCollaborator.bind(this);
+    this.handleClosePermissionModal = this.handleClosePermissionModal.bind(this);
+    this.handleEditCollaboratorPermission = this.handleEditCollaboratorPermission.bind(this);
+    this.handleAddCollaboratorPlaceholder = this.handleAddCollaboratorPlaceholder.bind(this);
+    this.handleEditCollaboratorPlaceholder = this.handleEditCollaboratorPlaceholder.bind(this);
+    this.handleStartAddCollaborator = this.handleStartAddCollaborator.bind(this);
+    this.handleCancelAddCollaborator = this.handleCancelAddCollaborator.bind(this);
+    this.handleRemoveCollaborator = this.handleRemoveCollaborator.bind(this);
+    this.handleEditEditorInviting = this.handleEditEditorInviting.bind(this);
     this.handleEditAnonymousEditing = this.handleEditAnonymousEditing.bind(this);
+    this.handleStartSubmitPermission = this.handleStartSubmitPermission.bind(this);
   }
 
   componentDidUpdate(prevProps) {
@@ -17,17 +37,50 @@ class DocumentPermissionModal extends React.Component {
     }
   }
 
-  handleAddCollaborator(e) {
-    e.preventDefault();
-    this.props.onAddCollaborator();
+  handleClosePermissionModal() {
+    const { dispatch } = this.props;
+    dispatch(closePermissionModal());
   }
 
-  handleConfirmAddCollaborator(e) {
+  handleEditCollaboratorPermission(email, permission) {
+    const { dispatch } = this.props;
+    dispatch(editCollaboratorPermission(email, permission));
+  }
+
+  handleAddCollaboratorPlaceholder(e) {
+    const { dispatch } = this.props;
     e.preventDefault();
-    this.props.onConfirmAddCollaborator(this.props.newCollaboratorEmail);
+    dispatch(addCollaboratorPlaceholder());
+  }
+
+  handleEditCollaboratorPlaceholder(email) {
+    const { dispatch } = this.props;
+    dispatch(editCollaboratorPlaceholder(email));
+  }
+
+  handleStartAddCollaborator(e) {
+    const { dispatch } = this.props;
+    e.preventDefault();
+    dispatch(startAddCollaborator(this.props.newCollaboratorEmail));
+  }
+
+  handleCancelAddCollaborator() {
+    const { dispatch } = this.props;
+    dispatch(cancelAddCollaborator());
+  }
+
+  handleRemoveCollaborator(email) {
+    const { dispatch } = this.props;
+    dispatch(removeCollaborator(email));
+  }
+
+  handleEditEditorInviting(editorInviting) {
+    const { dispatch } = this.props;
+    dispatch(editEditorInviting(editorInviting));
   }
 
   handleEditAnonymousEditing() {
+    const { dispatch } = this.props;
     let anonymousEditing = '';
     if (this.refs.anonymousEditingDeny.checked) {
       anonymousEditing = 'deny';
@@ -36,27 +89,20 @@ class DocumentPermissionModal extends React.Component {
     } else {
       anonymousEditing = 'edit';
     }
-    this.props.onEditAnonymousEditing(anonymousEditing);
+    dispatch(editAnonymousEditing(anonymousEditing));
+  }
+
+  handleStartSubmitPermission() {
+    const { dispatch } = this.props;
+    dispatch(startSubmitPermission());
   }
 
   render() {
-    let titleElement;
-    if (this.props.title) {
-      titleElement = (
-        <div className="modal-title">
-          Sharing Settings for <strong>{this.props.title}</strong>
-        </div>
-      );
-    } else {
-      titleElement = (<div className="modal-title">Sharing Settings</div>);
-    }
     let bodyElement;
-    if (this.props.loading) {
-      bodyElement = (
-        <div className="modal-body" id="permission-modal-body">
-          Loading...
-        </div>
-      );
+    if (!this.props.opened) {
+      bodyElement = null;
+    } else if (this.props.loading) {
+      bodyElement = (<div className="modal-body" id="permission-modal-body">Loading...</div>);
     } else {
       const { anonymousEditing, canEdit } = this.props;
       bodyElement = (
@@ -72,7 +118,7 @@ class DocumentPermissionModal extends React.Component {
           <div className="modal-body-section-title">Collaborators</div>
           <div className="modal-body-section">
             <div id="collaborator-permission-list" className={classNames({ editable: canEdit !== 'none' })}>
-              {this.props.collaborators.map((collaborator, index) => (
+              {this.props.collaborators.map(collaborator => (
                 <div className="collaborator-permission-item" key={collaborator.email}>
                   <UserAvatar email={collaborator.email} size={32} cornerRadius={32} />
                   <div className="collaborator-identity">
@@ -83,21 +129,21 @@ class DocumentPermissionModal extends React.Component {
                     <select
                       disabled={canEdit === 'none'}
                       value={collaborator.permission}
-                      onChange={e => this.props.onEditCollaboratorPermission(collaborator.email, e.target.value)}
+                      onChange={e => this.handleEditCollaboratorPermission(collaborator.email, e.target.value)}
                     >
                       <option value="view">Can view</option>
                       <option value="edit">Can edit</option>
                     </select>
                   </div>
                   <div className="collaborator-operations">
-                    <div className="btn btn-link" onClick={() => this.props.onRemoveCollaborator(collaborator.email)}>
+                    <div className="btn btn-link" onClick={() => this.handleRemoveCollaborator(collaborator.email)}>
                       <i className="fa fa-times" />
                     </div>
                   </div>
                 </div>
               ))}
               {canEdit !== 'none' && this.props.editingNewCollaborator &&
-                <form onSubmit={this.handleConfirmAddCollaborator}>
+                <form onSubmit={this.handleStartAddCollaborator}>
                   <div className="collaborator-permission-item new-item">
                     <div className="collaborator-identity">
                       <input
@@ -105,14 +151,14 @@ class DocumentPermissionModal extends React.Component {
                         type="text"
                         className="textbox"
                         value={this.props.newCollaboratorEmail}
-                        onChange={e => this.props.onEditNewCollaborator(e.target.value)}
+                        onChange={e => this.handleEditCollaboratorPlaceholder(e.target.value)}
                       />
                     </div>
                     <div className="collaborator-operations">
-                      <div className="btn btn-link" onClick={this.handleConfirmAddCollaborator}>
+                      <div className="btn btn-link" onClick={this.handleStartAddCollaborator}>
                         <i className="fa fa-check" />
                       </div>
-                      <div className="btn btn-link" onClick={this.props.onCancelAddCollaborator}>
+                      <div className="btn btn-link" onClick={this.handleCancelAddCollaborator}>
                         <i className="fa fa-times" />
                       </div>
                     </div>
@@ -121,7 +167,7 @@ class DocumentPermissionModal extends React.Component {
               }
               {canEdit !== 'none' && !this.props.editingNewCollaborator &&
                 <div className="collaborator-permission-item">
-                  <a href="" onClick={this.handleAddCollaborator}>Add collaborator</a>
+                  <a href="" onClick={this.handleAddCollaboratorPlaceholder}>Add collaborator</a>
                 </div>
               }
             </div>
@@ -131,7 +177,7 @@ class DocumentPermissionModal extends React.Component {
                   type="checkbox"
                   checked={this.props.editorInviting}
                   disabled={canEdit !== 'owner'}
-                  onChange={e => this.props.onEditEditorInviting(e.target.checked)}
+                  onChange={e => this.handleEditEditorInviting(e.target.checked)}
                 />
                 Allow collaborators with editing permission to change collaborators
               </label>
@@ -190,14 +236,14 @@ class DocumentPermissionModal extends React.Component {
       <div>
         {this.props.opened &&
           <Modal
-            titleElement={titleElement}
+            title="Sharing Settings"
             bodyElement={bodyElement}
             confirmButtonTitle="Save"
             confirmButtonHidden={this.props.loading || this.props.canEdit === 'none'}
             confirmButtonDisabled={this.props.editingNewCollaborator === 'adding'}
             cancelButtonTitle={cancelButtonTitle}
-            onCancel={this.props.onCancel}
-            onConfirm={this.props.onConfirm}
+            onCancel={this.handleClosePermissionModal}
+            onConfirm={this.handleStartSubmitPermission}
           />
         }
       </div>
@@ -205,10 +251,9 @@ class DocumentPermissionModal extends React.Component {
   }
 }
 
-DocumentPermissionModal.propTypes = {
+PermissionModal.propTypes = {
   opened: React.PropTypes.bool.isRequired,
   documentID: React.PropTypes.string.isRequired,
-  title: React.PropTypes.string,
   loading: React.PropTypes.bool.isRequired,
   saving: React.PropTypes.bool.isRequired,
   canEdit: React.PropTypes.string.isRequired,
@@ -223,16 +268,12 @@ DocumentPermissionModal.propTypes = {
   anonymousEditing: React.PropTypes.string.isRequired,
   editingNewCollaborator: React.PropTypes.string.isRequired,
   newCollaboratorEmail: React.PropTypes.string.isRequired,
-  onEditCollaboratorPermission: React.PropTypes.func.isRequired,
-  onEditEditorInviting: React.PropTypes.func.isRequired,
-  onEditAnonymousEditing: React.PropTypes.func.isRequired,
-  onAddCollaborator: React.PropTypes.func.isRequired,
-  onEditNewCollaborator: React.PropTypes.func.isRequired,
-  onConfirmAddCollaborator: React.PropTypes.func.isRequired,
-  onCancelAddCollaborator: React.PropTypes.func.isRequired,
-  onRemoveCollaborator: React.PropTypes.func.isRequired,
-  onConfirm: React.PropTypes.func.isRequired,
-  onCancel: React.PropTypes.func.isRequired
+  dispatch: React.PropTypes.func.isRequired
 };
 
-export default DocumentPermissionModal;
+function mapStateToProps(state) {
+  return state.permissionModal;
+}
+
+export default connect(mapStateToProps)(PermissionModal);
+

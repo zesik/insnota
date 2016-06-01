@@ -2,24 +2,12 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { getDocuments, createDocument, changeDocumentTitle } from '../actions/documentManager';
 import { openDeleteDocumentModal, closeDeleteDocumentModal, deleteDocument } from '../actions/documentDelete';
-import {
-  openPermissionModal,
-  closePermissionModal,
-  editCollaboratorPermission,
-  editEditorInviting,
-  editAnonymousEditing,
-  addCollaboratorPlaceholder,
-  editCollaboratorPlaceholder,
-  startAddCollaborator,
-  cancelAddCollaborator,
-  removeCollaborator,
-  startSubmitPermission
-} from '../actions/documentPermission';
+import { openPermissionModal } from '../actions/permissionModal';
 import { showInformation, showError } from '../actions/notificationCenter';
 import { getModeName } from '../utils/editorLanguageModes';
 import DocumentManager from '../components/DocumentManager';
 import DeleteDocumentModal from '../components/DeleteDocumentModal';
-import DocumentPermissionModal from '../components/DocumentPermissionModal';
+import PermissionModal from './PermissionModal';
 import SyncedEditor, { REMOTE_REMOTE } from '../components/SyncedEditor';
 import NotificationCenter from '../components/NotificationCenter';
 
@@ -36,19 +24,7 @@ class App extends React.Component {
     this.handleLanguageModeChanged = this.handleLanguageModeChanged.bind(this);
     this.handleTitleChanged = this.handleTitleChanged.bind(this);
     this.handleDeleteDocument = this.handleDeleteDocument.bind(this);
-
-    // Permission modal
     this.handleOpenPermissionModal = this.handleOpenPermissionModal.bind(this);
-    this.handleClosePermissionModal = this.handleClosePermissionModal.bind(this);
-    this.handleEditCollaboratorPermission = this.handleEditCollaboratorPermission.bind(this);
-    this.handleEditEditorInviting = this.handleEditEditorInviting.bind(this);
-    this.handleEditAnonymousEditing = this.handleEditAnonymousEditing.bind(this);
-    this.handleAddCollaborator = this.handleAddCollaborator.bind(this);
-    this.handleEditNewCollaborator = this.handleEditNewCollaborator.bind(this);
-    this.handleConfirmAddCollaborator = this.handleConfirmAddCollaborator.bind(this);
-    this.handleCancelAddCollaborator = this.handleCancelAddCollaborator.bind(this);
-    this.handleRemoveCollaborator = this.handleRemoveCollaborator.bind(this);
-    this.handleSavePermission = this.handleSavePermission.bind(this);
   }
 
   componentDidMount() {
@@ -76,56 +52,6 @@ class App extends React.Component {
   handleOpenPermissionModal(documentID) {
     const { dispatch } = this.props;
     dispatch(openPermissionModal(documentID));
-  }
-
-  handleClosePermissionModal() {
-    const { dispatch } = this.props;
-    dispatch(closePermissionModal());
-  }
-
-  handleEditCollaboratorPermission(email, permission) {
-    const { dispatch } = this.props;
-    dispatch(editCollaboratorPermission(email, permission));
-  }
-
-  handleEditEditorInviting(editorInviting) {
-    const { dispatch } = this.props;
-    dispatch(editEditorInviting(editorInviting));
-  }
-
-  handleEditAnonymousEditing(anonymousEditing) {
-    const { dispatch } = this.props;
-    dispatch(editAnonymousEditing(anonymousEditing));
-  }
-
-  handleAddCollaborator() {
-    const { dispatch } = this.props;
-    dispatch(addCollaboratorPlaceholder());
-  }
-
-  handleEditNewCollaborator(email) {
-    const { dispatch } = this.props;
-    dispatch(editCollaboratorPlaceholder(email));
-  }
-
-  handleConfirmAddCollaborator(email) {
-    const { dispatch } = this.props;
-    dispatch(startAddCollaborator(email));
-  }
-
-  handleCancelAddCollaborator() {
-    const { dispatch } = this.props;
-    dispatch(cancelAddCollaborator());
-  }
-
-  handleRemoveCollaborator(email) {
-    const { dispatch } = this.props;
-    dispatch(removeCollaborator(email));
-  }
-
-  handleSavePermission() {
-    const { dispatch } = this.props;
-    dispatch(startSubmitPermission());
   }
 
   render() {
@@ -162,31 +88,7 @@ class App extends React.Component {
           onConfirm={this.handleDeleteDocument}
           onCancel={() => dispatch(closeDeleteDocumentModal())}
         />
-        <DocumentPermissionModal
-          opened={this.props.modalDocumentPermission.opened}
-          documentID={this.props.modalDocumentPermission.documentID}
-          title={this.props.modalDocumentPermission.title}
-          loading={this.props.modalDocumentPermission.loading}
-          saving={this.props.modalDocumentPermission.saving}
-          canEdit={this.props.modalDocumentPermission.canEdit}
-          ownerName={this.props.modalDocumentPermission.ownerName}
-          ownerEmail={this.props.modalDocumentPermission.ownerEmail}
-          collaborators={this.props.modalDocumentPermission.collaborators}
-          editorInviting={this.props.modalDocumentPermission.editorInviting}
-          anonymousEditing={this.props.modalDocumentPermission.anonymousEditing}
-          editingNewCollaborator={this.props.modalDocumentPermission.editingNewCollaborator}
-          newCollaboratorEmail={this.props.modalDocumentPermission.newCollaboratorEmail}
-          onEditCollaboratorPermission={this.handleEditCollaboratorPermission}
-          onEditEditorInviting={this.handleEditEditorInviting}
-          onEditAnonymousEditing={this.handleEditAnonymousEditing}
-          onAddCollaborator={this.handleAddCollaborator}
-          onEditNewCollaborator={this.handleEditNewCollaborator}
-          onConfirmAddCollaborator={this.handleConfirmAddCollaborator}
-          onCancelAddCollaborator={this.handleCancelAddCollaborator}
-          onRemoveCollaborator={this.handleRemoveCollaborator}
-          onCancel={this.handleClosePermissionModal}
-          onConfirm={this.handleSavePermission}
-        />
+        <PermissionModal />
         <NotificationCenter notifications={this.props.notifications} />
       </div>
     );

@@ -1,7 +1,7 @@
 import { combineReducers } from 'redux';
 import { routerReducer } from 'react-router-redux';
 import document from './documentManager';
-import permissionModal from './documentPermission';
+import permissionModal from './permissionModal';
 import deleteModal from './documentDelete';
 import notification from './notificationCenter';
 

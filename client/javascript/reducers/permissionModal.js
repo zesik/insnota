@@ -11,7 +11,7 @@ import {
   CANCEL_ADD_COLLABORATOR,
   REMOVE_COLLABORATOR,
   INITIALIZE_PERMISSION_MODAL
-} from '../actions/documentPermission';
+} from '../actions/permissionModal';
 
 const initialState = {
   opened: false,

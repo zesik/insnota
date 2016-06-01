@@ -194,5 +194,5 @@ export function startSubmitPermission() {
         dispatch(updateSubmissionStatus(false, json));
       });
     });
-  }
+  };
 }
