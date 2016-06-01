@@ -19,16 +19,9 @@ import {
 class PermissionModal extends React.Component {
   constructor(props) {
     super(props);
-    this.handleClosePermissionModal = this.handleClosePermissionModal.bind(this);
-    this.handleEditCollaboratorPermission = this.handleEditCollaboratorPermission.bind(this);
     this.handleAddCollaboratorPlaceholder = this.handleAddCollaboratorPlaceholder.bind(this);
-    this.handleEditCollaboratorPlaceholder = this.handleEditCollaboratorPlaceholder.bind(this);
     this.handleStartAddCollaborator = this.handleStartAddCollaborator.bind(this);
-    this.handleCancelAddCollaborator = this.handleCancelAddCollaborator.bind(this);
-    this.handleRemoveCollaborator = this.handleRemoveCollaborator.bind(this);
-    this.handleEditEditorInviting = this.handleEditEditorInviting.bind(this);
     this.handleEditAnonymousEditing = this.handleEditAnonymousEditing.bind(this);
-    this.handleStartSubmitPermission = this.handleStartSubmitPermission.bind(this);
   }
 
   componentDidUpdate(prevProps) {
@@ -37,50 +30,17 @@ class PermissionModal extends React.Component {
     }
   }
 
-  handleClosePermissionModal() {
-    const { dispatch } = this.props;
-    dispatch(closePermissionModal());
-  }
-
-  handleEditCollaboratorPermission(email, permission) {
-    const { dispatch } = this.props;
-    dispatch(editCollaboratorPermission(email, permission));
-  }
-
   handleAddCollaboratorPlaceholder(e) {
-    const { dispatch } = this.props;
     e.preventDefault();
-    dispatch(addCollaboratorPlaceholder());
-  }
-
-  handleEditCollaboratorPlaceholder(email) {
-    const { dispatch } = this.props;
-    dispatch(editCollaboratorPlaceholder(email));
+    this.props.onAddCollaboratorPlaceholder();
   }
 
   handleStartAddCollaborator(e) {
-    const { dispatch } = this.props;
     e.preventDefault();
-    dispatch(startAddCollaborator(this.props.newCollaboratorEmail));
-  }
-
-  handleCancelAddCollaborator() {
-    const { dispatch } = this.props;
-    dispatch(cancelAddCollaborator());
-  }
-
-  handleRemoveCollaborator(email) {
-    const { dispatch } = this.props;
-    dispatch(removeCollaborator(email));
-  }
-
-  handleEditEditorInviting(editorInviting) {
-    const { dispatch } = this.props;
-    dispatch(editEditorInviting(editorInviting));
+    this.props.onStartAddCollaborator(this.props.newCollaboratorEmail);
   }
 
   handleEditAnonymousEditing() {
-    const { dispatch } = this.props;
     let anonymousEditing = '';
     if (this.refs.anonymousEditingDeny.checked) {
       anonymousEditing = 'deny';
@@ -89,12 +49,7 @@ class PermissionModal extends React.Component {
     } else {
       anonymousEditing = 'edit';
     }
-    dispatch(editAnonymousEditing(anonymousEditing));
-  }
-
-  handleStartSubmitPermission() {
-    const { dispatch } = this.props;
-    dispatch(startSubmitPermission());
+    this.props.onEditAnonymousEditing(anonymousEditing);
   }
 
   render() {
@@ -129,14 +84,14 @@ class PermissionModal extends React.Component {
                     <select
                       disabled={canEdit === 'none'}
                       value={collaborator.permission}
-                      onChange={e => this.handleEditCollaboratorPermission(collaborator.email, e.target.value)}
+                      onChange={e => this.props.onEditCollaboratorPermission(collaborator.email, e.target.value)}
                     >
                       <option value="view">Can view</option>
                       <option value="edit">Can edit</option>
                     </select>
                   </div>
                   <div className="collaborator-operations">
-                    <div className="btn btn-link" onClick={() => this.handleRemoveCollaborator(collaborator.email)}>
+                    <div className="btn btn-link" onClick={() => this.props.onRemoveCollaborator(collaborator.email)}>
                       <i className="fa fa-times" />
                     </div>
                   </div>
@@ -151,14 +106,14 @@ class PermissionModal extends React.Component {
                         type="text"
                         className="textbox"
                         value={this.props.newCollaboratorEmail}
-                        onChange={e => this.handleEditCollaboratorPlaceholder(e.target.value)}
+                        onChange={e => this.props.onEditCollaboratorPlaceholder(e.target.value)}
                       />
                     </div>
                     <div className="collaborator-operations">
                       <div className="btn btn-link" onClick={this.handleStartAddCollaborator}>
                         <i className="fa fa-check" />
                       </div>
-                      <div className="btn btn-link" onClick={this.handleCancelAddCollaborator}>
+                      <div className="btn btn-link" onClick={this.props.onCancelAddCollaborator}>
                         <i className="fa fa-times" />
                       </div>
                     </div>
@@ -177,7 +132,7 @@ class PermissionModal extends React.Component {
                   type="checkbox"
                   checked={this.props.editorInviting}
                   disabled={canEdit !== 'owner'}
-                  onChange={e => this.handleEditEditorInviting(e.target.checked)}
+                  onChange={e => this.props.onEditEditorInviting(e.target.checked)}
                 />
                 Allow collaborators with editing permission to change collaborators
               </label>
@@ -242,8 +197,8 @@ class PermissionModal extends React.Component {
             confirmButtonHidden={this.props.loading || this.props.canEdit === 'none'}
             confirmButtonDisabled={this.props.editingNewCollaborator === 'adding'}
             cancelButtonTitle={cancelButtonTitle}
-            onCancel={this.handleClosePermissionModal}
-            onConfirm={this.handleStartSubmitPermission}
+            onConfirm={this.props.onStartSubmitPermission}
+            onCancel={this.props.onClosePermissionModal}
           />
         }
       </div>
@@ -268,12 +223,55 @@ PermissionModal.propTypes = {
   anonymousEditing: React.PropTypes.string.isRequired,
   editingNewCollaborator: React.PropTypes.string.isRequired,
   newCollaboratorEmail: React.PropTypes.string.isRequired,
-  dispatch: React.PropTypes.func.isRequired
+  onEditCollaboratorPermission: React.PropTypes.func.isRequired,
+  onAddCollaboratorPlaceholder: React.PropTypes.func.isRequired,
+  onEditCollaboratorPlaceholder: React.PropTypes.func.isRequired,
+  onStartAddCollaborator: React.PropTypes.func.isRequired,
+  onCancelAddCollaborator: React.PropTypes.func.isRequired,
+  onRemoveCollaborator: React.PropTypes.func.isRequired,
+  onEditEditorInviting: React.PropTypes.func.isRequired,
+  onEditAnonymousEditing: React.PropTypes.func.isRequired,
+  onStartSubmitPermission: React.PropTypes.func.isRequired,
+  onClosePermissionModal: React.PropTypes.func.isRequired
 };
 
 function mapStateToProps(state) {
   return state.permissionModal;
 }
 
-export default connect(mapStateToProps)(PermissionModal);
+function mapDispatchToProps(dispatch) {
+  return {
+    onEditCollaboratorPermission: (email, permission) => {
+      dispatch(editCollaboratorPermission(email, permission));
+    },
+    onAddCollaboratorPlaceholder: () => {
+      dispatch(addCollaboratorPlaceholder());
+    },
+    onEditCollaboratorPlaceholder: email => {
+      dispatch(editCollaboratorPlaceholder(email));
+    },
+    onStartAddCollaborator: email => {
+      dispatch(startAddCollaborator(email));
+    },
+    onCancelAddCollaborator: () => {
+      dispatch(cancelAddCollaborator());
+    },
+    onRemoveCollaborator: email => {
+      dispatch(removeCollaborator(email));
+    },
+    onEditEditorInviting: editorInviting => {
+      dispatch(editEditorInviting(editorInviting));
+    },
+    onEditAnonymousEditing: anonymousEditing => {
+      dispatch(editAnonymousEditing(anonymousEditing));
+    },
+    onStartSubmitPermission: () => {
+      dispatch(startSubmitPermission());
+    },
+    onClosePermissionModal: () => {
+      dispatch(closePermissionModal());
+    }
+  };
+}
 
+export default connect(mapStateToProps, mapDispatchToProps)(PermissionModal);

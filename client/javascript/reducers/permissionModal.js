@@ -31,7 +31,7 @@ const initialState = {
   newCollaboratorEmail: ''
 };
 
-function documentPermissionReducer(state = initialState, action) {
+function permissionModalReducer(state = initialState, action) {
   switch (action.type) {
     case SHOW_PERMISSION_MODAL:
       return Object.assign({}, initialState, {
@@ -114,4 +114,4 @@ function documentPermissionReducer(state = initialState, action) {
   }
 }
 
-export default documentPermissionReducer;
+export default permissionModalReducer;
