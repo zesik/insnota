@@ -1,4 +1,5 @@
 import React from 'react';
+import { connect } from 'react-redux';
 import classNames from 'classnames';
 import ReactCSSTransitionGroup from 'react-addons-css-transition-group';
 import { NOTIFICATION_INFORMATION, NOTIFICATION_WARNING, NOTIFICATION_ERROR } from '../constants/notificationLevels';
@@ -36,7 +37,11 @@ NotificationCenter.propTypes = {
     id: React.PropTypes.number.isRequired,
     level: React.PropTypes.string.isRequired,
     message: React.PropTypes.string.isRequired
-  }))
+  })).isRequired
 };
 
-export default NotificationCenter;
+function mapStateToProps(state) {
+  return state.notification;
+}
+
+export default connect(mapStateToProps)(NotificationCenter);

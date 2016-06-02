@@ -6,10 +6,10 @@ import { openPermissionModal } from '../actions/permissionModal';
 import { showInformation, showError } from '../actions/notificationCenter';
 import { getModeName } from '../utils/editorLanguageModes';
 import DocumentManager from '../components/DocumentManager';
+import SyncedEditor, { REMOTE_REMOTE } from '../components/SyncedEditor';
 import PermissionModal from './PermissionModal';
 import DeleteModal from './DeleteModal';
-import SyncedEditor, { REMOTE_REMOTE } from '../components/SyncedEditor';
-import NotificationCenter from '../components/NotificationCenter';
+import NotificationCenter from './NotificationCenter';
 
 const COLLECTION_NAME = 'collection';
 
@@ -77,7 +77,7 @@ class App extends React.Component {
         />
         <DeleteModal selectedDocumentID={this.props.selectedDocumentID} />
         <PermissionModal />
-        <NotificationCenter notifications={this.props.notifications} />
+        <NotificationCenter />
       </div>
     );
   }
@@ -94,11 +94,6 @@ App.propTypes = {
     lastModified: React.PropTypes.string
   })),
   selectedDocumentID: React.PropTypes.string,
-  notifications: React.PropTypes.arrayOf(React.PropTypes.shape({
-    id: React.PropTypes.number.isRequired,
-    level: React.PropTypes.string.isRequired,
-    message: React.PropTypes.string.isRequired
-  })),
   dispatch: React.PropTypes.func.isRequired
 };
 
@@ -109,10 +104,7 @@ function mapStateToProps(state, ownProps) {
     userName: state.document.userName,
     userEmail: state.document.userEmail,
     documents: state.document.documents,
-    selectedDocumentID: ownProps.params.splat,
-    modalDeleteDocument: state.deleteModal,
-    modalDocumentPermission: state.permissionModal,
-    notifications: state.notification.notifications
+    selectedDocumentID: ownProps.params.splat
   };
 }
 
