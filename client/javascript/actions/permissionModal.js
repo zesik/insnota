@@ -55,8 +55,10 @@ export function openPermissionModal(documentID) {
           permission = 'owner';
         } else if (json.editorInviting) {
           for (let i = 0; i < json.collaborators.length; ++i) {
-            if (json.collaborators[i].email === userEmail && json.collaborators[i].permission === 'edit') {
-              permission = 'collaborator';
+            if (json.collaborators[i].email === userEmail) {
+              if (json.collaborators[i].permission === 'edit') {
+                permission = 'collaborator';
+              }
               break;
             }
           }

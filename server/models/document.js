@@ -15,6 +15,10 @@ const DocumentSchema = new Schema({
   updated_at: { type: Date, default: Date.now }
 });
 
+DocumentSchema.static('findOneByID', function (id, callback) {
+  return this.findOne({ _id: id }, callback);
+});
+
 DocumentSchema.static('findByOwner', function (email, callback) {
   return this.find({ owner: email }, callback);
 });

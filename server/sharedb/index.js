@@ -8,6 +8,9 @@ const SocketStream = require('./socket-stream');
 const ClientConnection = require('../models/clientConnection');
 const Document = require('../models/document');
 
+const ERROR_NOT_FOUND = '404';
+const ERROR_ACCESS_DENIED = '404'; // Note: This value is set to '404' so that same value is passed to client side
+const ERROR_SERVICE_UNAVAILABLE = '503';
 const DEFAULT_DOCUMENT = {
   a: {},                // Collaborators
   t: 'Untitled',        // Title
@@ -15,14 +18,7 @@ const DEFAULT_DOCUMENT = {
   m: 'text/plain'       // MIME type
 };
 
-// Initialize ShareDB
-const backend = sharedb({ db: sharedbDatabase });
-require('sharedb-logger')(backend);
-backend.use('connect', handleShareDBConnect);
-backend.use('receive', handleShareDBReceive);
-const serverConnection = backend.connect();
-
-function handleClientConnected(clientID, user, collection, document, callback) {
+function handleClientSubscribing(clientID, user, collection, document, callback) {
   const timestamp = Date.now();
   ClientConnection.findOne({ client_id: clientID }, function (err, clientConnection) {
     if (err) {
@@ -60,7 +56,7 @@ function handleClientConnected(clientID, user, collection, document, callback) {
   });
 }
 
-function handleClientDisconnected(clientID, collection, document, callback) {
+function handleClientUnsubscribing(clientID, collection, document, callback) {
   const query = {};
   if (clientID) {
     query.client_id = clientID;
@@ -112,32 +108,85 @@ function handleShareDBConnect(req, next) {
   return next();
 }
 
+function ensureReadPermission(documentID, user, next) {
+  Document.findOneByID(documentID, function (err, doc) {
+    if (err) {
+      return next(err);
+    }
+    if (!doc) {
+      return next(ERROR_NOT_FOUND);
+    }
+    if (doc.public_access !== 'view' && doc.public_access !== 'edit') {
+      if (!user) {
+        // Permission denied due to anonymous user trying to access private document
+        return next(ERROR_ACCESS_DENIED);
+      }
+      if (doc.owner !== user.email &&
+          doc.viewable.indexOf(user.email) === -1 && doc.editable.indexOf(user.email) === -1) {
+        // Permission denied due to non-collaborator trying to access the document
+        return next(ERROR_ACCESS_DENIED);
+      }
+    }
+    return next();
+  });
+}
+
+function ensureWritePermission(documentID, user, next) {
+  Document.findOneByID(documentID, function (err, doc) {
+    if (err) {
+      return next(err);
+    }
+    if (!doc) {
+      return next(ERROR_NOT_FOUND);
+    }
+    if (doc.public_access !== 'edit') {
+      if (!user) {
+        // Permission denied due to anonymous user trying to edit private document
+        return next(ERROR_ACCESS_DENIED);
+      }
+      if (doc.owner !== user.email && doc.editable.indexOf(user.email) === -1) {
+        // Permission denied due to collaborator without editing permission trying to edit the document
+        return next(ERROR_ACCESS_DENIED);
+      }
+    }
+    return next();
+  });
+}
+
 function handleShareDBReceive(req, next) {
+  if (req.agent.stream.isServer) {
+    return next();
+  }
   switch (req.data.a) {
-    case 'bs':
     case 's':
-      if (!req.agent.stream.isServer) {
-        handleClientConnected(req.agent.clientId, req.agent.stream.user, req.data.c, req.data.d, next);
-      }
+      ensureReadPermission(req.data.d, req.agent.stream.user, function (err) {
+        if (err) {
+          return next(err);
+        }
+        handleClientSubscribing(req.agent.clientId, req.agent.stream.user, req.data.c, req.data.d, next);
+      });
       break;
-    case 'bu':
     case 'u':
-      if (!req.agent.stream.isServer) {
-        handleClientDisconnected(req.agent.clientId, req.data.c, req.data.d, next);
-      }
+      handleClientUnsubscribing(req.agent.clientId, req.data.c, req.data.d, next);
       break;
     case 'op':
-      if (req.data.op) {
-        for (let i = 0; i < req.data.op.length; ++i) {
-          if (req.data.op[i].p[0] === 't') {
-            const newTitle = req.data.op[i].oi;
-            Document.update({ _id: req.data.d }, { title: newTitle }).exec();
+      ensureWritePermission(req.data.d, req.agent.stream.user, function (err) {
+        if (err) {
+          return next(err);
+        }
+        if (req.data.op) {
+          for (let i = 0; i < req.data.op.length; ++i) {
+            if (req.data.op[i].p[0] === 't') {
+              const newTitle = req.data.op[i].oi;
+              Document.update({ _id: req.data.d }, { title: newTitle }).exec();
+            }
           }
         }
-      }
-      return next();
+        return next();
+      });
+      break;
     default:
-      return next();
+      return next(new Error(ERROR_ACCESS_DENIED));
   }
 }
 
@@ -149,13 +198,13 @@ function handleSocketConnection(ws, req) {
   const remoteAddress = stream.remoteAddress;
   stream.on('close', function () {
     console.log(`ShareDB disconnected: ${clientID}, ${remoteAddress}, ${user}`);
-    handleClientDisconnected(clientID, null, null);
+    handleClientUnsubscribing(clientID, null, null);
   });
 }
 
 function tidyLooseConnections(callback) {
   console.log('Tidying loose connections...');
-  handleClientDisconnected(null, null, null, function (err) {
+  handleClientUnsubscribing(null, null, null, function (err) {
     console.log('Finished');
     callback(err);
   });
@@ -168,7 +217,8 @@ function createDocument(id, callback) {
       return callback(err);
     }
     if (sharedbDoc.type) {
-      return callback(new Error(503));
+      // This means document with this ID already exists
+      return callback(new Error(ERROR_SERVICE_UNAVAILABLE));
     }
     sharedbDoc.create(DEFAULT_DOCUMENT, err => {
       if (err) {
@@ -178,6 +228,13 @@ function createDocument(id, callback) {
     });
   });
 }
+
+// Initialize ShareDB
+const backend = sharedb({ db: sharedbDatabase });
+require('sharedb-logger')(backend);
+backend.use('connect', handleShareDBConnect);
+backend.use('receive', handleShareDBReceive);
+const serverConnection = backend.connect();
 
 module.exports = {
   tidyLooseConnections,

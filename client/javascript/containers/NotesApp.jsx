@@ -67,6 +67,7 @@ class App extends React.Component {
         />
         <SyncedEditor
           fullScreen={!this.props.userEmail}
+          userEmail={userEmail}
           socketURL={createWebSocketURL()}
           collection={COLLECTION_NAME}
           documentID={this.props.selectedDocumentID}

@@ -1,6 +1,7 @@
 import React from 'react';
 import classNames from 'classnames';
 import CodeMirror from 'codemirror';
+import 'whatwg-fetch';
 import ShareDB from 'sharedb/lib/client';
 import EditorOverlay from './EditorOverlay';
 import EditorStatusBar from './EditorStatusBar';
@@ -125,7 +126,7 @@ class SyncedEditor extends React.Component {
       case DOC_SYNCING:
         this.refs.title.disabled = false;
         this.refs.title.readOnly = nextState.documentReadOnly;
-        this.codeMirror.setOption('readOnly', nextState.documentReadOnly);
+        this.codeMirror.setOption('readOnly', nextState.documentReadOnly ? 'nocursor': false);
         break;
       default:
         this.refs.title.disabled = true;
@@ -599,46 +600,83 @@ class SyncedEditor extends React.Component {
     this.setState({ documentState: DOC_INITIAL });
     if (collection && documentID) {
       this.setState({ documentState: DOC_OPENING });
-      const doc = this.shareDBConnection.get(collection, documentID);
-      doc.subscribe(error => {
-        // Unable to subscribe to the document
-        if (error) {
-          console.error('Failed to subscribe', error);
-          this.setState({ documentState: DOC_FAILED });
-          return;
+      fetch(`/api/notes/${documentID}`, {
+        credentials: 'same-origin'
+      }).then(response => {
+        if (response.status >= 200 && response.status < 300) {
+          return response.json();
+        }
+        const error = new Error(response.statusText);
+        error.response = response;
+        throw error;
+      }).then(json => {
+        // Check whether we could write to the document
+        var readonly = true;
+        if (json.anonymousEditing === 'edit') {
+          readonly = false;
+        } else {
+          const userEmail = this.props.userEmail;
+          if (json.owner.email === userEmail) {
+            readonly = false;
+          } else {
+            for (let i = 0; i < json.collaborators.length; ++i) {
+              if (json.collaborators[i].email === userEmail) {
+                if (json.collaborators[i].permission === 'edit') {
+                  readonly = false;
+                }
+                break;
+              }
+            }
+          }
         }
 
-        // Document does not exist
-        if (!doc.type) {
-          console.error('Document does not exist');
-          this.setState({ documentState: DOC_FAILED });
-          return;
-        }
+        // Subscribe to the document
+        const doc = this.shareDBConnection.get(collection, documentID);
+        doc.subscribe(error => {
+          // Unable to subscribe to the document
+          if (error) {
+            console.error('Failed to subscribe', error);
+            this.setState({ documentState: DOC_FAILED });
+            return;
+          }
 
-        const title = doc.data.t;
-        const content = doc.data.c;
-        const mimeType = doc.data.m;
+          // Document does not exist
+          if (!doc.type) {
+            console.error('Document does not exist');
+            this.setState({ documentState: DOC_FAILED });
+            return;
+          }
 
-        this.shareDBDoc = doc;
-        this.remoteUpdating = REMOTE_INIT;
-        this.refs.title.value = title;
-        this.raiseTitleChanged(title, this.remoteUpdating);
-        this.codeMirror.setValue(content);
-        // CodeMirror will trigger change event
-        this.setState({ documentLanguageMode: mimeType });
-        this.raiseLanguageModeChanged(mimeType, this.remoteUpdating);
-        this.remoteUpdating = REMOTE_LOCAL;
+          this.setState({ documentReadOnly: readonly });
 
-        // Document is populated
-        this.setState({ documentState: DOC_SYNCED });
-        this.codeMirror.focus();
-        this.handleContentCursorActivity(this.codeMirror);
-        this.updateDocumentCollaborators();
+          const title = doc.data.t;
+          const content = doc.data.c;
+          const mimeType = doc.data.m;
 
-        // Handle document updating event
-        doc.on('op', this.handleShareDBDocOperation);
-        doc.on('error', this.handleShareDBDocError);
-        doc.on('nothing pending', this.handleShareDBDocNothingPending);
+          this.shareDBDoc = doc;
+          this.remoteUpdating = REMOTE_INIT;
+          this.refs.title.value = title;
+          this.raiseTitleChanged(title, this.remoteUpdating);
+          this.codeMirror.setValue(content);
+          // CodeMirror will trigger change event
+          this.setState({ documentLanguageMode: mimeType });
+          this.raiseLanguageModeChanged(mimeType, this.remoteUpdating);
+          this.remoteUpdating = REMOTE_LOCAL;
+
+          // Document is populated
+          this.setState({ documentState: DOC_SYNCED });
+          this.codeMirror.focus();
+          this.handleContentCursorActivity(this.codeMirror);
+          this.updateDocumentCollaborators();
+
+          // Handle document updating event
+          doc.on('op', this.handleShareDBDocOperation);
+          doc.on('error', this.handleShareDBDocError);
+          doc.on('nothing pending', this.handleShareDBDocNothingPending);
+        });
+      }).catch(err => {
+        console.error('Unable to access the document');
+        this.setState({ documentState: DOC_FAILED });
       });
     }
   }
@@ -710,6 +748,7 @@ SyncedEditor.propTypes = {
   socketURL: React.PropTypes.string.isRequired,
   collection: React.PropTypes.string,
   documentID: React.PropTypes.string,
+  userEmail: React.PropTypes.string,
   onTitleChanged: React.PropTypes.func,
   onContentChanged: React.PropTypes.func,
   onCursorActivity: React.PropTypes.func,

@@ -13,7 +13,8 @@ const router = express.Router();
 const hashids = new Hashids(config.hashidSalt);
 
 router.use(function (req, res, next) {
-  if (req.user || req.path === '/user' || req.path === '/signup' || req.path.startsWith('/signin/')) {
+  if (req.user || req.path === '/user' || req.path === '/signup' || req.path.startsWith('/signin/') ||
+      req.path.startsWith('/notes/')) {
     return next();
   }
   return res.status(403).end();
