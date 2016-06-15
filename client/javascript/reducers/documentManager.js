@@ -1,5 +1,6 @@
 import {
-  LOAD_DOCUMENTS,
+  START_LOADING_DOCUMENTS,
+  FINISH_LOADING_DOCUMENTS,
   START_CREATING_DOCUMENT,
   FINISH_CREATING_DOCUMENT,
   CHANGE_DOCUMENT_TITLE
@@ -7,32 +8,39 @@ import {
 
 const initialState = {
   // User information
-  userName: null,
-  userEmail: null,
+  name: null,
+  email: null,
   // Document list
   documents: [],
-  documentsFetching: false,
-  documentCreating: false
+  loading: false,
+  creating: false
 };
 
 function documentManagerReducer(state = initialState, action) {
   switch (action.type) {
-    case LOAD_DOCUMENTS:
+    case START_LOADING_DOCUMENTS:
       return Object.assign({}, state, {
-        fetchingDocuments: action.fetchingDocuments,
-        userName: action.userName,
-        userEmail: action.userEmail,
+        loading: true
+      });
+    case FINISH_LOADING_DOCUMENTS:
+      return Object.assign({}, state, {
+        loading: false,
+        name: action.name,
+        email: action.email,
         documents: action.documents
       });
     case START_CREATING_DOCUMENT:
       return Object.assign({}, state, {
-        creatingDocument: true
+        creating: true
       });
     case FINISH_CREATING_DOCUMENT:
       if (action.error) {
-        return state;
+        return Object.assign({}, state, {
+          creating: false
+        });
       }
       return Object.assign({}, state, {
+        creating: false,
         documents: [
           {
             id: action.id,

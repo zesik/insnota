@@ -1,6 +1,6 @@
-# collabnotes
+# Insnota
 
-A collaborative note-taking platform.
+A collaborative web-based note-taking platform.
 
 ## License
 

@@ -3,87 +3,210 @@ import classNames from 'classnames';
 import CodeMirror from 'codemirror';
 import 'whatwg-fetch';
 import ShareDB from 'sharedb/lib/client';
-import EditorOverlay from './EditorOverlay';
-import EditorStatusBar from './EditorStatusBar';
 import Collaborators from './Collaborators';
+import EditorOverlay from './EditorOverlay';
+import EditorStatusBar from '../containers/EditorStatusBar';
 import { LANGUAGE_MODES } from '../utils/editorLanguageModes';
 
-export const CONNECTION_DISCONNECTED = 'CONNECTION_DISCONNECTED';
-export const CONNECTION_CONNECTING = 'CONNECTION_CONNECTING';
-export const CONNECTION_CONNECTED = 'CONNECTION_CONNECTED';
-export const CONNECTION_WAITING = 'CONNECTION_WAITING';
+export const NET_DISCONNECTED = 'NET_DISCONNECTED';
+export const NET_CONNECTING = 'NET_CONNECTING';
+export const NET_CONNECTED = 'NET_CONNECTED';
+export const NET_WAITING = 'NET_WAITING';
 
 export const DOC_INITIAL = 'DOC_INITIAL';
 export const DOC_OPENING = 'DOC_OPENING';
-export const DOC_FAILED = 'DOC_FAILED';
+export const DOC_DENIED = 'DOC_DENIED';
+export const DOC_ERROR = 'DOC_FAILED';
 export const DOC_SYNCING = 'DOC_SYNCING';
 export const DOC_SYNCED = 'DOC_SYNCED';
 
-export const REMOTE_LOCAL = 0;
-export const REMOTE_REMOTE = 1;
-export const REMOTE_INIT = 2;
-export const REMOTE_RESYNC = 3;
+export const OP_LOCAL = 0;
+export const OP_REMOTE = 1;
+export const OP_INIT = 2;
+export const OP_RESYNC = 3;
 
 const MAX_BACKOFF_TIME_PARAMETER = 6;
 
-const COLLABORATOR_COLORS = [
-  '0097a7:ffffff',  // Cyan 700
-  'e91e63:ffffff',  // Pink 500
-  'ef6c00:ffffff',  // Orange 800
-  '3f51b5:ffffff',  // Indigo 500
-  '4caf50:ffffff',  // Green 600
-  '2196f3:ffffff',  // Blue 500
-  '673ab7:ffffff',  // Deep Purple 500
-  '795548:ffffff',  // Brown 500
-  '827717:ffffff',  // Lime 900
-  '607d8b:ffffff'   // Blue Gray 500
-];
+const COLLABORATOR_COLOR_COUNT = 10;
+
+//
+// Collaborator color helper
+//
 let colorIndex = 0;
 function getNextColor() {
-  const color = COLLABORATOR_COLORS[colorIndex];
-  colorIndex = (colorIndex + 1) % COLLABORATOR_COLORS.length;
-  return color;
+  const currentIndex = colorIndex;
+  colorIndex = (colorIndex + 1) % COLLABORATOR_COLOR_COUNT;
+  return currentIndex;
+}
+
+//
+// Connection helper
+//
+function createConnection() {
+  const l = window.location;
+  return new WebSocket(`${((l.protocol === 'https:') ? 'wss://' : 'ws://')}${l.host}/notes`);
+}
+
+function getReconnectWaitTime(retryCount) {
+  return [Math.pow(2, Math.min(retryCount, MAX_BACKOFF_TIME_PARAMETER)), Math.floor(Math.random() * 1000)];
+}
+
+//
+// CodeMirror index helper
+//
+function getColumnIndex(cm, ln, ch, tabSize) {
+  const line = cm.lineInfo(ln).text;
+  let col = 0;
+  for (let i = 0; i < ch; ++i) {
+    if (line[i] === '\t') {
+      col += tabSize;
+    } else {
+      col += 1;
+    }
+  }
+  return col;
+}
+
+function getCursors(cm) {
+  const selections = cm.listSelections();
+  const selectedStrings = cm.getSelections();
+  const tabSize = cm.getOption('tabSize');
+  if (selections.length !== selectedStrings.length) {
+    console.error('Error retriving cursors: selection counts mismatch');
+    return [];
+  }
+  const cursors = selections.map((item, index) => ({
+    anchor: {
+      ln: item.anchor.line + 1,
+      col: getColumnIndex(cm, item.anchor.line, item.anchor.ch, tabSize) + 1,
+      ch: item.anchor.ch + 1
+    },
+    head: {
+      ln: item.head.line + 1,
+      col: getColumnIndex(cm, item.head.line, item.head.ch, tabSize) + 1,
+      ch: item.head.ch + 1
+    },
+    length: selectedStrings[index].length
+  }));
+  return cursors;
+}
+
+//
+// CodeMirror cursors
+//
+function createCollaboratorCursor(cm, collaborator) {
+  const ownerDocument = cm.getWrapperElement().ownerDocument;
+  const color = collaborator.color;
+  const cursorContainer = ownerDocument.createElement('div');
+  cursorContainer.className = 'collaborator-cursor-container';
+  const cursorElement = ownerDocument.createElement('div');
+  cursorElement.className = `collaborator-cursor color-${color}`;
+  cursorContainer.appendChild(cursorElement);
+  const idElement = ownerDocument.createElement('div');
+  if (collaborator.email) {
+    idElement.className = `collaborator-identity color-${color}`;
+    idElement.innerText = collaborator.name;
+  } else {
+    idElement.className = `collaborator-identity collaborator-anonymous color-${color}`;
+    idElement.innerText = 'Anonymous';
+  }
+  cursorContainer.appendChild(idElement);
+  return cursorContainer;
+}
+
+function syncCollaborators(cm, current, next) {
+  for (let i = 0; i < next.length; ++i) {
+    if (i >= current.length || current[i].clientID > next[i].clientID) {
+      const element = createCollaboratorCursor(cm, next[i]);
+      const collaboratorObject = {
+        clientID: next[i],
+        element
+      };
+      current.splice(i, 0, collaboratorObject);
+      if (!next[i].cursors || next[i].cursors.length === 0) {
+        continue;
+      }
+    } else if (current[i].clientID < next[i].clientID) {
+      if (current[i].widget) {
+        current[i].widget.clear();
+      }
+      current.splice(i, 1);
+      --i;
+      continue;
+    } else {
+      if (!next[i].cursors || next[i].cursors.length === 0) {
+        if (current[i].widget) {
+          current[i].widget.clear();
+          delete current[i].ln;
+          delete current[i].ch;
+          delete current[i].widget;
+        }
+        continue;
+      }
+      if (current[i].widget) {
+        if (next[i].cursors[0].head.ln - 1 === current[i].ln && next[i].cursors[0].head.ch - 1 === current[i].ch) {
+          continue;
+        }
+        current[i].widget.clear();
+      }
+    }
+    current[i].ln = next[i].cursors[0].head.ln - 1;
+    current[i].ch = next[i].cursors[0].head.ch - 1;
+    current[i].widget = cm.setBookmark(
+      new CodeMirror.Pos(next[i].cursors[0].head.ln - 1, next[i].cursors[0].head.ch - 1),
+      { widget: current[i].element }
+    );
+  }
+  const i = next.length;
+  while (i < current.length) {
+    if (current[i].widget) {
+      current[i].widget.clear();
+    }
+    current.splice(i, 1);
+  }
 }
 
 class SyncedEditor extends React.Component {
   constructor(props) {
     super(props);
+
+    // Connection events
     this.handleConnectionStateChanged = this.handleConnectionStateChanged.bind(this);
+    // Title editor events
+    this.handleTitleKeyUp = this.handleTitleKeyUp.bind(this);
+    this.handleTitleBoxSubmit = this.handleTitleBoxSubmit.bind(this);
+    // Content editor events
     this.handleContentChanged = this.handleContentChanged.bind(this);
     this.handleContentCursorActivity = this.handleContentCursorActivity.bind(this);
-    this.handleToggleLanguageModeList = this.handleToggleLanguageModeList.bind(this);
-    this.handleEditLanguageModeFilter = this.handleEditLanguageModeFilter.bind(this);
-    this.handleLanguageModeChanged = this.handleLanguageModeChanged.bind(this);
-    this.handleToggleNavigationPopup = this.handleToggleNavigationPopup.bind(this);
-    this.handleConfirmNavigation = this.handleConfirmNavigation.bind(this);
-    this.handleEditNavigationText = this.handleEditNavigationText.bind(this);
-    this.handleOpenPermissionModal = this.handleOpenPermissionModal.bind(this);
-    this.handleTitleKeyUp = this.handleTitleKeyUp.bind(this);
-    this.handleTitleBoxBlur = this.handleTitleBoxBlur.bind(this);
     this.handleEditorGotFocus = this.handleFocusChanged.bind(this, true);
     this.handleEditorLostFocus = this.handleFocusChanged.bind(this, false);
+    // Document events
     this.handleShareDBDocError = this.handleShareDBDocError.bind(this);
     this.handleShareDBDocOperation = this.handleShareDBDocOperation.bind(this);
     this.handleShareDBDocNothingPending = this.handleShareDBDocNothingPending.bind(this);
+    // Status bar events
+    this.handleChangeLanguageMode = this.handleChangeLanguageMode.bind(this);
+    this.handleNavigation = this.handleNavigation.bind(this);
+    this.handleOpenPermissionModal = this.handleOpenPermissionModal.bind(this);
+
+    // Initialize React state
     this.state = {
-      connectionState: CONNECTION_DISCONNECTED,
-      connectionRetries: 0,
-      connectionWaitSeconds: 0,
-      documentState: DOC_INITIAL,
-      documentReadOnly: false,
-      documentCursors: [],
-      documentShowCursorChars: false,
-      navigationText: '',
-      navigationPopupVisible: false,
-      documentLanguageMode: '',
-      documentLanguageModeList: LANGUAGE_MODES,
-      documentLanguageModeListFilter: '',
-      documentLanguageModeListVisible: false,
-      documentCollaborators: []
+      netStatus: '',
+      netRetryCount: 0,
+      netRetryWait: 0,
+      docStatus: '',
+      focused: false,
+      languageMode: '',
+      sharing: '',
+      readOnly: false,
+      cursors: [],
+      collaborators: [],
+      collaboratorCursorsVisible: true
     };
   }
 
   componentDidMount() {
+    // Initialize CodeMirror
     this.codeMirror = CodeMirror.fromTextArea(this.refs.textarea, {
       lineNumbers: true,
       showCursorWhenSelecting: true,
@@ -91,7 +214,7 @@ class SyncedEditor extends React.Component {
       indentUnit: 4,
       tabSize: 4,
       extraKeys: {
-        Tab: (cm) => {
+        Tab: cm => {
           if (cm.somethingSelected() || cm.getOption('indentWithTabs')) {
             return CodeMirror.Pass;
           }
@@ -104,59 +227,47 @@ class SyncedEditor extends React.Component {
     this.codeMirror.on('cursorActivity', this.handleContentCursorActivity);
     this.codeMirror.on('focus', this.handleEditorGotFocus);
     this.codeMirror.on('blur', this.handleEditorLostFocus);
-    this.myClientID = null;
-    this.collaboratorColors = {};
-    this.cursorElements = [];
-    this.shareDBConnection = new ShareDB.Connection(this.initiateWebSocketConnection());
-    this.shareDBConnection.on('state', this.handleConnectionStateChanged);
+
+    // Initialize ShareDB connection to the server
     this.shareDBDoc = null;
-    this.remoteUpdating = REMOTE_LOCAL;
-    this.subscribeDocument(this.props.collection, this.props.documentID);
+    this.shareDBConnection = new ShareDB.Connection(createConnection());
+    this.shareDBConnection.on('state', this.handleConnectionStateChanged);
+
+    // Initialize other helper variables
+    this.operationSource = OP_LOCAL;
+    this.reconnectionTimer = 0;
+    this.collaboratorColors = {};
+    this.collaboratorCursors = [];
+
+    // componentWillReceiveProps is not called when mounting, so we need to manually subscribe to document here
+    // See https://facebook.github.io/react/tips/componentWillReceiveProps-not-triggered-after-mounting.html
+    this.subscribeDocument(this.props.documentID);
   }
 
   componentWillReceiveProps(nextProps) {
-    if (nextProps.collection !== this.props.collection || nextProps.documentID !== this.props.documentID) {
-      this.subscribeDocument(nextProps.collection, nextProps.documentID);
+    if (nextProps.documentID !== this.props.documentID) {
+      this.subscribeDocument(nextProps.documentID);
     }
   }
 
   componentWillUpdate(nextProps, nextState) {
-    switch (nextState.documentState) {
+    switch (nextState.docStatus) {
       case DOC_SYNCED:
       case DOC_SYNCING:
-        this.refs.title.disabled = false;
-        this.refs.title.readOnly = nextState.documentReadOnly;
-        this.codeMirror.setOption('readOnly', nextState.documentReadOnly ? 'nocursor': false);
+        this.codeMirror.setOption('readOnly', nextState.readOnly);
         break;
       default:
-        this.refs.title.disabled = true;
         this.codeMirror.setOption('readOnly', 'nocursor');
         break;
     }
-    this.codeMirror.setOption('mode', nextState.documentLanguageMode);
-    this.cursorElements.forEach(e => e.clear());
-    nextState.documentCollaborators.forEach(c => {
-      if (!c.cursors) {
-        return;
-      }
-      const colors = c.color.split(':');
-      const cursorContainer = this.codeMirror.getWrapperElement().ownerDocument.createElement('div');
-      cursorContainer.className = 'collaborator-cursor-container';
-      const cursorElement = this.codeMirror.getWrapperElement().ownerDocument.createElement('div');
-      cursorElement.className = 'collaborator-cursor';
-      cursorElement.style.backgroundColor = `#${colors[0]}`;
-      cursorContainer.appendChild(cursorElement);
-      const idElement = this.codeMirror.getWrapperElement().ownerDocument.createElement('div');
-      idElement.className = 'collaborator-identity';
-      idElement.innerText = c.name || '(Anonymous)';
-      idElement.style.backgroundColor = `#${colors[0]}`;
-      idElement.style.color = `#${colors[1]}`;
-      cursorContainer.appendChild(idElement);
-      this.cursorElements.push(this.codeMirror.setBookmark(
-        new CodeMirror.Pos(c.cursors[0].head.ln - 1, c.cursors[0].head.ch - 1),
-        { widget: cursorContainer }
-      ));
-    });
+
+    this.codeMirror.setOption('mode', nextState.languageMode);
+
+    let collaborators = [];
+    if (nextState.collaboratorCursorsVisible) {
+      collaborators = nextState.collaborators.slice(0).sort((a, b) => a.clientID.localeCompare(b.clientID));
+    }
+    syncCollaborators(this.codeMirror, this.collaboratorCursors, collaborators);
   }
 
   componentWillUnmount() {
@@ -181,45 +292,6 @@ class SyncedEditor extends React.Component {
     }
   }
 
-  getColumnIndex(cm, ln, ch, tabSize) {
-    const line = cm.lineInfo(ln).text;
-    let col = 0;
-    for (let i = 0; i < ch; ++i) {
-      if (line[i] === '\t') {
-        col += tabSize;
-      } else {
-        col += 1;
-      }
-    }
-    return col;
-  }
-
-  getCursors(cm) {
-    const selections = cm.listSelections();
-    const selectedStrings = cm.getSelections();
-    const tabSize = cm.getOption('tabSize');
-    if (selections.length !== selectedStrings.length) {
-      console.error('Unexpected selection length.');
-    }
-    const cursors = [];
-    for (let i = 0; i < selections.length; ++i) {
-      cursors.push({
-        anchor: {
-          ln: selections[i].anchor.line + 1,
-          col: this.getColumnIndex(cm, selections[i].anchor.line, selections[i].anchor.ch, tabSize) + 1,
-          ch: selections[i].anchor.ch + 1
-        },
-        head: {
-          ln: selections[i].head.line + 1,
-          col: this.getColumnIndex(cm, selections[i].head.line, selections[i].head.ch, tabSize) + 1,
-          ch: selections[i].head.ch + 1
-        },
-        length: selectedStrings[i].length
-      });
-    }
-    return cursors;
-  }
-
   getIndexFromPos(pos) {
     if (pos.line < 0 || pos.ch < 0) {
       return 0;
@@ -236,50 +308,48 @@ class SyncedEditor extends React.Component {
     return index;
   }
 
-  getReconnectWaitTime(retryCount) {
-    return [Math.pow(2, Math.min(retryCount, MAX_BACKOFF_TIME_PARAMETER)), Math.floor(Math.random() * 1000)];
-  }
-
-  initiateWebSocketConnection() {
-    return new WebSocket(this.props.socketURL);
-  }
-
+  //
+  // ShareDB connection event handlers
+  //
   handleConnectionStateChanged(newState) {
     switch (newState) {
       case 'connected':
-        this.myClientID = this.shareDBConnection.id;
         this.setState({
-          connectionState: CONNECTION_CONNECTED,
-          connectionRetries: 0,
-          connectionWaitSeconds: 0
+          netStatus: NET_CONNECTED,
+          netRetryCount: 0,
+          netRetryWait: 0
         });
         break;
       case 'connecting':
         this.setState({
-          connectionState: CONNECTION_CONNECTING
+          netStatus: NET_CONNECTING
         });
         break;
       default:
-        this.myClientID = null;
         this.prepareReconnection();
         break;
     }
   }
 
+  //
+  // Document editor event handlers
+  //
   handleContentChanged(cm, changes) {
-    // Event is not raised if not subscribing to remote document
+    // Editor should not be able to be changed when not subscribing to a document
     if (!this.shareDBDoc) {
+      console.error('Content changed when not subscribing to a document');
       return;
     }
 
-    // Do not submit remote changes again to the server
-    this.raiseContentChanged(cm.getValue(), this.remoteUpdating);
-    if (this.remoteUpdating !== REMOTE_LOCAL) {
+    // Raise event
+    this.raiseContentChanged(cm.getValue(), this.operationSource);
+
+    // Do not submit changes to the server unless we are sure it is a local change
+    if (this.operationSource !== OP_LOCAL) {
       return;
     }
 
     // Submit changes to remote server
-    this.setState({ documentState: DOC_SYNCING });
     for (let i = 0; i < changes.length; ++i) {
       this.submitDocumentChange(cm, changes[i]);
     }
@@ -287,94 +357,67 @@ class SyncedEditor extends React.Component {
   }
 
   handleContentCursorActivity(cm) {
-    const cursors = this.getCursors(cm);
-    this.submitCursorChange(cursors);
-    this.setState({ documentCursors: cursors });
-  }
-
-  handleFocusChanged(focus) {
-    if (focus) {
-      this.setState({
-        documentLanguageModeListVisible: false,
-        navigationPopupVisible: false
-      });
-    }
-  }
-
-  handleLanguageModeChanged(languageMode) {
-    this.setState({
-      documentLanguageModeListVisible: false,
-      documentLanguageMode: languageMode
-    });
-
-    // Event is not raised if not subscribing to remote document
+    // Editor should not be able to have any cursor activity when not subscribing to a document
     if (!this.shareDBDoc) {
+      console.error('Cursor activity when not subscribing to a document');
       return;
     }
 
-    this.raiseLanguageModeChanged(languageMode, this.remoteUpdating);
-    if (this.remoteUpdating !== REMOTE_LOCAL) {
+    const cursors = getCursors(cm);
+    this.setState({ cursors });
+
+    // TODO: we can raise cursor changed event
+
+    this.submitCursorActivity(cursors);
+  }
+
+  handleFocusChanged(focused) {
+    this.setState({ focused });
+  }
+
+  //
+  // Status bar event popup handlers
+  //
+  handleChangeLanguageMode(languageMode) {
+    // Language should not be able to be changed when not subscribing to a document
+    if (!this.shareDBDoc) {
+      console.error('Language mode changed when not subscribing to a document');
       return;
     }
 
-    this.setState({ documentState: DOC_SYNCING });
+    this.setState({ languageMode });
+
+    // Raise events
+    this.raiseLanguageModeChanged(languageMode, this.operationSource);
+
+    // Do not submit changes to the server unless we are sure it is a local change
+    if (this.operationSource !== OP_LOCAL) {
+      return;
+    }
+
+    // Submit change to remote server
     this.submitLanguageModeChange(languageMode);
   }
 
-  handleToggleLanguageModeList() {
-    this.setState({
-      documentLanguageModeListFilter: '',
-      documentLanguageModeListVisible: !this.state.documentLanguageModeListVisible,
-      navigationPopupVisible: false
-    });
-  }
-
-  handleEditLanguageModeFilter(value) {
-    this.setState({ documentLanguageModeListFilter: value });
-  }
-
-  handleToggleNavigationPopup() {
-    this.setState({
-      navigationText: '',
-      navigationPopupVisible: !this.state.navigationPopupVisible,
-      documentLanguageModeListVisible: false
-    });
-  }
-
-  handleEditNavigationText(value) {
-    this.setState({ navigationText: value });
-  }
-
-  handleConfirmNavigation(target) {
-    this.setState({ navigationPopupVisible: false });
+  handleNavigation(target) {
     const line = parseInt(target, 10);
     if (line) {
       this.codeMirror.setCursor(line - 1);
-      this.codeMirror.focus();
     }
+    this.codeMirror.focus();
   }
 
   handleOpenPermissionModal() {
     this.props.onOpenPermissionModal(this.props.documentID);
   }
 
-  handleTitleBoxBlur(event) {
-    // Event is not raised if not subscribing to remote document
-    if (!this.shareDBDoc) {
-      return;
-    }
-
-    const titleTextBox = event.target;
-    if (titleTextBox.value !== this.shareDBDoc.data.t) {
-      this.raiseTitleChanged(titleTextBox.value, this.remoteUpdating);
-      this.setState({ documentState: DOC_SYNCING });
-      this.submitTitleChange(titleTextBox.value);
-    }
-  }
-
+  //
+  // Title editor event handlers
+  //
   handleTitleKeyUp(event) {
-    // Event is not handled if not subscribing to remote document
+    // Event is not handled when not subscribing to a document
     if (!this.shareDBDoc) {
+      console.error('Title editor key up when not subscribing to a document');
       return;
     }
 
@@ -383,25 +426,47 @@ class SyncedEditor extends React.Component {
       // Cancelled, revert to original title
       titleTextBox.value = this.shareDBDoc.data.t;
       titleTextBox.blur();
-    } else if (event.key === 'Enter') {
-      titleTextBox.blur();
-    } else {
-      return;
     }
-    event.preventDefault();
   }
 
+  handleTitleBoxSubmit(event) {
+    // Prevent any default submitting actions
+    event.preventDefault();
+
+    // Event is not raised when not subscribing to a document
+    if (!this.shareDBDoc) {
+      console.error('Title editor submitted when not subscribing to a document');
+      return;
+    }
+
+    // No need to submit the change if same
+    const titleTextBox = this.refs.title;
+    titleTextBox.blur();
+    if (titleTextBox.value === this.shareDBDoc.data.t) {
+      return;
+    }
+
+    // Raise event
+    this.raiseTitleChanged(titleTextBox.value, this.operationSource);
+
+    // Submit title changes to server
+    this.submitTitleChange(titleTextBox.value);
+  }
+
+  //
+  // ShareDB document event handlers
+  //
   handleShareDBDocOperation(operationList, local) {
     if (local) {
       return;
     }
-    this.remoteUpdating = REMOTE_REMOTE;
+    this.operationSource = OP_REMOTE;
     for (let i = 0; i < operationList.length; ++i) {
       const operation = operationList[i];
       switch (operation.p[0]) {
         case 't': // Title
           this.refs.title.value = operation.oi;
-          this.raiseTitleChanged(this.refs.title.value, this.remoteUpdating);
+          this.raiseTitleChanged(this.refs.title.value, this.operationSource);
           break;
         case 'c': // Content
           if (typeof operation.sd === 'undefined') {
@@ -413,18 +478,27 @@ class SyncedEditor extends React.Component {
             const to = this.codeMirror.posFromIndex(operation.p[1] + operation.sd.length);
             this.codeMirror.replaceRange('', from, to);
           }
-          this.updateDocumentCollaborators();
+          // Change events are raised by CodeMirror event handlers
+          // Need to reset collaborator cursors because CodeMirror bookmark replaces along with content
+          this.setDocumentCollaborators();
           break;
         case 'm': // Language mode
-          this.setState({ documentLanguageMode: operation.oi });
-          this.raiseLanguageModeChanged(operation.oi, this.remoteUpdating);
+          this.setState({ languageMode: operation.oi });
+          this.raiseLanguageModeChanged(operation.oi, this.operationSource);
           break;
         case 'a': // Collaborators
-          if (operation.p[1] === this.myClientID) {
-            this.submitCursorChange(this.getCursors(this.codeMirror));
+          if (operation.p[1] === this.shareDBConnection.id) {
+            this.submitCursorActivity(getCursors(this.codeMirror));
           } else {
-            this.updateDocumentCollaborators();
+            this.setDocumentCollaborators();
           }
+          break;
+        case 'p': // Permission
+          this.validateDocumentAccess(this.props.documentID, err => {
+            if (err) {
+              this.subscribeDocument();
+            }
+          });
           break;
         default:
           console.error(`Unexpected operation at ${operation.p[0]}`);
@@ -432,131 +506,156 @@ class SyncedEditor extends React.Component {
       }
     }
     this.verifyDocumentContent();
-    this.remoteUpdating = REMOTE_LOCAL;
+    this.operationSource = OP_LOCAL;
   }
 
   handleShareDBDocNothingPending() {
-    this.setState({ documentState: DOC_SYNCED });
+    this.setState({ docStatus: DOC_SYNCED });
   }
 
   handleShareDBDocError(error) {
     this.raiseDocumentError(error);
   }
 
-  raiseDocumentError(error) {
-    if (this.props.onDocumentError) {
-      try {
-        this.props.onDocumentError(error);
-      } catch (e) {
-        console.error(e);
-      }
+  //
+  // SyncedEditor events
+  //
+  raiseTitleChanged(title, remote) {
+    if (!this.props.onTitleChanged) {
+      return;
+    }
+    try {
+      this.props.onTitleChanged(title, remote);
+    } catch (e) {
+      console.error(e);
     }
   }
 
   raiseContentChanged(content, remote) {
-    if (this.props.onContentChanged) {
-      try {
-        this.props.onContentChanged(content, remote);
-      } catch (e) {
-        console.error(e);
-      }
+    if (!this.props.onContentChanged) {
+      return;
+    }
+    try {
+      this.props.onContentChanged(content, remote);
+    } catch (e) {
+      console.error(e);
     }
   }
 
   raiseLanguageModeChanged(languageMode, remote) {
-    if (this.props.onLanguageModeChanged) {
-      try {
-        this.props.onLanguageModeChanged(languageMode, remote);
-      } catch (e) {
-        console.error(e);
-      }
+    if (!this.props.onLanguageModeChanged) {
+      return;
+    }
+    try {
+      this.props.onLanguageModeChanged(languageMode, remote);
+    } catch (e) {
+      console.error(e);
     }
   }
 
-  raiseTitleChanged(title, remote) {
-    if (this.props.onTitleChanged) {
-      try {
-        this.props.onTitleChanged(title, remote);
-      } catch (e) {
-        console.error(e);
-      }
+  raiseDocumentError(error) {
+    if (this.props.onDocumentError) {
+      return;
+    }
+    try {
+      this.props.onDocumentError(error);
+    } catch (e) {
+      console.error(e);
     }
   }
 
   prepareReconnection() {
     // Ignore if we are already waiting for reconnecting
-    if (this.reconnectTimer) {
+    if (this.reconnectionTimer) {
       return;
     }
 
     // Get reconnecting wait time
-    const seconds = this.getReconnectWaitTime(this.state.connectionRetries);
+    const seconds = getReconnectWaitTime(this.state.connectionRetries);
     const expire = new Date();
     expire.setSeconds(expire.getSeconds() + seconds[0]);
     expire.setMilliseconds(expire.getMilliseconds() + seconds[1]);
     this.setState({
-      connectionState: CONNECTION_WAITING,
-      connectionRetries: this.state.connectionRetries + 1,
-      connectionWaitSeconds: Math.ceil(seconds[0] + seconds[1] / 1000)
+      netStatus: NET_WAITING,
+      netRetryCount: this.state.netRetryCount + 1,
+      netRetryWait: Math.ceil(seconds[0] + seconds[1] / 1000)
     });
 
     // Set up timer for reconnecting
-    this.reconnectTimer = window.setInterval(() => {
+    this.reconnectionTimer = window.setInterval(() => {
       const difference = (expire - (new Date())) / 1000;
       if (difference > 0) {
-        this.setState({
-          connectionWaitSeconds: Math.ceil(difference)
-        });
+        this.setState({ netRetryWait: Math.ceil(difference) });
         return;
       }
 
       // Stop timer
-      window.clearInterval(this.reconnectTimer);
-      this.reconnectTimer = 0;
+      window.clearInterval(this.reconnectionTimer);
+      this.reconnectionTimer = 0;
 
       // Start reconnecting
-      this.setState({ connectionState: CONNECTION_CONNECTING });
-      this.shareDBConnection.bindToSocket(this.initiateWebSocketConnection());
+      this.setState({ netStatus: NET_CONNECTING });
+      this.validateDocumentAccess(this.props.documentID, err => {
+        this.shareDBConnection.bindToSocket(createConnection());
+        if (err) {
+          this.subscribeDocument();
+        }
+      });
     }, 100);
   }
 
-  updateDocumentCollaborators() {
-    if (!this.myClientID) {
+  setDocumentCollaborators() {
+    const collaboratorData = this.shareDBDoc.data.a;
+    const currentCollaborators = Object.keys(collaboratorData)
+      .filter(clientID => clientID !== this.shareDBConnection.id)
+      .map(clientID => {
+        const collaborator = collaboratorData[clientID];
+        let color;
+        if (clientID in this.collaboratorColors) {
+          color = this.collaboratorColors[clientID];
+        } else {
+          color = getNextColor();
+          this.collaboratorColors[clientID] = color;
+        }
+        return {
+          clientID,
+          time: collaborator.t,
+          name: collaborator.n,
+          email: collaborator.e,
+          cursors: collaborator.c,
+          color
+        };
+      })
+      .sort((a, b) => a.time - b.time);
+    this.setState({ collaborators: currentCollaborators });
+  }
+
+  //
+  // ShareDB submission handlers
+  //
+  submitTitleChange(title) {
+    // Do not submit title change when the document is read only.
+    if (this.state.readOnly) {
       return;
     }
-    const newCollaborators = [];
-    const collaborators = this.shareDBDoc.data.a;
-    for (const clientID in collaborators) {
-      if (!collaborators.hasOwnProperty(clientID)) {
-        continue;
-      }
-      if (clientID === this.myClientID) {
-        continue;
-      }
-      const collaborator = collaborators[clientID];
 
-      let color;
-      if (clientID in this.collaboratorColors) {
-        color = this.collaboratorColors[clientID];
-      } else {
-        color = getNextColor();
-        this.collaboratorColors[clientID] = color;
-      }
+    // Set SYNCING state
+    this.setState({ docStatus: DOC_SYNCING });
 
-      newCollaborators.push({
-        clientID,
-        time: collaborator.t,
-        name: collaborator.n,
-        email: collaborator.e,
-        cursors: collaborator.c,
-        color
-      });
-    }
-    newCollaborators.sort((a, b) => a.time - b.time);
-    this.setState({ documentCollaborators: newCollaborators });
+    this.shareDBDoc.submitOp([{ p: ['t'], od: this.shareDBDoc.data.t, oi: title }], true);
   }
 
   submitDocumentChange(cm, change) {
+    // Do not submit content change when the document is read only.
+    if (this.state.readOnly) {
+      return;
+    }
+
+    // Set SYNCING state
+    this.setState({ docStatus: DOC_SYNCING });
+
+    // Multicursor mode has some problems if getting data directly from CodeMirror
+    // See https://github.com/share/share-codemirror/pull/6
     const startPos = this.getIndexFromPos(change.from);
     if (change.to.line !== change.from.line || change.to.ch !== change.from.ch) {
       this.shareDBDoc.submitOp([{ p: ['c', startPos], sd: change.removed.join('\n') }], true);
@@ -569,27 +668,47 @@ class SyncedEditor extends React.Component {
     }
   }
 
-  submitLanguageModeChange(languageMode) {
-    this.shareDBDoc.submitOp([{ p: ['m'], od: this.shareDBDoc.data.m, oi: languageMode }], true);
-  }
-
-  submitTitleChange(title) {
-    this.shareDBDoc.submitOp([{ p: ['t'], od: this.shareDBDoc.data.t, oi: title }], true);
-  }
-
-  submitCursorChange(cursors) {
-    if (!this.myClientID || !this.shareDBDoc || !(this.myClientID in this.shareDBDoc.data.a)) {
+  submitCursorActivity(cursors) {
+    // Skip submitting if we are disconnected for the moment
+    if (this.shareDBConnection.state !== 'connected') {
       return;
     }
 
+    const clientID = this.shareDBConnection.id;
+
+    // Skip submitting if the server has not yet recognized us
+    if (!(clientID in this.shareDBDoc.data.a)) {
+      return;
+    }
+
+    // Do not submit cursor activity when the document is read only.
+    if (this.state.readOnly) {
+      return;
+    }
+
+    // We are not setting SYNCING state here because we don't consider cursor activity important
+
+    // Submit cursor activity
     this.shareDBDoc.submitOp([{
-      p: ['a', this.myClientID, 'c'],
-      od: this.shareDBDoc.data.a[this.myClientID].c,
+      p: ['a', clientID, 'c'],
+      od: this.shareDBDoc.data.a[clientID].c,
       oi: cursors
     }], true);
   }
 
-  subscribeDocument(collection, documentID) {
+  submitLanguageModeChange(languageMode) {
+    // Do not submit language mode change when the document is read only.
+    if (this.state.readOnly) {
+      return;
+    }
+
+    // Set SYNCING state
+    this.setState({ docStatus: DOC_SYNCING });
+
+    this.shareDBDoc.submitOp([{ p: ['m'], od: this.shareDBDoc.data.m, oi: languageMode }], true);
+  }
+
+  subscribeDocument(documentID) {
     if (this.shareDBDoc) {
       this.shareDBDoc.removeListener('op', this.handleShareDBDocOperation);
       this.shareDBDoc.removeListener('error', this.handleShareDBDocError);
@@ -597,105 +716,132 @@ class SyncedEditor extends React.Component {
       this.shareDBDoc.unsubscribe();
       this.shareDBDoc = null;
     }
-    this.setState({ documentState: DOC_INITIAL });
-    if (collection && documentID) {
-      this.setState({ documentState: DOC_OPENING });
-      fetch(`/api/notes/${documentID}`, {
-        credentials: 'same-origin'
-      }).then(response => {
-        if (response.status >= 200 && response.status < 300) {
-          return response.json();
+    this.setState({ docStatus: DOC_INITIAL });
+    if (!documentID) {
+      return;
+    }
+    this.setState({ docStatus: DOC_OPENING });
+    this.validateDocumentAccess(documentID, (accessError, docInfo) => {
+      if (accessError) {
+        return;
+      }
+
+      // Subscribe to the document
+      const doc = this.shareDBConnection.get(docInfo.collection, docInfo.documentID);
+      doc.subscribe(subscribeError => {
+        // Unable to subscribe to the document
+        if (subscribeError) {
+          this.setState({ docStatus: DOC_ERROR });
+          return;
         }
-        const error = new Error(response.statusText);
-        error.response = response;
-        throw error;
-      }).then(json => {
-        // Check whether we could write to the document
-        var readonly = true;
-        if (json.anonymousEditing === 'edit') {
-          readonly = false;
+
+        // Document does not exist
+        if (!doc.type) {
+          this.setState({ docStatus: DOC_DENIED });
+          return;
+        }
+
+        const title = doc.data.t;
+        const content = doc.data.c;
+        const mimeType = doc.data.m;
+
+        // Initialize document content and raise initial events
+        this.shareDBDoc = doc;
+        this.operationSource = OP_INIT;
+        this.refs.title.value = title;
+        this.raiseTitleChanged(title, this.operationSource);
+        this.codeMirror.setValue(content);
+        // CodeMirror raises initial change event
+        this.setState({ languageMode: mimeType });
+        this.raiseLanguageModeChanged(mimeType, this.operationSource);
+        this.operationSource = OP_LOCAL;
+
+        // Document is now populated
+        this.setState({ docStatus: DOC_SYNCED });
+        this.codeMirror.focus();
+        this.setDocumentCollaborators();
+
+        // Bind document updating event
+        doc.on('op', this.handleShareDBDocOperation);
+        doc.on('error', this.handleShareDBDocError);
+        doc.on('nothing pending', this.handleShareDBDocNothingPending);
+      });
+    });
+  }
+
+  validateDocumentAccess(documentID, callback) {
+    fetch(`/api/notes/${documentID}`, {
+      credentials: 'same-origin'
+    })
+    .then(response => {
+      if (response.status >= 200 && response.status < 300) {
+        return response.json();
+      }
+      const error = new Error(response.statusText);
+      error.response = response;
+      throw error;
+    })
+    .then(json => {
+      // Check whether we could write to the document
+      let readOnly = true;
+      if (json.anonymousEditing === 'edit') {
+        readOnly = false;
+      } else if (this.props.user) {
+        const email = this.props.user.email;
+        if (email === json.owner.email) {
+          // Owner has full access
+          readOnly = false;
         } else {
-          const userEmail = this.props.userEmail;
-          if (json.owner.email === userEmail) {
-            readonly = false;
-          } else {
-            for (let i = 0; i < json.collaborators.length; ++i) {
-              if (json.collaborators[i].email === userEmail) {
-                if (json.collaborators[i].permission === 'edit') {
-                  readonly = false;
-                }
-                break;
+          for (let i = 0; i < json.collaborators.length; ++i) {
+            if (email === json.collaborators[i].email) {
+              // Only collaborator with edit permission can edit
+              if (json.collaborators[i].permission === 'edit') {
+                readOnly = false;
               }
+              break;
             }
           }
         }
-
-        // Subscribe to the document
-        const doc = this.shareDBConnection.get(collection, documentID);
-        doc.subscribe(error => {
-          // Unable to subscribe to the document
-          if (error) {
-            console.error('Failed to subscribe', error);
-            this.setState({ documentState: DOC_FAILED });
-            return;
-          }
-
-          // Document does not exist
-          if (!doc.type) {
-            console.error('Document does not exist');
-            this.setState({ documentState: DOC_FAILED });
-            return;
-          }
-
-          this.setState({ documentReadOnly: readonly });
-
-          const title = doc.data.t;
-          const content = doc.data.c;
-          const mimeType = doc.data.m;
-
-          this.shareDBDoc = doc;
-          this.remoteUpdating = REMOTE_INIT;
-          this.refs.title.value = title;
-          this.raiseTitleChanged(title, this.remoteUpdating);
-          this.codeMirror.setValue(content);
-          // CodeMirror will trigger change event
-          this.setState({ documentLanguageMode: mimeType });
-          this.raiseLanguageModeChanged(mimeType, this.remoteUpdating);
-          this.remoteUpdating = REMOTE_LOCAL;
-
-          // Document is populated
-          this.setState({ documentState: DOC_SYNCED });
-          this.codeMirror.focus();
-          this.handleContentCursorActivity(this.codeMirror);
-          this.updateDocumentCollaborators();
-
-          // Handle document updating event
-          doc.on('op', this.handleShareDBDocOperation);
-          doc.on('error', this.handleShareDBDocError);
-          doc.on('nothing pending', this.handleShareDBDocNothingPending);
-        });
-      }).catch(err => {
-        console.error('Unable to access the document');
-        this.setState({ documentState: DOC_FAILED });
-      });
-    }
+      }
+      // Check the document sharing setting
+      let sharing = 'private';
+      if (json.anonymousEditing === 'view' || json.anonymousEditing === 'edit') {
+        sharing = 'public';
+      } else if (json.collaborators.length > 0) {
+        sharing = 'team';
+      }
+      this.setState({ readOnly, sharing });
+      return callback(null, { collection: 'collection', documentID });
+    })
+    .catch(err => {
+      // We could not access the document
+      if (err.response.status >= 500) {
+        console.error(`Server error: ${err}`);
+        this.setState({ docStatus: DOC_ERROR });
+      } else {
+        this.setState({ docStatus: DOC_DENIED });
+      }
+      return callback(err);
+    });
   }
 
   verifyDocumentContent() {
     process.nextTick(() => {
+      // Verification should not be called when not subscribing to a document
       if (!this.shareDBDoc) {
+        console.error('Unable to verify when not subscribing to a document');
         return;
       }
 
       if (this.shareDBDoc.data.c !== this.codeMirror.getValue()) {
         console.warn('Content out of sync, repopulating text');
-        this.remoteUpdating = REMOTE_RESYNC;
+        this.operationSource = OP_RESYNC;
         const ranges = this.codeMirror.listSelections();
         const viewport = this.codeMirror.getScrollInfo();
         this.codeMirror.setValue(this.shareDBDoc.data.c);
         this.codeMirror.setSelections(ranges);
         this.codeMirror.scrollTo(viewport.left, viewport.top);
-        this.remoteUpdating = REMOTE_LOCAL;
+        this.operationSource = OP_RESYNC;
       }
     });
   }
@@ -707,48 +853,53 @@ class SyncedEditor extends React.Component {
     });
     return (
       <div className={containerClasses}>
-        <EditorOverlay state={this.state.documentState} />
-        <Collaborators collaborators={this.state.documentCollaborators} />
-        <div className="title-editor">
-          <input ref="title" type="text" className="document-title"
-            onBlur={this.handleTitleBoxBlur} onKeyUp={this.handleTitleKeyUp}
+        <EditorOverlay state={this.state.docStatus} />
+        <div id="document-editor">
+          <Collaborators collaborators={this.state.collaborators} />
+          <form onSubmit={this.handleTitleBoxSubmit}>
+            <div className="title-editor">
+              <input
+                ref="title"
+                type="text"
+                className="document-title"
+                readOnly={this.state.readOnly}
+                disabled={this.state.docStatus !== DOC_SYNCED && this.state.docStatus !== DOC_SYNCING}
+                onBlur={this.handleTitleBoxSubmit}
+                onKeyUp={this.handleTitleKeyUp}
+              />
+            </div>
+          </form>
+          <div className="editor">
+            <textarea ref="textarea" />
+          </div>
+          <EditorStatusBar
+            netStatus={this.state.netStatus}
+            netRetryCount={this.state.netRetryCount}
+            netRetryWait={this.state.netRetryWait}
+            docStatus={this.state.docStatus}
+            docFocused={this.state.focused}
+            readOnly={this.state.readOnly}
+            cursors={this.state.cursors}
+            onNavigation={this.handleNavigation}
+            languageMode={this.state.languageMode}
+            languageModeList={LANGUAGE_MODES}
+            onChangeLanguageMode={this.handleChangeLanguageMode}
+            sharing={this.state.sharing}
+            onOpenPermissionModal={this.handleOpenPermissionModal}
           />
         </div>
-        <div className="editor">
-          <textarea ref="textarea" />
-        </div>
-        <EditorStatusBar
-          connectionState={this.state.connectionState}
-          connectionRetries={this.state.connectionRetries}
-          connectionWaitSeconds={this.state.connectionWaitSeconds}
-          documentState={this.state.documentState}
-          cursors={this.state.documentCursors}
-          showCursorChars={this.state.documentShowCursorChars}
-          navigationText={this.state.navigationText}
-          navigationPopupVisible={this.state.navigationPopupVisible}
-          onToggleNavigationPopup={this.handleToggleNavigationPopup}
-          onEditNavigationText={this.handleEditNavigationText}
-          onConfirmNavigation={this.handleConfirmNavigation}
-          languageMode={this.state.documentLanguageMode}
-          languageModeList={this.state.documentLanguageModeList}
-          languageModeListFilter={this.state.documentLanguageModeListFilter}
-          languageModeListVisible={this.state.documentLanguageModeListVisible}
-          onToggleLanguageModeList={this.handleToggleLanguageModeList}
-          onEditLanguageModeListFilter={this.handleEditLanguageModeFilter}
-          onChangeLanguageMode={this.handleLanguageModeChanged}
-          onOpenPermissionModal={this.handleOpenPermissionModal}
-        />
       </div>
     );
   }
 }
 
 SyncedEditor.propTypes = {
-  fullScreen: React.PropTypes.bool,
-  socketURL: React.PropTypes.string.isRequired,
-  collection: React.PropTypes.string,
-  documentID: React.PropTypes.string,
-  userEmail: React.PropTypes.string,
+  user: React.PropTypes.shape({
+    name: React.PropTypes.string.isRequired,
+    email: React.PropTypes.string.isRequired
+  }),
+  fullScreen: React.PropTypes.bool.isRequired,
+  documentID: React.PropTypes.string.isRequired,
   onTitleChanged: React.PropTypes.func,
   onContentChanged: React.PropTypes.func,
   onCursorActivity: React.PropTypes.func,

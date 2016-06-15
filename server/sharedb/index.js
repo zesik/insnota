@@ -224,8 +224,23 @@ function createDocument(id, callback) {
       if (err) {
         return callback(err);
       }
-      callback(null, DEFAULT_DOCUMENT)
+      callback(null, DEFAULT_DOCUMENT);
     });
+  });
+}
+
+function broadcastPermissionChange(collection, document, callback) {
+  const sharedbDoc = serverConnection.get(collection, document);
+  sharedbDoc.fetch(function (err) {
+    if (err) {
+      return callback(err);
+    }
+    if (typeof sharedbDoc.data.p !== 'undefined') {
+      sharedbDoc.submitOp({ p: ['p'], na: 1 }, true);
+    } else {
+      sharedbDoc.submitOp({ p: ['p'], oi: 0 }, true);
+    }
+    callback();
   });
 }
 
@@ -239,5 +254,6 @@ const serverConnection = backend.connect();
 module.exports = {
   tidyLooseConnections,
   handleSocketConnection,
-  createDocument
+  createDocument,
+  broadcastPermissionChange
 };

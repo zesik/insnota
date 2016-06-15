@@ -1,12 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router';
 
-function Home(props) {
+function Home() {
   return (
     <div className="home">
       <div className="hero">
         <div className="container">
-          <h1>Collabnotes</h1>
+          <h1>Insnota</h1>
           <p>A collaborative note-taking platform</p>
           <div className="signup">
             <Link className="btn" to="/signin">Sign in</Link>&nbsp;

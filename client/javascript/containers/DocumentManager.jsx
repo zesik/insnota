@@ -1,16 +1,21 @@
 import React from 'react';
+import { connect } from 'react-redux';
 import { Link } from 'react-router';
 import classNames from 'classnames';
-import Document from './Document';
-import UserAvatar from './UserAvatar';
+import Document from '../components/Document';
+import UserAvatar from '../components/UserAvatar';
+import { initializeManager, createDocument } from '../actions/documentManager';
+import { openDeleteModal } from '../actions/deleteModal';
 
-function getNoteCounter(count) {
-  if (count === 0) {
-    return 'No notes';
-  } else if (count === 1) {
-    return '1 note';
+function textifyNoteCounter(count) {
+  switch (count) {
+    case 0:
+      return 'No notes';
+    case 1:
+      return '1 note';
+    default:
+      return `${count} notes`;
   }
-  return `${count} notes`;
 }
 
 class DocumentManager extends React.Component {
@@ -20,9 +25,13 @@ class DocumentManager extends React.Component {
     this.handleDeleteDocumentClicked = this.handleDeleteDocumentClicked.bind(this);
   }
 
+  componentDidMount() {
+    this.props.initializeManager();
+  }
+
   handleNewDocumentClicked() {
-    const { fetching, creating, onNewDocumentClicked } = this.props;
-    if (fetching || creating) {
+    const { loading, creating, onNewDocumentClicked } = this.props;
+    if (loading || creating) {
       return;
     }
     onNewDocumentClicked();
@@ -39,7 +48,7 @@ class DocumentManager extends React.Component {
       'btn-link': true,
       'tool-bar-item': true,
       'icon-button': true,
-      disabled: this.props.fetching || this.props.creating
+      disabled: this.props.loading || this.props.creating
     });
     const containerClasses = classNames({
       'document-list-container': true,
@@ -48,20 +57,20 @@ class DocumentManager extends React.Component {
     return (
       <div className={containerClasses}>
         <div className="document-list-header">
-          {this.props.currentUser &&
+          {this.props.user &&
           <div>
-            <UserAvatar email={this.props.currentUser.email} size={32} cornerRadius={32} />
+            <UserAvatar email={this.props.user.email} size={32} cornerRadius={32} />
             <div className="user-info">
-              <div className="user-name">{this.props.currentUser.name}</div>
-              <div className="user-email">{this.props.currentUser.email}</div>
+              <div className="user-name">{this.props.user.name}</div>
+              <div className="user-email">{this.props.user.email}</div>
             </div>
           </div>
           }
         </div>
         <div className="document-list-status tool-bar">
           <div className="tool-bar-item">
-            {this.props.fetching && <div className="loading">Loading...</div>}
-            {(!this.props.fetching) && <div>{getNoteCounter(this.props.documents.length)}</div>}
+            {this.props.loading && <div className="loading">Loading...</div>}
+            {!this.props.loading && <div>{textifyNoteCounter(this.props.documents.length)}</div>}
           </div>
           <div className="tool-bar-item flex-width" />
           <button className={newDocClasses} onClick={this.handleNewDocumentClicked}>
@@ -69,7 +78,7 @@ class DocumentManager extends React.Component {
           </button>
         </div>
         <div className="document-list">
-          {this.props.documents.map(function (item) {
+          {this.props.documents.map(item => {
             const classes = classNames({
               'document-item': true,
               'document-item-selected': item.id === this.props.selectedDocumentID
@@ -83,7 +92,7 @@ class DocumentManager extends React.Component {
                 />
               </Link>
             );
-          }, this)}
+          })}
         </div>
       </div>
     );
@@ -91,21 +100,48 @@ class DocumentManager extends React.Component {
 }
 
 DocumentManager.propTypes = {
-  collapsed: React.PropTypes.bool,
-  currentUser: React.PropTypes.shape({
+  loading: React.PropTypes.bool.isRequired,
+  creating: React.PropTypes.bool.isRequired,
+  user: React.PropTypes.shape({
     name: React.PropTypes.string.isRequired,
     email: React.PropTypes.string.isRequired
   }),
-  fetching: React.PropTypes.bool,
-  creating: React.PropTypes.bool,
   documents: React.PropTypes.arrayOf(React.PropTypes.shape({
     id: React.PropTypes.string.isRequired,
-    title: React.PropTypes.string,
+    title: React.PropTypes.string.isRequired,
     lastModified: React.PropTypes.string
-  })),
+  })).isRequired,
   selectedDocumentID: React.PropTypes.string,
+  collapsed: React.PropTypes.bool.isRequired,
+  initializeManager: React.PropTypes.func.isRequired,
   onNewDocumentClicked: React.PropTypes.func.isRequired,
   onDeleteDocumentClicked: React.PropTypes.func.isRequired
 };
 
-export default DocumentManager;
+function mapStateToProps(state, ownProps) {
+  const user = state.manager.email ? { name: state.manager.name, email: state.manager.email } : null;
+  return {
+    loading: state.manager.loading,
+    creating: state.manager.creating,
+    user,
+    documents: state.manager.documents,
+    collapsed: !user,
+    selectedDocumentID: ownProps.selectedDocumentID
+  };
+}
+
+function mapDispatchToProps(dispatch) {
+  return {
+    initializeManager: () => {
+      dispatch(initializeManager());
+    },
+    onNewDocumentClicked: () => {
+      dispatch(createDocument());
+    },
+    onDeleteDocumentClicked: (id, title) => {
+      dispatch(openDeleteModal(id, title));
+    }
+  };
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(DocumentManager);

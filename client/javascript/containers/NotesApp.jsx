@@ -1,22 +1,14 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { getDocuments, createDocument, changeDocumentTitle } from '../actions/documentManager';
-import { openDeleteModal } from '../actions/deleteModal';
+import { changeDocumentTitle } from '../actions/documentManager';
 import { openPermissionModal } from '../actions/permissionModal';
 import { showInformation, showError } from '../actions/notificationCenter';
 import { getModeName } from '../utils/editorLanguageModes';
-import DocumentManager from '../components/DocumentManager';
+import DocumentManager from './DocumentManager';
 import SyncedEditor, { REMOTE_REMOTE } from '../components/SyncedEditor';
 import PermissionModal from './PermissionModal';
 import DeleteModal from './DeleteModal';
 import NotificationCenter from './NotificationCenter';
-
-const COLLECTION_NAME = 'collection';
-
-function createWebSocketURL() {
-  const l = window.location;
-  return `${((l.protocol === 'https:') ? 'wss://' : 'ws://')}${l.host}/notes`;
-}
 
 class App extends React.Component {
   constructor(props) {
@@ -24,11 +16,6 @@ class App extends React.Component {
     this.handleLanguageModeChanged = this.handleLanguageModeChanged.bind(this);
     this.handleTitleChanged = this.handleTitleChanged.bind(this);
     this.handleOpenPermissionModal = this.handleOpenPermissionModal.bind(this);
-  }
-
-  componentDidMount() {
-    const { dispatch } = this.props;
-    dispatch(getDocuments());
   }
 
   handleLanguageModeChanged(mimeType, remote) {
@@ -49,27 +36,13 @@ class App extends React.Component {
   }
 
   render() {
-    const { dispatch, userName, userEmail } = this.props;
-    let currentUser = null;
-    if (userEmail) {
-      currentUser = { name: userName, email: userEmail };
-    }
+    const { dispatch, user } = this.props;
     return (
       <div className="full-size">
-        <DocumentManager
-          collapsed={!this.props.userEmail}
-          fetching={this.props.fetchingDocuments}
-          currentUser={currentUser}
-          documents={this.props.documents}
-          selectedDocumentID={this.props.selectedDocumentID}
-          onNewDocumentClicked={() => dispatch(createDocument())}
-          onDeleteDocumentClicked={(documentID, title) => dispatch(openDeleteModal(documentID, title))}
-        />
+        <DocumentManager selectedDocumentID={this.props.selectedDocumentID} />
         <SyncedEditor
-          fullScreen={!this.props.userEmail}
-          userEmail={userEmail}
-          socketURL={createWebSocketURL()}
-          collection={COLLECTION_NAME}
+          user={user}
+          fullScreen={!user}
           documentID={this.props.selectedDocumentID}
           onTitleChanged={this.handleTitleChanged}
           onLanguageModeChanged={this.handleLanguageModeChanged}
@@ -85,27 +58,19 @@ class App extends React.Component {
 }
 
 App.propTypes = {
-  fetchingDocuments: React.PropTypes.bool,
-  creatingDocuments: React.PropTypes.bool,
-  userName: React.PropTypes.string,
-  userEmail: React.PropTypes.string,
-  documents: React.PropTypes.arrayOf(React.PropTypes.shape({
-    id: React.PropTypes.string.isRequired,
-    title: React.PropTypes.string,
-    lastModified: React.PropTypes.string
-  })),
+  user: React.PropTypes.shape({
+    name: React.PropTypes.string,
+    email: React.PropTypes.string
+  }),
   selectedDocumentID: React.PropTypes.string,
   dispatch: React.PropTypes.func.isRequired
 };
 
 function mapStateToProps(state, ownProps) {
+  const user = state.manager.email ? { name: state.manager.name, email: state.manager.email } : null;
   return {
-    fetchingDocuments: state.document.fetchingDocuments,
-    creatingDocuments: state.document.creatingDocuments,
-    userName: state.document.userName,
-    userEmail: state.document.userEmail,
-    documents: state.document.documents,
-    selectedDocumentID: ownProps.params.splat
+    user,
+    selectedDocumentID: ownProps.params.id
   };
 }
 

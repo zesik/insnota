@@ -1,13 +1,8 @@
 import React from 'react';
 import classNames from 'classnames';
-import LanguageModePopup from './LanguageModePopup';
-import NavigationPopup from './NavigationPopup';
-import {
-  CONNECTION_CONNECTING,
-  CONNECTION_WAITING,
-  CONNECTION_CONNECTED,
-  DOC_SYNCED
-} from './SyncedEditor';
+import LanguageModePopup from '../components/LanguageModePopup';
+import NavigationPopup from '../components/NavigationPopup';
+import { NET_CONNECTED, NET_CONNECTING, NET_WAITING, DOC_SYNCED } from '../components/SyncedEditor';
 
 function formatSecondCounter(seconds) {
   if (seconds > 1) {
@@ -19,27 +14,76 @@ function formatSecondCounter(seconds) {
 class EditorStatusBar extends React.Component {
   constructor(props) {
     super(props);
-    this.handleLanguageModeChanged = this.handleLanguageModeChanged.bind(this);
+    this.handleToggleNavigationPopup = this.handleToggleNavigationPopup.bind(this);
+    this.handleNavigation = this.handleNavigation.bind(this);
+    this.handleToggleLanguageModePopup = this.handleToggleLanguageModePopup.bind(this);
+    this.handleEditLanguageModeFilter = this.handleEditLanguageModeFilter.bind(this);
+    this.handleChangeLanguageMode = this.handleChangeLanguageMode.bind(this);
+    this.state = {
+      navigationPopupVisible: false,
+      languageModePopupVisible: false,
+      languageModeFilter: ''
+    };
   }
 
-  handleLanguageModeChanged(event) {
-    if (this.props.onLanguageModeChanged) {
-      this.props.onLanguageModeChanged(event.target.value);
+  componentWillReceiveProps(nextProps) {
+    if (nextProps.docFocused) {
+      this.setState({ navigationPopupVisible: false, languageModePopupVisible: false });
+    }
+  }
+
+  handleToggleNavigationPopup() {
+    this.setState({
+      navigationPopupVisible: !this.state.navigationPopupVisible,
+      languageModePopupVisible: false
+    });
+  }
+
+  handleNavigation(navigationTarget) {
+    this.setState({ navigationPopupVisible: false });
+    if (this.props.onNavigation) {
+      this.props.onNavigation(navigationTarget);
+    }
+  }
+
+  handleToggleLanguageModePopup() {
+    if (this.state.languageModePopupVisible) {
+      this.setState({
+        navigationPopupVisible: false,
+        languageModePopupVisible: false
+      });
+    } else {
+      this.setState({
+        navigationPopupVisible: false,
+        languageModePopupVisible: !this.props.readOnly,
+        languageModeFilter: ''
+      });
+    }
+  }
+
+  handleEditLanguageModeFilter(filter) {
+    this.setState({ languageModeFilter: filter });
+  }
+
+  handleChangeLanguageMode(languageMode) {
+    this.setState({ languageModePopupVisible: false });
+    if (this.props.onChangeLanguageMode) {
+      this.props.onChangeLanguageMode(languageMode);
     }
   }
 
   render() {
     // Detailed synchronization status text
     let syncTitle;
-    switch (this.props.connectionState) {
-      case CONNECTION_CONNECTING:
+    switch (this.props.netStatus) {
+      case NET_CONNECTING:
         syncTitle = 'Connecting...';
         break;
-      case CONNECTION_WAITING:
-        syncTitle = `Retrying connection to the server in ${formatSecondCounter(this.props.connectionWaitSeconds)}...`;
+      case NET_WAITING:
+        syncTitle = `Retrying connection to the server in ${formatSecondCounter(this.props.netRetryWait)}...`;
         break;
-      case CONNECTION_CONNECTED:
-        if (this.props.documentState === DOC_SYNCED) {
+      case NET_CONNECTED:
+        if (this.props.docStatus === DOC_SYNCED) {
           syncTitle = 'All changes are saved to the cloud';
         } else {
           syncTitle = 'Saving changes...';
@@ -52,9 +96,9 @@ class EditorStatusBar extends React.Component {
 
     // Synchronization status icon
     let syncStatus;
-    if (this.props.connectionRetries < 3) {
+    if (this.props.netRetryCount < 3) {
       // Won't display error when retry time less than 3
-      if (this.props.documentState === DOC_SYNCED) {
+      if (this.props.docStatus === DOC_SYNCED) {
         syncStatus = (
           <div className="status-bar-item-content icon-button" title={syncTitle}>
             <i className="fa fa-cloud" />
@@ -94,7 +138,7 @@ class EditorStatusBar extends React.Component {
       cursorInformation = '';
     } else if (this.props.cursors.length === 1) {
       const cursor = this.props.cursors[0].head;
-      if (this.props.showCursorChars) {
+      if (this.props.cursorCharsVisible) {
         cursorInformation = `Ln ${cursor.ln}, Col ${cursor.col}, Ch ${cursor.ch}`;
       } else {
         cursorInformation = `Ln ${cursor.ln}, Col ${cursor.col}`;
@@ -112,7 +156,7 @@ class EditorStatusBar extends React.Component {
     }
     const cursorStatusClasses = classNames({
       'status-bar-item': true,
-      'popup-open': this.props.navigationPopupVisible
+      'popup-open': this.state.navigationPopupVisible
     });
 
     // Language mode selections
@@ -122,8 +166,22 @@ class EditorStatusBar extends React.Component {
     }
     const languageSelectionClasses = classNames({
       'status-bar-item': true,
-      'popup-open': this.props.languageModeListVisible
+      'popup-open': this.state.languageModePopupVisible
     });
+
+    // Sharing setting
+    let sharingIcon;
+    switch (this.props.sharing) {
+      case 'team':
+        sharingIcon = (<i className="fa fa-users" />);
+        break;
+      case 'public':
+        sharingIcon = (<i className="fa fa-globe" />);
+        break;
+      default:
+        sharingIcon = (<i className="fa fa-lock" />);
+        break;
+    }
 
     return (
       <div className="status-bar">
@@ -131,37 +189,35 @@ class EditorStatusBar extends React.Component {
           {syncStatus}
         </div>
         <div className={cursorStatusClasses}>
-          <div className="status-bar-item-content" onClick={this.props.onToggleNavigationPopup}>
+          <div className="status-bar-item-content" onClick={this.handleToggleNavigationPopup}>
             {cursorInformation}
           </div>
-          {this.props.navigationPopupVisible &&
+          {this.state.navigationPopupVisible &&
             <NavigationPopup
-              navigationText={this.props.navigationText}
-              onEditNavigationText={this.props.onEditNavigationText}
-              onConfirmNavigation={this.props.onConfirmNavigation}
-              onClosePopup={this.props.onToggleNavigationPopup}
+              onNavigation={this.handleNavigation}
+              onClosePopup={this.handleToggleNavigationPopup}
             />
           }
         </div>
         <div className="status-bar-item flex-width" />
         <div className={languageSelectionClasses}>
-          <div className="status-bar-item-content" onClick={this.props.onToggleLanguageModeList}>
+          <div className="status-bar-item-content" onClick={this.handleToggleLanguageModePopup}>
             {currentLanguageMode.name}
           </div>
-          {this.props.languageModeListVisible &&
+          {this.state.languageModePopupVisible &&
             <LanguageModePopup
               currentMode={currentLanguageMode}
               fullModeList={this.props.languageModeList}
-              filterText={this.props.languageModeListFilter}
-              onEditFilterText={this.props.onEditLanguageModeListFilter}
-              onChangeLanguageMode={this.props.onChangeLanguageMode}
-              onClosePopup={this.props.onToggleLanguageModeList}
+              filterText={this.state.languageModeFilter}
+              onEditFilterText={this.handleEditLanguageModeFilter}
+              onChangeLanguageMode={this.handleChangeLanguageMode}
+              onClosePopup={this.handleToggleLanguageModePopup}
             />
           }
         </div>
         <div className="status-bar-item">
           <div className="status-bar-item-content icon-button" onClick={this.props.onOpenPermissionModal}>
-            <i className="fa fa-lock" />
+            {sharingIcon}
           </div>
         </div>
       </div>
@@ -170,11 +226,13 @@ class EditorStatusBar extends React.Component {
 }
 
 EditorStatusBar.propTypes = {
-  // Document sync status
-  connectionState: React.PropTypes.string.isRequired,
-  connectionRetries: React.PropTypes.number.isRequired,
-  connectionWaitSeconds: React.PropTypes.number.isRequired,
-  documentState: React.PropTypes.string.isRequired,
+  // Document status
+  netStatus: React.PropTypes.string.isRequired,
+  netRetryCount: React.PropTypes.number.isRequired,
+  netRetryWait: React.PropTypes.number.isRequired,
+  docStatus: React.PropTypes.string.isRequired,
+  docFocused: React.PropTypes.bool.isRequired,
+  readOnly: React.PropTypes.bool.isRequired,
   // Cursor information
   cursors: React.PropTypes.arrayOf(React.PropTypes.shape({
     anchor: React.PropTypes.shape({
@@ -190,26 +248,18 @@ EditorStatusBar.propTypes = {
     length: React.PropTypes.number.isRequired,
     primary: React.PropTypes.bool
   })).isRequired,
-  showCursorChars: React.PropTypes.bool,
+  cursorCharsVisible: React.PropTypes.bool,
   // Navigation
-  navigationPopupVisible: React.PropTypes.bool.isRequired,
-  navigationText: React.PropTypes.string.isRequired,
-  onToggleNavigationPopup: React.PropTypes.func.isRequired,
-  onEditNavigationText: React.PropTypes.func.isRequired,
-  onConfirmNavigation: React.PropTypes.func.isRequired,
+  onNavigation: React.PropTypes.func.isRequired,
   // Language mode
   languageMode: React.PropTypes.string.isRequired,
-  languageModeListVisible: React.PropTypes.bool.isRequired,
-  languageModeListFilter: React.PropTypes.string.isRequired,
   languageModeList: React.PropTypes.arrayOf(React.PropTypes.shape({
     name: React.PropTypes.string.isRequired,
     mimeType: React.PropTypes.string.isRequired
   })).isRequired,
-  onToggleLanguageModeList: React.PropTypes.func.isRequired,
-  onEditLanguageModeListFilter: React.PropTypes.func.isRequired,
   onChangeLanguageMode: React.PropTypes.func.isRequired,
   // Permissions
-  permission: React.PropTypes.string.isRequired,
+  sharing: React.PropTypes.string.isRequired,
   onOpenPermissionModal: React.PropTypes.func.isRequired
 };
 

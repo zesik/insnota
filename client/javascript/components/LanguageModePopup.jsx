@@ -25,9 +25,9 @@ class LanguageModePopup extends React.Component {
         />
         <ul id="language-selection-list">
           {filteredModeList.length === 0 &&
-          <li className="language-selection-empty">
-            No match found
-          </li>
+            <li className="language-selection-empty">
+              No match found
+            </li>
           }
           {filteredModeList.map(item => (
             <li
@@ -37,7 +37,7 @@ class LanguageModePopup extends React.Component {
             >
               <div className="language-mode-name">{item.name}</div>
               {item.mimeType === this.props.currentMode.mimeType &&
-              <div className="language-mode-current">Current Mode</div>
+                <div className="language-mode-current">Current Mode</div>
               }
             </li>
           ))}

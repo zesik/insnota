@@ -40,15 +40,17 @@ export function openPermissionModal(documentID) {
     dispatch(showPermissionModal(documentID));
     fetch(`/api/notes/${documentID}`, {
       credentials: 'same-origin'
-    }).then(function (response) {
+    })
+    .then(function (response) {
       if (response.status >= 200 && response.status < 300) {
         return response.json();
       }
       const error = new Error(response.statusText);
       error.response = response;
       throw error;
-    }).then(function (json) {
-      const userEmail = getState().document.userEmail;
+    })
+    .then(function (json) {
+      const userEmail = getState().manager.email;
       let permission = 'none';
       if (userEmail) {
         if (json.owner.email === userEmail) {
@@ -66,7 +68,8 @@ export function openPermissionModal(documentID) {
       }
       dispatch(initializePermissionModal(null, json.owner.name, json.owner.email, json.collaborators,
         json.editorInviting, json.anonymousEditing, permission));
-    }).catch(function (err) {
+    })
+    .catch(function (err) {
       dispatch(initializePermissionModal(err));
     });
   };
@@ -177,16 +180,19 @@ export function startSubmitPermission() {
       },
       body: JSON.stringify(data),
       credentials: 'same-origin'
-    }).then(function (response) {
+    })
+    .then(function (response) {
       if (response.status >= 200 && response.status < 300) {
         return response;
       }
       const error = new Error(response.statusText);
       error.response = response;
       throw error;
-    }).then(function () {
+    })
+    .then(function () {
       dispatch(closePermissionModal());
-    }).catch(function (err) {
+    })
+    .catch(function (err) {
       if (err.response.status >= 500) {
         console.error(err);
         dispatch(updateSubmissionStatus(false, 'Server error'));

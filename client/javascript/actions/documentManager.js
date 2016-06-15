@@ -1,18 +1,25 @@
 import 'whatwg-fetch';
 import { push } from 'react-router-redux';
 
-export const LOAD_DOCUMENTS = 'LOAD_DOCUMENTS';
+export const START_LOADING_DOCUMENTS = 'START_LOADING_DOCUMENTS';
+export const FINISH_LOADING_DOCUMENTS = 'FINISH_LOADING_DOCUMENTS';
 export const START_CREATING_DOCUMENT = 'START_CREATING_DOCUMENT';
 export const FINISH_CREATING_DOCUMENT = 'FINISH_CREATING_DOCUMENT';
 export const CHANGE_DOCUMENT_TITLE = 'CHANGE_DOCUMENT_TITLE';
 
-function loadDocuments(fetchingDocuments, userName, userEmail, documents) {
+function startLoadingDocuments() {
   return {
-    type: LOAD_DOCUMENTS,
-    fetchingDocuments,
-    userName,
-    userEmail,
-    documents
+    type: START_LOADING_DOCUMENTS
+  };
+}
+
+function finishLoadingDocuments(error, name, email, documents) {
+  return {
+    type: FINISH_LOADING_DOCUMENTS,
+    error,
+    name,
+    email,
+    documents: documents || []
   };
 }
 
@@ -31,12 +38,26 @@ function finishCreatingDocument(error, id, title) {
   };
 }
 
-export function getDocuments() {
+export function initializeManager() {
   return dispatch => {
-    dispatch(loadDocuments(true, '', '', []));
-    return fetch('/api/notes', { credentials: 'same-origin' })
-      .then(response => response.json())
-      .then(json => dispatch(loadDocuments(false, json.name, json.email, json.documents)));
+    dispatch(startLoadingDocuments());
+    return fetch('/api/notes', {
+      credentials: 'same-origin'
+    })
+    .then(function (response) {
+      if (response.status >= 200 && response.status < 300) {
+        return response.json();
+      }
+      const error = new Error(response.statusText);
+      error.response = response;
+      throw error;
+    })
+    .then(function (json) {
+      dispatch(finishLoadingDocuments(null, json.name, json.email, json.documents));
+    })
+    .catch(function (err) {
+      dispatch(finishLoadingDocuments(err));
+    });
   };
 }
 
@@ -50,17 +71,20 @@ export function createDocument() {
         'Content-Type': 'application/json'
       },
       credentials: 'same-origin'
-    }).then(function (response) {
+    })
+    .then(function (response) {
       if (response.status >= 200 && response.status < 300) {
         return response.json();
       }
       const error = new Error(response.statusText);
       error.response = response;
       throw error;
-    }).then(function (json) {
+    })
+    .then(function (json) {
       dispatch(finishCreatingDocument(null, json.id, json.title));
       dispatch(push(`/notes/${json.id}`));
-    }).catch(function (err) {
+    })
+    .catch(function (err) {
       dispatch(finishCreatingDocument(err));
     });
   };

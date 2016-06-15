@@ -12,7 +12,7 @@ class NavigationPopup extends React.Component {
 
   handleConfirm(e) {
     e.preventDefault();
-    this.props.onConfirmNavigation(this.props.navigationText);
+    this.props.onNavigation(this.refs.navigation.value);
   }
 
   render() {
@@ -28,8 +28,6 @@ class NavigationPopup extends React.Component {
             type="text"
             className="textbox"
             id="navigation-text"
-            value={this.props.navigationText}
-            onChange={(e) => this.props.onEditNavigationText(e.target.value)}
           />
           <button className="btn btn-default" type="submit" onClick={this.handleConfirm}>
             Go
@@ -41,9 +39,7 @@ class NavigationPopup extends React.Component {
 }
 
 NavigationPopup.propTypes = {
-  navigationText: React.PropTypes.string.isRequired,
-  onEditNavigationText: React.PropTypes.func.isRequired,
-  onConfirmNavigation: React.PropTypes.func.isRequired,
+  onNavigation: React.PropTypes.func.isRequired,
   onClosePopup: React.PropTypes.func.isRequired
 };
 

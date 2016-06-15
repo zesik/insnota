@@ -8,6 +8,7 @@ const userService = require('../services/user');
 const documentService = require('../services/document');
 const recaptchaService = require('../services/recaptcha');
 const createDocument = require('../sharedb').createDocument;
+const broadcastPermissionChange = require('../sharedb').broadcastPermissionChange;
 
 const router = express.Router();
 const hashids = new Hashids(config.hashidSalt);
@@ -174,7 +175,12 @@ router.put('/notes/:docID', function (req, res, next) {
       if (err) {
         return next(err);
       }
-      res.status(200).end();
+      broadcastPermissionChange('collection', doc._id, function (err) {
+        if (err) {
+          return next(err);
+        }
+        res.status(200).end();
+      });
     });
   });
 });

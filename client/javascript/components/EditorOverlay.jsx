@@ -1,5 +1,5 @@
 import React from 'react';
-import { DOC_INITIAL, DOC_OPENING, DOC_FAILED } from './SyncedEditor';
+import { DOC_INITIAL, DOC_OPENING, DOC_ERROR, DOC_DENIED } from './SyncedEditor';
 
 function EditorOverlay(props) {
   let overlay;
@@ -16,11 +16,20 @@ function EditorOverlay(props) {
         </div>
       );
       break;
-    case DOC_FAILED:
+    case DOC_ERROR:
       overlay = (
         <div className="overlay">
           <div className="content">
-            Failed
+            Server Error
+          </div>
+        </div>
+      );
+      break;
+    case DOC_DENIED:
+      overlay = (
+        <div className="overlay">
+          <div className="content">
+            Access denied
           </div>
         </div>
       );

@@ -1,12 +1,12 @@
 import { combineReducers } from 'redux';
 import { routerReducer } from 'react-router-redux';
-import document from './documentManager';
+import manager from './documentManager';
 import permissionModal from './permissionModal';
 import deleteModal from './deleteModal';
 import notification from './notificationCenter';
 
 const rootReducer = combineReducers({
-  document,
+  manager,
   permissionModal,
   deleteModal,
   notification,

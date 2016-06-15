@@ -1,9 +1,62 @@
 @import 'base';
 @import url("https://fonts.googleapis.com/css?family=Inconsolata:400,700");
 
+$collaborator-color-0: #0097a7;
+$collaborator-color-1: #e91e63;
+$collaborator-color-2: #ef6c00;
+$collaborator-color-3: #3f51b5;
+$collaborator-color-4: #4caf50;
+$collaborator-color-5: #2196f3;
+$collaborator-color-6: #673ab7;
+$collaborator-color-7: #795548;
+$collaborator-color-8: #827717;
+$collaborator-color-9: #607d8b;
+
 @mixin drop-shadow($offset-x, $offset-y, $blur-radius, $color) {
   filter: drop-shadow($offset-x $offset-y $blur-radius $color);
   -webkit-filter: drop-shadow($offset-x $offset-y $blur-radius $color);
+}
+
+@mixin colorize() {
+  &.color-0 {
+    background-color: $collaborator-color-0;
+  }
+
+  &.color-1 {
+    background-color: $collaborator-color-1;
+  }
+
+  &.color-2 {
+    background-color: $collaborator-color-2;
+  }
+
+  &.color-3 {
+    background-color: $collaborator-color-3;
+  }
+
+  &.color-4 {
+    background-color: $collaborator-color-4;
+  }
+
+  &.color-5 {
+    background-color: $collaborator-color-5;
+  }
+
+  &.color-6 {
+    background-color: $collaborator-color-6;
+  }
+
+  &.color-7 {
+    background-color: $collaborator-color-7;
+  }
+
+  &.color-8 {
+    background-color: $collaborator-color-8;
+  }
+
+  &.color-9 {
+    background-color: $collaborator-color-9;
+  }
 }
 
 html, body {
@@ -144,6 +197,10 @@ $status-bar-line-height:
     margin: 10px 8px 8px 8px;
     text-align: right;
 
+    .user-avatar {
+      @include colorize;
+    }
+
     .collaborator {
       display: inline-block;
       margin: 0 1px;
@@ -152,6 +209,7 @@ $status-bar-line-height:
         width: 24px;
         height: 5px;
         margin-top: 1px;
+        @include colorize;
       }
     }
   }
@@ -279,8 +337,8 @@ $status-bar-line-height:
   padding: 12px;
   background-color: $white;
   color: $dark-text-primary;
-  font-size: $status-bar-font-size;
-  line-height: $status-bar-line-height;
+  font-size: $base-font-size;
+  line-height: $base-line-height;
 
   &.popup-top-left {
     bottom: $status-bar-height;
@@ -353,7 +411,7 @@ $status-bar-line-height:
 }
 
 #popup-navigation {
-  width: 240px;
+  width: 280px;
 }
 
 #popup-navigation-content {
@@ -608,6 +666,7 @@ $status-bar-line-height:
     height: 16px;
     top: 1px;
     left: -1px;
+    @include colorize;
   }
 
   .collaborator-identity {
@@ -619,6 +678,8 @@ $status-bar-line-height:
     font-family: $base-font-family;
     font-size: $small-font-size;
     pointer-events: none;
+    color: $white;
+    @include colorize;
   }
 
   &:hover .collaborator-identity {
