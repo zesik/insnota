@@ -1,5 +1,3 @@
-'use strict';
-
 const crypto = require('crypto');
 const mongoose = require('mongoose');
 const recaptchaService = require('../services/recaptcha');
@@ -139,7 +137,7 @@ function findUser(email, callback) {
 }
 
 function findUsersIn(emails, callback) {
-  User.find({ email: { $in: emails }}, callback);
+  User.find({ email: { $in: emails } }, callback);
 }
 
 function resetLoginAttempts(email, callback) {

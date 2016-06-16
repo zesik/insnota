@@ -42,7 +42,7 @@ function initializeExpress() {
   // Set up middleware
   app.use(express.static(path.join(__dirname, '..', 'build')));
   app.use(bodyParser.json());
-  app.use(bodyParser.urlencoded({extended: false}));
+  app.use(bodyParser.urlencoded({ extended: false }));
   app.use(cookieParser(config.cookieSecret));
   app.use(session({
     secret: 'keyboard cat',

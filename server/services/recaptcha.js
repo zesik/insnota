@@ -1,5 +1,3 @@
-'use strict';
-
 const https = require('https');
 const config = require('../config');
 
@@ -33,13 +31,12 @@ function verifySignUp(response, callback) {
 }
 
 function verifyRecaptcha(secretKey, response, callback) {
-  https.get(`https://www.google.com/recaptcha/api/siteverify?secret=${secretKey}&response=${response}`, function(res) {
+  https.get(`https://www.google.com/recaptcha/api/siteverify?secret=${secretKey}&response=${response}`, function (res) {
     let data = '';
-    res.on('data', chunk => data += chunk.toString());
+    res.on('data', chunk => { data += chunk.toString() });
     res.on('end', function () {
       try {
-        var parsedData = JSON.parse(data);
-        callback(parsedData.success);
+        callback(JSON.parse(data).success);
       } catch (e) {
         callback(false);
       }

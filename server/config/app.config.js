@@ -3,7 +3,7 @@ module.exports = {
   mongo: 'mongodb://localhost:27017/test',
   // Configures the salt for generating HashID.
   hashidSalt: 'this is my salt',
-  // Controls identifier of current server.
+  // Configures identifier of current server.
   serverID: '0',
   // Controls reCAPTCHA display. Set to `false` to disable reCAPTCHA.
   reCAPTCHA: {
@@ -28,12 +28,14 @@ module.exports = {
   },
   // Whether new users can sign up.
   allowSignUp: true,
-  // Controls secret for signed cookies.
+  // Configures secret for signed cookies.
   cookieSecret: 'keyboard cat',
-  // Controls name of the login cookie.
+  // Configures name of the login cookie.
   loginTokenName: 'login',
-  // TODO: Whether anonymous users (not signed in) can create documents.
+  // TODO: Controls whether anonymous users (not signed in) can create documents.
   anonymousCreating: true,
   // TODO: Whether anonymous users (not signed in) can edit documents.
-  anonymousEditing: true
+  anonymousEditing: true,
+  // Configure name of document collection.
+  documentCollection: 'collection'
 };

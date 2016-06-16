@@ -58,13 +58,13 @@ class DocumentManager extends React.Component {
       <div className={containerClasses}>
         <div className="document-list-header">
           {this.props.user &&
-          <div>
-            <UserAvatar email={this.props.user.email} size={32} cornerRadius={32} />
-            <div className="user-info">
-              <div className="user-name">{this.props.user.name}</div>
-              <div className="user-email">{this.props.user.email}</div>
+            <div>
+              <UserAvatar email={this.props.user.email} size={32} cornerRadius={32} />
+              <div className="user-info">
+                <div className="user-name">{this.props.user.name}</div>
+                <div className="user-email">{this.props.user.email}</div>
+              </div>
             </div>
-          </div>
           }
         </div>
         <div className="document-list-status tool-bar">

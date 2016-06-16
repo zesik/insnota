@@ -1,10 +1,9 @@
-'use strict';
-
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const DocumentSchema = new Schema({
   _id: { type: String, index: true },
+  owner_collection: { type: String },
   title: String,
   owner: { type: String, required: true, index: true },
   viewable: { type: [String], index: true },

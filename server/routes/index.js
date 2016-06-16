@@ -1,5 +1,3 @@
-'use strict';
-
 const express = require('express');
 const config = require('../config');
 const userService = require('../services/user');
@@ -32,15 +30,7 @@ function verifyCredentialForm(req, signupForm) {
 }
 
 function allValid(errors) {
-  for (let key in errors) {
-    if (!errors.hasOwnProperty(key)) {
-      continue;
-    }
-    if (errors[key]) {
-      return false;
-    }
-  }
-  return true;
+  return Object.keys(errors).findIndex(key => errors[key]) === -1;
 }
 
 router.get('/', (req, res) => res.render('index'));
@@ -90,48 +80,47 @@ router.post('/signin', function (req, res, next) {
     res.status(400).send(form.errors);
     return;
   }
-  userService.verifyUserWithRecaptcha(form.email, form.password, form.recaptcha,
-    function (err, result) {
+  userService.verifyUserWithRecaptcha(form.email, form.password, form.recaptcha, function (err, result) {
+    if (err) {
+      return next(err);
+    }
+    if (result.recaptcha === 1) {
+      res.status(403).send({
+        validationRecaptchaInvalid: true,
+        recaptchaSiteKey: result.siteKey
+      });
+      return;
+    }
+    if (result.password === 1) {
+      res.status(403).send({
+        validationCredentialInvalid: true,
+        recaptchaSiteKey: result.siteKey
+      });
+      return;
+    }
+    const user = result.user;
+    userService.resetLoginAttempts(user.email, function (err) {
       if (err) {
         return next(err);
       }
-      if (result.recaptcha === 1) {
-        res.status(403).send({
-          validationRecaptchaInvalid: true,
-          recaptchaSiteKey: result.siteKey
-        });
-        return;
-      }
-      if (result.password === 1) {
-        res.status(403).send({
-          validationCredentialInvalid: true,
-          recaptchaSiteKey: result.siteKey
-        });
-        return;
-      }
-      const user = result.user;
-      userService.resetLoginAttempts(user.email, function (err) {
-        if (err) {
-          return next(err);
-        }
-        if (form.remember) {
-          userService.issueLoginToken(user.email, function (err, token) {
-            if (err) {
-              return next(err);
-            }
-            req.session.email = user.email;
-            res.cookie(config.loginTokenName, token._id, {
-              expires: token.expires,
-              signed: true
-            });
-            res.status(204).end();
-          });
-        } else {
+      if (form.remember) {
+        userService.issueLoginToken(user.email, function (err, token) {
+          if (err) {
+            return next(err);
+          }
           req.session.email = user.email;
+          res.cookie(config.loginTokenName, token._id, {
+            expires: token.expires,
+            signed: true
+          });
           res.status(204).end();
-        }
-      });
+        });
+      } else {
+        req.session.email = user.email;
+        res.status(204).end();
+      }
     });
+  });
 });
 
 module.exports = router;

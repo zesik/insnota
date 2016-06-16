@@ -1,5 +1,3 @@
-'use strict';
-
 const Document = require('../models/document');
 
 function findByOwner(email, callback) {

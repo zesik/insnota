@@ -1,5 +1,3 @@
-'use strict';
-
 const async = require('async');
 const config = require('../config');
 const sharedb = require('sharedb');
@@ -66,7 +64,7 @@ function handleClientUnsubscribing(clientID, collection, document, callback) {
       return callback(err);
     }
     async.map(docs, function (doc, callback) {
-      async.mapSeries(doc.subscriptions, function(subscription, callback) {
+      async.mapSeries(doc.subscriptions, function (subscription, callback) {
         const sharedbDoc = serverConnection.get(subscription.c, subscription.d);
         sharedbDoc.fetch(function (err) {
           if (err) {
@@ -77,9 +75,9 @@ function handleClientUnsubscribing(clientID, collection, document, callback) {
             return callback();
           }
           if (sharedbDoc.data.a) {
-            let clientInfo = sharedbDoc.data.a[doc.client_id];
+            const clientInfo = sharedbDoc.data.a[doc.client_id];
             if (clientInfo) {
-              sharedbDoc.submitOp({p: ['a', doc.client_id], od: clientInfo});
+              sharedbDoc.submitOp({ p: ['a', doc.client_id], od: clientInfo });
             }
           }
           callback();
@@ -121,8 +119,7 @@ function ensureReadPermission(documentID, user, next) {
         // Permission denied due to anonymous user trying to access private document
         return next(ERROR_ACCESS_DENIED);
       }
-      if (doc.owner !== user.email &&
-          doc.viewable.indexOf(user.email) === -1 && doc.editable.indexOf(user.email) === -1) {
+      if (doc.owner !== user.email && !doc.viewable.includes(user.email) && !doc.editable.includes(user.email)) {
         // Permission denied due to non-collaborator trying to access the document
         return next(ERROR_ACCESS_DENIED);
       }

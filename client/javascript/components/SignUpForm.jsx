@@ -148,7 +148,7 @@ class SignUpForm extends React.Component {
             <div className={recaptchaClasses}>
               <Recaptcha siteKey={this.props.recaptchaSiteKey} />
               {this.props.validationRecaptchaInvalid &&
-              <div className="validation-error">Please verify that you are not a robot.</div>
+                <div className="validation-error">Please verify that you are not a robot.</div>
               }
             </div>
           }

@@ -191,10 +191,10 @@ class SyncedEditor extends React.Component {
 
     // Initialize React state
     this.state = {
-      netStatus: '',
+      netStatus: NET_DISCONNECTED,
       netRetryCount: 0,
       netRetryWait: 0,
-      docStatus: '',
+      docStatus: DOC_INITIAL,
       focused: false,
       languageMode: '',
       sharing: '',
@@ -716,7 +716,6 @@ class SyncedEditor extends React.Component {
       this.shareDBDoc.unsubscribe();
       this.shareDBDoc = null;
     }
-    this.setState({ docStatus: DOC_INITIAL });
     if (!documentID) {
       return;
     }
@@ -727,7 +726,7 @@ class SyncedEditor extends React.Component {
       }
 
       // Subscribe to the document
-      const doc = this.shareDBConnection.get(docInfo.collection, docInfo.documentID);
+      const doc = this.shareDBConnection.get(docInfo.collection, docInfo.document);
       doc.subscribe(subscribeError => {
         // Unable to subscribe to the document
         if (subscribeError) {
@@ -811,7 +810,7 @@ class SyncedEditor extends React.Component {
         sharing = 'team';
       }
       this.setState({ readOnly, sharing });
-      return callback(null, { collection: 'collection', documentID });
+      return callback(null, { collection: json.collection, document: json.document });
     })
     .catch(err => {
       // We could not access the document
@@ -899,7 +898,7 @@ SyncedEditor.propTypes = {
     email: React.PropTypes.string.isRequired
   }),
   fullScreen: React.PropTypes.bool.isRequired,
-  documentID: React.PropTypes.string.isRequired,
+  documentID: React.PropTypes.string,
   onTitleChanged: React.PropTypes.func,
   onContentChanged: React.PropTypes.func,
   onCursorActivity: React.PropTypes.func,

@@ -1,5 +1,3 @@
-'use strict';
-
 const Duplex = require('stream').Duplex;
 const inherits = require('util').inherits;
 

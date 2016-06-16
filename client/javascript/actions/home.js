@@ -28,16 +28,19 @@ function getSignInResponse(email) {
   return new Promise(function (resolve, reject) {
     fetch(`/api/signin/${email}`, {
       credentials: 'same-origin'
-    }).then(function (response) {
+    })
+    .then(function (response) {
       if (response.status >= 200 && response.status < 300) {
         return response.json();
       }
       const error = new Error(response.statusText);
       error.response = response;
       throw error;
-    }).then(function (json) {
+    })
+    .then(function (json) {
       return resolve(json);
-    }).catch(function (err) {
+    })
+    .catch(function (err) {
       if (err.response.status === 404) {
         return resolve(null);
       }
@@ -50,16 +53,19 @@ function getSignUpResponse() {
   return new Promise(function (resolve, reject) {
     fetch('/api/signup', {
       credentials: 'same-origin'
-    }).then(function (response) {
+    })
+    .then(function (response) {
       if (response.status >= 200 && response.status < 300) {
         return response.json();
       }
       const error = new Error(response.statusText);
       error.response = response;
       throw error;
-    }).then(function (json) {
+    })
+    .then(function (json) {
       return resolve(json);
-    }).catch(function (err) {
+    })
+    .catch(function (err) {
       if (err.response.status === 403) {
         return resolve({ forbidden: true });
       }
@@ -77,16 +83,19 @@ export function checkIdentity() {
     dispatch(updateIdentity(true, null));
     fetch('/api/user', {
       credentials: 'same-origin'
-    }).then(function (response) {
+    })
+    .then(function (response) {
       if (response.status >= 200 && response.status < 300) {
         return response.json();
       }
       const error = new Error(response.statusText);
       error.response = response;
       throw error;
-    }).then(function (json) {
+    })
+    .then(function (json) {
       dispatch(updateIdentity(false, json.email || null));
-    }).catch(function (err) {
+    })
+    .catch(function (err) {
       dispatch(updateIdentity(false, null));
       console.error(err);
     });
@@ -161,6 +170,7 @@ export function validateFormSignUpEmail(email) {
     if (validationEmailEmpty || validationEmailInvalid) {
       return;
     }
+    // TODO: send ajax to validate email not registered
   };
 }
 
@@ -249,16 +259,19 @@ export function submitSignUpForm(name, email, password, recaptcha) {
       },
       body: JSON.stringify({ name: name.trim(), email: email.trim(), password, recaptcha }),
       credentials: 'same-origin'
-    }).then(function (response) {
+    })
+    .then(function (response) {
       if (response.status >= 200 && response.status < 300) {
         return response;
       }
       const error = new Error(response.statusText);
       error.response = response;
       throw error;
-    }).then(function () {
+    })
+    .then(function () {
       window.location = '/notes';
-    }).catch(function (err) {
+    })
+    .catch(function (err) {
       dispatch(updateFormSubmitting(false));
       dispatch(updateFormValidations({ recaptchaSiteKey: '' }));
       if (err.response.status === 400 || err.response.status === 403 || err.response.status === 409) {
@@ -315,16 +328,19 @@ export function submitSignInForm(email, password, remember, recaptcha) {
       },
       body: JSON.stringify({ email: email.trim(), password, remember, recaptcha }),
       credentials: 'same-origin'
-    }).then(function (response) {
+    })
+    .then(function (response) {
       if (response.status >= 200 && response.status < 300) {
         return response;
       }
       const error = new Error(response.statusText);
       error.response = response;
       throw error;
-    }).then(function () {
+    })
+    .then(function () {
       window.location = '/notes';
-    }).catch(function (err) {
+    })
+    .catch(function (err) {
       dispatch(updateFormSubmitting(false));
       dispatch(updateFormValidations({ recaptchaSiteKey: '' }));
       if (err.response.status === 400 || err.response.status === 403) {
