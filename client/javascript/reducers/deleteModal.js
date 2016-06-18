@@ -4,7 +4,8 @@ const initialState = {
   opened: false,
   documentID: '',
   title: '',
-  deleting: false
+  deleting: false,
+  error: null
 };
 
 function deleteModalReducer(state = initialState, action) {

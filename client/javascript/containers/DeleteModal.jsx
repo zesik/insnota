@@ -9,7 +9,7 @@ function DeleteModal(props) {
       Are you sure you want to delete <strong>{props.title}</strong>?
     </div>
   );
-  const body = 'You cannot undo this operation. All other collaborators will no longer be able to view or edit ' +
+  const body = 'You cannot undo this operation. You and all collaborators will no longer be able to view or edit ' +
     'this file.';
   return (
     <div>

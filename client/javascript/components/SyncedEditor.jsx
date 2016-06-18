@@ -248,6 +248,9 @@ class SyncedEditor extends React.Component {
     if (nextProps.documentID !== this.props.documentID) {
       this.subscribeDocument(nextProps.documentID);
     }
+    if (!nextProps.documentID) {
+      this.setState({ docStatus: DOC_INITIAL });
+    }
   }
 
   componentWillUpdate(nextProps, nextState) {

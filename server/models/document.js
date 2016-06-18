@@ -11,7 +11,8 @@ const DocumentSchema = new Schema({
   public_access: { type: String },
   editor_inviting: { type: Boolean },
   created_at: { type: Date, default: Date.now },
-  updated_at: { type: Date, default: Date.now }
+  updated_at: { type: Date, default: Date.now },
+  deleted_at: { type: Date, default: null }
 });
 
 DocumentSchema.static('findOneByID', function (id, callback) {

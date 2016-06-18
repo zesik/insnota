@@ -5,6 +5,7 @@ import {
   FINISH_CREATING_DOCUMENT,
   CHANGE_DOCUMENT_TITLE
 } from '../actions/documentManager';
+import { HIDE_DELETE_MODAL } from '../actions/deleteModal';
 
 const initialState = {
   // User information
@@ -59,6 +60,13 @@ function documentManagerReducer(state = initialState, action) {
           }
           return doc;
         })
+      });
+    case HIDE_DELETE_MODAL:
+      if (!action.deletedDocumentID) {
+        return state;
+      }
+      return Object.assign({}, state, {
+        documents: state.documents.filter(doc => doc.id !== action.deletedDocumentID)
       });
     default:
       return state;

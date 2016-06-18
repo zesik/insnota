@@ -199,7 +199,43 @@ router.put('/notes/:docID', function (req, res, next) {
         if (err) {
           return next(err);
         }
-        res.status(200).end();
+        res.status(204).end();
+      });
+    });
+  });
+});
+
+router.delete('/notes/:docID', function (req, res, next) {
+  if (!req.user) {
+    return res.status(404).end();
+  }
+  documentService.findByID(req.params.docID, function (err, doc) {
+    if (err) {
+      return next(err);
+    }
+
+    if (!doc) {
+      return res.status(404).end();
+    }
+
+    // Check whether user is allowed to modify document sharing settings
+    if (doc.owner !== req.user.email) {
+      return res.status(404).end();
+    }
+
+    // Mark document deleted
+    doc.deleted_at = new Date();
+
+    doc.save(function (err) {
+      if (err) {
+        return next(err);
+      }
+      const collection = doc.owner_collection || config.documentCollection;
+      broadcastPermissionChange(collection, doc._id, function (err) {
+        if (err) {
+          return next(err);
+        }
+        res.status(204).end();
       });
     });
   });
