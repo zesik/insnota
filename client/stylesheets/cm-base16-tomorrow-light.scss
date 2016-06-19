@@ -6,25 +6,27 @@
 */
 
 .cm-s-base16-tomorrow-light.CodeMirror { background: #ffffff; color: #373b41; }
-.cm-s-base16-tomorrow-light.CodeMirror pre { padding-left: 12px; }
 .cm-s-base16-tomorrow-light div.CodeMirror-selected { background: #e0e0e0 !important; }
-.cm-s-base16-tomorrow-light .CodeMirror-activeline-background { background: #e0e0e0; }
 .cm-s-base16-tomorrow-light .CodeMirror-gutters { background: #ffffff; border-right: 0; }
-.cm-s-base16-tomorrow-light .CodeMirror-linenumber { color: #c5c8c6; }
+.cm-s-base16-tomorrow-light .CodeMirror-linenumber { color: #e0e0e0; padding-right: 8px; }
+.cm-s-base16-tomorrow-light .CodeMirror-activeline-background {background: #efefef;}
 .cm-s-base16-tomorrow-light .CodeMirror-cursor { border-left: 1px solid #282a2e !important; }
 
+.cm-s-base16-tomorrow-light span.cm-meta { color: #b294bb; }
 .cm-s-base16-tomorrow-light span.cm-comment { color: #969896; }
-.cm-s-base16-tomorrow-light span.cm-atom { color: #b5bd68; }
+.cm-s-base16-tomorrow-light span.cm-atom { color: #de935f; }
 .cm-s-base16-tomorrow-light span.cm-number { color: #de935f; }
 
 .cm-s-base16-tomorrow-light span.cm-property, .cm-s-base16-tomorrow-light span.cm-attribute { color: #81a2be; }
 .cm-s-base16-tomorrow-light span.cm-keyword { color: #b294bb; }
 .cm-s-base16-tomorrow-light span.cm-string { color: #b5bd68; }
-.cm-s-base16-tomorrow-light span.cm-string-2 { color: #81a2be; }
+.cm-s-base16-tomorrow-light span.cm-string-2 {  color: #8abeb7;  }
 
-.cm-s-base16-tomorrow-light span.cm-variable, .cm-s-base16-tomorrow-light span.cm-variable-2 { color: #cc6666; }
-.cm-s-base16-tomorrow-light span.cm-def { color: #81a2be; }
-.cm-s-base16-tomorrow-light span.cm-error { background: #cc6666; }
+.cm-s-base16-tomorrow-light span.cm-variable { color: #373b41; }
+.cm-s-base16-tomorrow-light span.cm-variable-2 { color: #cc6666; }
+.cm-s-base16-tomorrow-light span.cm-variable-3 { color: #b294bb; }
+.cm-s-base16-tomorrow-light span.cm-def { color: #de935f; }
+.cm-s-base16-tomorrow-light span.cm-error { background: #cc6666; color: #e0e0e0; }
 .cm-s-base16-tomorrow-light span.cm-bracket { color: #373b41; }
 .cm-s-base16-tomorrow-light span.cm-tag { color: #f0c674; }
 .cm-s-base16-tomorrow-light span.cm-link { color: #81a2be; }

@@ -1,6 +1,7 @@
 import React from 'react';
 import classNames from 'classnames';
 import CodeMirror from 'codemirror';
+import 'codemirror/addon/selection/active-line';
 import 'whatwg-fetch';
 import ShareDB from 'sharedb/lib/client';
 import Collaborators from './Collaborators';
@@ -75,7 +76,7 @@ function getCursors(cm) {
     console.error('Error retriving cursors: selection counts mismatch');
     return [];
   }
-  const cursors = selections.map((item, index) => ({
+  return selections.map((item, index) => ({
     anchor: {
       ln: item.anchor.line + 1,
       col: getColumnIndex(cm, item.anchor.line, item.anchor.ch, tabSize) + 1,
@@ -88,7 +89,6 @@ function getCursors(cm) {
     },
     length: selectedStrings[index].length
   }));
-  return cursors;
 }
 
 //
@@ -208,6 +208,7 @@ class SyncedEditor extends React.Component {
   componentDidMount() {
     // Initialize CodeMirror
     this.codeMirror = CodeMirror.fromTextArea(this.refs.textarea, {
+      styleActiveLine: true,
       lineNumbers: true,
       showCursorWhenSelecting: true,
       readOnly: 'nocursor',
