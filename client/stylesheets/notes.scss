@@ -140,7 +140,7 @@ html, body {
   overflow: hidden;
 }
 
-$title-section-height: 48px;
+$title-section-height: 64px;
 
 .document-list-container {
   display: flex;
@@ -162,7 +162,7 @@ $title-section-height: 48px;
     .user-avatar {
       float: left;
       margin-left: 16px;
-      margin-top: 8px;
+      margin-top: 16px;
     }
 
     .user-info {
@@ -766,3 +766,5 @@ $status-bar-line-height:
     display: block;
   }
 }
+
+@import 'cm-base16-tomorrow-light.scss';

@@ -211,6 +211,7 @@ class SyncedEditor extends React.Component {
       lineNumbers: true,
       showCursorWhenSelecting: true,
       readOnly: 'nocursor',
+      theme: 'base16-tomorrow-light',
       indentUnit: 4,
       tabSize: 4,
       extraKeys: {
