@@ -750,7 +750,7 @@ $status-bar-line-height:
   }
 
   .collaborator-identity {
-    display: none;
+    visibility: hidden;
     position: absolute;
     bottom: -1px;
     left: -1px;
@@ -759,11 +759,15 @@ $status-bar-line-height:
     font-size: $small-font-size;
     pointer-events: none;
     color: $white;
+    opacity: 0;
+    transition: visibility 0s linear 2s, opacity 0.2s linear 1.8s;
     @include colorize;
   }
 
   &:hover .collaborator-identity {
-    display: block;
+    visibility: visible;
+    opacity: 1;
+    transition: none;
   }
 }
 
