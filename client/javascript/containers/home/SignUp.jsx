@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { Link } from 'react-router';
-import SignUpForm from '../components/SignUpForm';
+import SignUpForm from '../../components/SignUpForm';
 import {
   resetForm,
   initializeSignUpForm,
@@ -18,7 +18,7 @@ import {
   resetFormPasswordValidation,
   resetFormPasswordConfirmValidation,
   submitSignUpForm
-} from '../actions/home';
+} from '../../actions/home';
 
 class SignUp extends React.Component {
   componentDidMount() {

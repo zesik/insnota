@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { Link } from 'react-router';
-import SignInForm, { FORM_STAGE_SIGN_IN_EMAIL, FORM_STAGE_SIGN_IN_PASSWORD } from '../components/SignInForm';
+import SignInForm, { FORM_STAGE_SIGN_IN_EMAIL, FORM_STAGE_SIGN_IN_PASSWORD } from '../../components/SignInForm';
 import {
   resetForm,
   editFormEmail,
@@ -14,7 +14,7 @@ import {
   updateFormStage,
   submitSignInEmail,
   submitSignInForm
-} from '../actions/home';
+} from '../../actions/home';
 
 class SignIn extends React.Component {
   constructor(props) {

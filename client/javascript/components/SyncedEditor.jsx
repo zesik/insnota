@@ -5,7 +5,7 @@ import 'whatwg-fetch';
 import ShareDB from 'sharedb/lib/client';
 import Collaborators from './Collaborators';
 import EditorOverlay from './EditorOverlay';
-import EditorStatusBar from '../containers/EditorStatusBar';
+import EditorStatusBar from './EditorStatusBar';
 import { LANGUAGE_MODES } from '../utils/editorLanguageModes';
 
 export const NET_DISCONNECTED = 'NET_DISCONNECTED';

@@ -1,8 +1,8 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import classNames from 'classnames';
-import Modal from '../components/Modal';
-import UserAvatar from '../components/UserAvatar';
+import Modal from '../../components/Modal';
+import UserAvatar from '../../components/UserAvatar';
 import {
   closePermissionModal,
   editCollaboratorPermission,
@@ -14,7 +14,7 @@ import {
   editEditorInviting,
   editAnonymousEditing,
   startSubmitPermission
-} from '../actions/permissionModal';
+} from '../../actions/permissionModal';
 
 class PermissionModal extends React.Component {
   constructor(props) {

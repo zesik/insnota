@@ -1,8 +1,8 @@
 import React from 'react';
 import classNames from 'classnames';
-import LanguageModePopup from '../components/LanguageModePopup';
-import NavigationPopup from '../components/NavigationPopup';
-import { NET_CONNECTED, NET_CONNECTING, NET_WAITING, DOC_SYNCED } from '../components/SyncedEditor';
+import LanguageModePopup from './LanguageModePopup';
+import NavigationPopup from './NavigationPopup';
+import { NET_CONNECTED, NET_CONNECTING, NET_WAITING, DOC_SYNCED } from './SyncedEditor';
 
 function formatSecondCounter(seconds) {
   if (seconds > 1) {

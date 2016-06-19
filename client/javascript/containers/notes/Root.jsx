@@ -2,8 +2,8 @@ import React from 'react';
 import { Router, Route, Redirect, browserHistory } from 'react-router';
 import { Provider } from 'react-redux';
 import { syncHistoryWithStore } from 'react-router-redux';
-import App from './NotesApp';
-import configureStore from '../configureNotesStore';
+import Notes from './Notes';
+import configureStore from '../../configureNotesStore';
 
 const store = configureStore();
 const history = syncHistoryWithStore(browserHistory, store);
@@ -13,7 +13,7 @@ export default function Root() {
     <Provider store={store}>
       <Router history={history}>
         <Redirect from="/notes/" to="/notes" />
-        <Route path="/notes(/:id)" component={App} />
+        <Route path="/notes(/:id)" component={Notes} />
       </Router>
     </Provider>
   );

@@ -1,16 +1,16 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { changeDocumentTitle } from '../actions/documentManager';
-import { openPermissionModal } from '../actions/permissionModal';
-import { showInformation, showError } from '../actions/notificationCenter';
-import { getModeName } from '../utils/editorLanguageModes';
+import { changeDocumentTitle } from '../../actions/documentManager';
+import { openPermissionModal } from '../../actions/permissionModal';
+import { showInformation, showError } from '../../actions/notificationCenter';
+import { getModeName } from '../../utils/editorLanguageModes';
 import DocumentManager from './DocumentManager';
-import SyncedEditor, { REMOTE_REMOTE } from '../components/SyncedEditor';
+import SyncedEditor, { OP_REMOTE } from '../../components/SyncedEditor';
 import PermissionModal from './PermissionModal';
 import DeleteModal from './DeleteModal';
 import NotificationCenter from './NotificationCenter';
 
-class App extends React.Component {
+class Notes extends React.Component {
   constructor(props) {
     super(props);
     this.handleLanguageModeChanged = this.handleLanguageModeChanged.bind(this);
@@ -20,7 +20,7 @@ class App extends React.Component {
 
   handleLanguageModeChanged(mimeType, remote) {
     const { dispatch } = this.props;
-    if (remote === REMOTE_REMOTE) {
+    if (remote === OP_REMOTE) {
       dispatch(showInformation(`Language mode is changed to ${getModeName(mimeType)} by remote user.`));
     }
   }
@@ -57,7 +57,7 @@ class App extends React.Component {
   }
 }
 
-App.propTypes = {
+Notes.propTypes = {
   user: React.PropTypes.shape({
     name: React.PropTypes.string,
     email: React.PropTypes.string
@@ -74,4 +74,4 @@ function mapStateToProps(state, ownProps) {
   };
 }
 
-export default connect(mapStateToProps)(App);
+export default connect(mapStateToProps)(Notes);

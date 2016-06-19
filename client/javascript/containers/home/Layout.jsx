@@ -1,8 +1,8 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { checkIdentity } from '../actions/home';
+import { checkIdentity } from '../../actions/home';
 
-class Index extends React.Component {
+class Layout extends React.Component {
   componentDidMount() {
     const { dispatch } = this.props;
     dispatch(checkIdentity());
@@ -24,9 +24,9 @@ class Index extends React.Component {
   }
 }
 
-Index.propTypes = {
+Layout.propTypes = {
   children: React.PropTypes.element.isRequired,
   dispatch: React.PropTypes.func
 };
 
-export default connect(state => state.home)(Index);
+export default connect(state => state.home)(Layout);

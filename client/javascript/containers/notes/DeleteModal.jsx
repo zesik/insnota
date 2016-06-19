@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import Modal from '../components/Modal';
-import { closeDeleteModal, startDeleteDocument } from '../actions/deleteModal';
+import Modal from '../../components/Modal';
+import { closeDeleteModal, startDeleteDocument } from '../../actions/deleteModal';
 
 function DeleteModal(props) {
   const titleElement = (

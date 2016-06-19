@@ -2,10 +2,10 @@ import React from 'react';
 import { connect } from 'react-redux';
 import { Link } from 'react-router';
 import classNames from 'classnames';
-import Document from '../components/Document';
-import UserAvatar from '../components/UserAvatar';
-import { initializeManager, createDocument } from '../actions/documentManager';
-import { openDeleteModal } from '../actions/deleteModal';
+import Document from '../../components/Document';
+import UserAvatar from '../../components/UserAvatar';
+import { initializeManager, createDocument } from '../../actions/documentManager';
+import { openDeleteModal } from '../../actions/deleteModal';
 
 function textifyNoteCounter(count) {
   switch (count) {
