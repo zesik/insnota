@@ -1,81 +1,6 @@
 @import 'base';
 @import url("https://fonts.googleapis.com/css?family=Inconsolata:400,700");
 
-html, body {
-  width: 100%;
-  height: 100%;
-}
-
-.app-container {
-  position: relative;
-  min-height: 100%;
-}
-
-.app-title {
-  padding-top: 30px;
-  padding-bottom: 30px;
-}
-
-.app-navigation {
-  margin-bottom: 20px;
-
-  .container {
-    padding-bottom: 7px;
-    border-bottom: 1px solid $grey-200;
-  }
-
-  .navigation-tab {
-    padding: 8px 16px;
-    color: $dark-text-secondary;
-    margin-right: 4px;
-
-    &:last-child {
-      margin-right: 0;
-    }
-
-    &:hover {
-      background-color: $grey-300;
-      color: $dark-text-primary;
-    }
-
-    &.navigation-tab-active {
-      background-color: $grey-200;
-      color: $dark-text-primary;
-
-      &:hover {
-        background-color: $grey-300;
-      }
-    }
-  }
-}
-
-.app-content {
-  padding-bottom: 60px;
-}
-
-.app-footer {
-  position: absolute;
-  height: 60px;
-  width: 100%;
-  bottom: 0;
-  left: 0;
-  font-size: 12px;
-  color: $light-text-disabled;
-  background-color: $grey-800;
-}
-
-.container {
-  margin: auto;
-  padding: 0 10px;
-  max-width: 880px;
-}
-
-.footer-content {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-}
-
 $collaborator-color-0: #0097a7;
 $collaborator-color-1: #e91e63;
 $collaborator-color-2: #ef6c00;
@@ -134,13 +59,11 @@ $collaborator-color-9: #607d8b;
   }
 }
 
-html, body {
-  width: 100%;
-  height: 100%;
+$title-section-height: 64px;
+
+#editor-container {
   overflow: hidden;
 }
-
-$title-section-height: 64px;
 
 .document-list-container {
   display: flex;
@@ -769,6 +692,10 @@ $status-bar-line-height:
     opacity: 1;
     transition: none;
   }
+}
+
+#form-control-avatar {
+  padding-top: 7px;
 }
 
 @import 'cm-base16-tomorrow-light.scss';

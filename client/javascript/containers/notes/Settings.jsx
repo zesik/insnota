@@ -1,7 +1,13 @@
 import React from 'react';
 import { Link } from 'react-router';
+import { connect } from 'react-redux';
+import { initializeSettingsPage } from '../../actions/settings';
 
 class Settings extends React.Component {
+  componentDidMount() {
+    this.props.dispatch(initializeSettingsPage());
+  }
+
   render() {
     return (
       <div className="app-container">
@@ -33,4 +39,8 @@ class Settings extends React.Component {
   }
 }
 
-export default Settings;
+Settings.propTypes = {
+  dispatch: React.PropTypes.func.isRequired
+};
+
+export default connect(state => state.settings)(Settings);

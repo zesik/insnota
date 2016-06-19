@@ -38,7 +38,7 @@ class Notes extends React.Component {
   render() {
     const { dispatch, user } = this.props;
     return (
-      <div className="full-size">
+      <div id="editor-container" className="full-size">
         <DocumentManager selectedDocumentID={this.props.selectedDocumentID} />
         <SyncedEditor
           user={user}

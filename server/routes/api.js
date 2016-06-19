@@ -13,7 +13,20 @@ const hashids = new Hashids(config.hashidSalt);
 
 router.get('/user', function (req, res) {
   if (req.user) {
-    res.send({ email: req.user.email });
+    userService.findUser(req.user.email, function (err, user) {
+      if (err) {
+        return next(err);
+      }
+      if (user) {
+        res.send({
+          email: user.email,
+          name: user.name,
+          status: user.status
+        });
+      } else {
+        res.send({})
+      }
+    });
   } else {
     res.send({});
   }
