@@ -175,6 +175,10 @@ body {
   height: 100%;
 }
 
+#initial-content {
+  margin: 20px;
+}
+
 a {
   color: $blue-500;
   text-decoration: none;
@@ -192,6 +196,8 @@ a {
   border: 1px solid $grey-300;
   padding: 6px;
   outline: none;
+  width: 100%;
+  color: $dark-text-primary;
 
   &:hover {
     border-color: $grey-400;
@@ -199,6 +205,10 @@ a {
 
   &:focus {
     border-color: $grey-600;
+  }
+
+  &.textbox-display-only {
+    border: 1px solid transparent;
   }
 }
 
@@ -300,60 +310,109 @@ a {
       color: $light-text-primary;
     }
   }
-}
 
-.form-group, .form-checkbox {
-  margin-bottom: 12px;
-}
+  &.btn-transparent {
+    background: none;
+    box-shadow:0 0 0 2px $light-text-primary inset;
 
-.form-group {
-  label {
-    display: block;
-    font-weight: $font-bold;
-    padding-bottom: 6px;
-  }
-
-  .textbox {
-    width: 100%;
-  }
-
-  &.error {
-    .textbox {
-      border-color: $red-600;
+    &:hover, &:focus {
+      background-color: rgba($light-text-primary, 0.15);
     }
 
-    .validation-error {
-      font-size: 12px;
+    &:active {
+      background-color: rgba($light-text-primary, 0.3);
+    }
+  }
+}
+
+form, .form {
+  .form-title {
+    margin-top: 30px;
+    margin-bottom: 20px;
+    font-size: 18px;
+    font-weight: $font-regular;
+  }
+
+  .form-group, .form-checkbox {
+    margin-bottom: 16px;
+  }
+
+  .form-group {
+    .control-label {
+      display: block;
+      font-weight: $font-bold;
+      padding-bottom: 6px;
+    }
+
+    .form-control {
+      width: 100%;
+
+      &.error {
+        .textbox {
+          border-color: $red-600;
+        }
+      }
+
+      .form-control-supplement {
+        color: $dark-text-secondary;
+        font-size: 12px;
+        margin-top: 6px;
+
+        &.error {
+          color: $red-600;
+        }
+      }
+    }
+  }
+
+  .form-checkbox {
+    position: relative;
+
+    label {
+      padding-left: 20px;
+      cursor: pointer;
+    }
+
+    input[type="checkbox"], input[type="radio"] {
+      position: absolute;
       margin-top: 4px;
-      color: $red-600;
+      margin-left: -20px;
+      cursor: inherit;
     }
   }
-}
 
-.form-checkbox {
-  position: relative;
-
-  label {
-    padding-left: 20px;
-    cursor: pointer;
+  .form-submit {
+    margin: 16px 0;
   }
 
-  input[type="checkbox"], input[type="radio"] {
-    position: absolute;
-    margin-top: 4px;
-    margin-left: -20px;
-    cursor: inherit;
+  &.form-horizontal {
+    .form-group {
+      &:before {
+        display: table;
+        content: " ";
+      }
+
+      &:after {
+        display: table;
+        content: " ";
+        clear: both;
+      }
+
+      .form-control {
+        float: left;
+        width: 75%;
+      }
+
+      .control-label {
+        float: left;
+        width: 25%;
+        text-align: right;
+        padding: 7px 22px 0 0;
+      }
+    }
+
+    .form-submit {
+      margin-left: 25%;
+    }
   }
-}
-
-.form-submit {
-  margin: 16px 0;
-
-  .btn {
-    width: 100%;
-  }
-}
-
-.form-footer {
-  text-align: center;
 }

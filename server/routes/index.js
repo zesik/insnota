@@ -39,6 +39,8 @@ router.get('/signup', (req, res) => res.render('index'));
 router.ws('/notes', handleShareDBConnection);
 router.get('/notes', (req, res) => res.render('notes'));
 router.get('/notes/*', (req, res) => res.render('notes'));
+router.get('/settings', (req, res) => res.render('notes'));
+router.get('/settings/*', (req, res) => res.render('notes'));
 
 router.post('/signup', function (req, res, next) {
   if (!config.allowSignUp) {

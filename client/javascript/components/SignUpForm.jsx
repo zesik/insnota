@@ -25,17 +25,21 @@ class SignUpForm extends React.Component {
 
   render() {
     const serverErrorElement = (
-      <div className="form-group error">
-        <div className="validation-error">
-          Unable to sign up due to an internal server error. Please try again in a few minutes.
+      <div className="form-group">
+        <div className="form-control error">
+          <div className="form-control-supplement error">
+            Unable to sign up due to an internal server error. Please try again in a few minutes.
+          </div>
         </div>
       </div>
     );
     const notAllowedElement = (
-      <div className="form-group error">
-        <form className="validation-error">
-          Signing up is currently not allowed. Please check back later.
-        </form>
+      <div className="form-group">
+        <div className="form-control error">
+          <div className="form-control-supplement error">
+            Signing up is currently not allowed. Please check back later.
+          </div>
+        </div>
       </div>
     );
     let form;
@@ -54,102 +58,122 @@ class SignUpForm extends React.Component {
       );
     } else {
       const nameClasses = classNames({
-        'form-group': true,
+        'form-control': true,
         error: this.props.validationNameEmpty
       });
       const emailClasses = classNames({
-        'form-group': true,
+        'form-control': true,
         error: this.props.validationEmailEmpty || this.props.validationEmailInvalid ||
           this.props.validationEmailOccupied
       });
       const passwordClasses = classNames({
-        'form-group': true,
+        'form-control': true,
         error: this.props.validationPasswordEmpty || this.props.validationPasswordShort
       });
       const passwordConfirmClasses = classNames({
-        'form-group': true,
+        'form-control': true,
         error: this.props.validationPasswordConfirmMismatch
       });
       const recaptchaClasses = classNames({
-        'form-group': true,
+        'form-control': true,
         error: this.props.validationRecaptchaInvalid
       });
       form = (
         <form method="post" onSubmit={this.handleSubmit}>
-          <div className={nameClasses}>
-            <label htmlFor="signup-name">Name</label>
-            <input
-              type="text"
-              className="textbox"
-              value={this.props.name}
-              onFocus={(e) => (this.props.onEnterNameBox ? this.props.onEnterNameBox(e.target.value) : null)}
-              onBlur={(e) => (this.props.onLeaveNameBox ? this.props.onLeaveNameBox(e.target.value) : null)}
-              onChange={(e) => this.props.onEditName(e.target.value)}
-              autoFocus
-            />
-            {this.props.validationNameEmpty && <div className="validation-error">Name cannot be blank.</div>}
+          <div className="form-group">
+            <label htmlFor="signup-name" className="control-label">Name</label>
+            <div className={nameClasses}>
+              <input
+                type="text"
+                className="textbox"
+                id="signup-name"
+                value={this.props.name}
+                onFocus={(e) => (this.props.onEnterNameBox ? this.props.onEnterNameBox(e.target.value) : null)}
+                onBlur={(e) => (this.props.onLeaveNameBox ? this.props.onLeaveNameBox(e.target.value) : null)}
+                onChange={(e) => this.props.onEditName(e.target.value)}
+                autoFocus
+              />
+              {this.props.validationNameEmpty &&
+                <div className="form-control-supplement error">Name cannot be blank.</div>
+              }
+            </div>
           </div>
-          <div className={emailClasses}>
-            <label htmlFor="signup-email">Email Address</label>
-            <input
-              type="text"
-              className="textbox"
-              value={this.props.email}
-              onFocus={(e) => (this.props.onEnterEmailBox ? this.props.onEnterEmailBox(e.target.value) : null)}
-              onBlur={(e) => (this.props.onLeaveEmailBox ? this.props.onLeaveEmailBox(e.target.value) : null)}
-              onChange={(e) => this.props.onEditEmail(e.target.value)}
-            />
-            {this.props.validationEmailEmpty &&
-              <div className="validation-error">Email address cannot be blank.</div>
-            }
-            {this.props.validationEmailInvalid &&
-              <div className="validation-error">This is not a valid email address.</div>
-            }
-            {this.props.validationEmailOccupied &&
-              <div className="validation-error">This email address is occupied.</div>
-            }
+          <div className="form-group">
+            <label htmlFor="signup-email" className="control-label">Email Address</label>
+            <div className={emailClasses}>
+              <input
+                type="text"
+                className="textbox"
+                id="signup-email"
+                value={this.props.email}
+                onFocus={(e) => (this.props.onEnterEmailBox ? this.props.onEnterEmailBox(e.target.value) : null)}
+                onBlur={(e) => (this.props.onLeaveEmailBox ? this.props.onLeaveEmailBox(e.target.value) : null)}
+                onChange={(e) => this.props.onEditEmail(e.target.value)}
+                />
+              {this.props.validationEmailEmpty &&
+                <div className="form-control-supplement error">Email address cannot be blank.</div>
+              }
+              {this.props.validationEmailInvalid &&
+                <div className="form-control-supplement error">This is not a valid email address.</div>
+              }
+              {this.props.validationEmailOccupied &&
+                <div className="form-control-supplement error">This email address is occupied.</div>
+              }
+            </div>
           </div>
-          <div className={passwordClasses}>
-            <label htmlFor="signup-password">Choose a Password</label>
-            <input
-              type="password"
-              className="textbox"
-              value={this.props.password}
-              onFocus={(e) => (this.props.onEnterPasswordBox ? this.props.onEnterPasswordBox(e.target.value) : null)}
-              onBlur={(e) => (this.props.onLeavePasswordBox ? this.props.onLeavePasswordBox(e.target.value) : null)}
-              onChange={(e) => this.props.onEditPassword(e.target.value)}
-            />
-            {this.props.validationPasswordEmpty && <div className="validation-error">Password cannot be blank.</div>}
-            {this.props.validationPasswordShort && <div className="validation-error">This password is too short.</div>}
+          <div className="form-group">
+            <label htmlFor="signup-password" className="control-label">Choose a Password</label>
+            <div className={passwordClasses}>
+              <input
+                type="password"
+                className="textbox"
+                id="signup-password"
+                value={this.props.password}
+                onFocus={(e) => (this.props.onEnterPasswordBox ? this.props.onEnterPasswordBox(e.target.value) : null)}
+                onBlur={(e) => (this.props.onLeavePasswordBox ? this.props.onLeavePasswordBox(e.target.value) : null)}
+                onChange={(e) => this.props.onEditPassword(e.target.value)}
+              />
+              {this.props.validationPasswordEmpty &&
+                <div className="form-control-supplement error">Password cannot be blank.</div>
+              }
+              {this.props.validationPasswordShort &&
+                <div className="form-control-supplement error">This password is too short.</div>
+              }
+            </div>
           </div>
-          <div className={passwordConfirmClasses}>
-            <label htmlFor="signup-password-confirm">Confirm Your Password</label>
-            <input
-              type="password"
-              className="textbox"
-              value={this.props.passwordConfirm}
-              onFocus={(e) => {
-                if (this.props.onEnterPasswordConfirmBox) {
-                  this.props.onEnterPasswordConfirmBox(e.target.value);
-                }
-              }}
-              onBlur={(e) => {
-                if (this.props.onLeavePasswordConfirmBox) {
-                  this.props.onLeavePasswordConfirmBox(e.target.value);
-                }
-              }}
-              onChange={(e) => this.props.onEditPasswordConfirm(e.target.value)}
-            />
-            {this.props.validationPasswordConfirmMismatch &&
-              <div className="validation-error">Password confirmation is different from password.</div>
-            }
+          <div className="form-group">
+            <label htmlFor="signup-password-confirm" className="control-label">Confirm Your Password</label>
+            <div className={passwordConfirmClasses}>
+              <input
+                type="password"
+                className="textbox"
+                id="signup-password-confirm"
+                value={this.props.passwordConfirm}
+                onFocus={(e) => {
+                  if (this.props.onEnterPasswordConfirmBox) {
+                    this.props.onEnterPasswordConfirmBox(e.target.value);
+                  }
+                }}
+                onBlur={(e) => {
+                  if (this.props.onLeavePasswordConfirmBox) {
+                    this.props.onLeavePasswordConfirmBox(e.target.value);
+                  }
+                }}
+                onChange={(e) => this.props.onEditPasswordConfirm(e.target.value)}
+              />
+              {this.props.validationPasswordConfirmMismatch &&
+                <div className="form-control-supplement error">Password confirmation is different from password.</div>
+              }
+            </div>
           </div>
           {this.props.recaptchaSiteKey &&
-            <div className={recaptchaClasses}>
-              <Recaptcha siteKey={this.props.recaptchaSiteKey} />
-              {this.props.validationRecaptchaInvalid &&
-                <div className="validation-error">Please verify that you are not a robot.</div>
-              }
+            <div className="form-group">
+              <div className={recaptchaClasses}>
+                <Recaptcha siteKey={this.props.recaptchaSiteKey} />
+                {this.props.validationRecaptchaInvalid &&
+                  <div className="form-control-supplement error">Please verify that you are not a robot.</div>
+                }
+              </div>
             </div>
           }
           {this.props.serverError && serverErrorElement}

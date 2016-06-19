@@ -5,7 +5,11 @@ function EditorOverlay(props) {
   let overlay;
   switch (props.state) {
     case DOC_INITIAL:
-      overlay = (<div className="overlay" />);
+      overlay = (
+        <div className="overlay">
+          <h1 className="content app-name">Insnota</h1>
+        </div>
+      );
       break;
     case DOC_OPENING:
       overlay = (

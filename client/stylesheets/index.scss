@@ -73,6 +73,14 @@ html, body {
   form {
     margin-bottom: 32px;
   }
+
+  .btn {
+    width: 100%;
+  }
+
+  .form-footer {
+    text-align: center;
+  }
 }
 
 .user-info {
@@ -92,4 +100,8 @@ html, body {
   .user-email {
     color: $dark-text-disabled;
   }
+}
+
+.form-info-container {
+  margin-bottom: 30px;
 }

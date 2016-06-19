@@ -14,7 +14,7 @@ function findByID(id, callback) {
     if (err) {
       return callback(err);
     }
-    if (doc.deleted_at) {
+    if (!doc || doc.deleted_at) {
       return callback();
     }
     return callback(null, doc);

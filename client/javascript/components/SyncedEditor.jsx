@@ -289,7 +289,7 @@ class SyncedEditor extends React.Component {
       this.shareDBDoc = null;
     }
     if (this.shareDBConnection) {
-      this.shareDBConnection.off('state', this.handleConnectionStateChanged);
+      this.shareDBConnection.removeListener('state', this.handleConnectionStateChanged);
       this.shareDBConnection.close();
       this.shareDBConnection = null;
     }

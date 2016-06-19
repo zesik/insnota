@@ -9,7 +9,7 @@ function Home() {
           <h1>Insnota</h1>
           <p>A collaborative note-taking platform</p>
           <div className="signup">
-            <Link className="btn" to="/signin">Sign in</Link>&nbsp;
+            <Link className="btn btn-transparent" to="/signin">Sign in</Link>&nbsp;
             <Link className="btn btn-default" to="/signup">Sign up</Link>
           </div>
         </div>

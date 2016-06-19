@@ -6,7 +6,7 @@ import Layout from './Layout';
 import Home from './Home';
 import SignIn from './SignIn';
 import SignUp from './SignUp';
-import NotFound from './NotFound';
+import NotFound from '../NotFound';
 import configureStore from '../../configureHomeStore';
 
 const store = configureStore();

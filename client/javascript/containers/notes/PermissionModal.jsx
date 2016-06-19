@@ -71,7 +71,7 @@ class PermissionModal extends React.Component {
             </div>
           </div>
           <div className="modal-body-section-title">Collaborators</div>
-          <div className="modal-body-section">
+          <div className="modal-body-section form">
             <div id="collaborator-permission-list" className={classNames({ editable: canEdit !== 'none' })}>
               {this.props.collaborators.map(collaborator => (
                 <div className="collaborator-permission-item" key={collaborator.email}>
@@ -139,7 +139,7 @@ class PermissionModal extends React.Component {
             </div>
           </div>
           <div className="modal-body-section-title">Anonymous Editors</div>
-          <div className="modal-body-section">
+          <div className="modal-body-section form">
             <div className="form-checkbox">
               <label>
                 <input

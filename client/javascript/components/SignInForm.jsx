@@ -32,41 +32,52 @@ class SignInForm extends React.Component {
 
   render() {
     const serverErrorElement = (
-      <div className="form-element error">
-        <div className="validation-error">
-          Unable to sign in due to an internal server error. Please try again in a few minutes.
+      <div className="form-group">
+        <div className="form-control">
+          <div className="form-control-supplement error">
+            Unable to sign in due to an internal server error. Please try again in a few minutes.
+          </div>
         </div>
       </div>
     );
     let form;
     if (this.props.stage === FORM_STAGE_SIGN_IN_EMAIL) {
       const emailClasses = classNames({
-        'form-group': true,
+        'form-control': true,
         error: this.props.validationEmailEmpty || this.props.validationEmailInvalid ||
           this.props.validationEmailNotExist
       });
       form = (
         <form method="post" onSubmit={this.handleSubmitEmail}>
-          <div className={emailClasses}>
-            <label className="title" htmlFor="signin-email">Email</label>
-            <input
-              type="text"
-              className="textbox"
-              value={this.props.email}
-              onFocus={(e) => (this.props.onEnterEmailBox ? this.props.onEnterEmailBox(e.target.value) : null)}
-              onBlur={(e) => (this.props.onLeaveEmailBox ? this.props.onLeaveEmailBox(e.target.value) : null)}
-              onChange={(e) => this.props.onEditEmail(e.target.value)}
-              autoFocus
-            />
-            {this.props.validationEmailEmpty &&
-              <div className="validation-error">Please type your email address to sign in.</div>
-            }
-            {this.props.validationEmailInvalid &&
-              <div className="validation-error">Please type a valid email address to sign in.</div>
-            }
-            {this.props.validationEmailNotExist &&
-              <div className="validation-error">This email address is not registered.</div>
-            }
+          <div className="form-group">
+            <label htmlFor="signin-email" className="control-label">Email</label>
+            <div className={emailClasses}>
+              <input
+                type="text"
+                className="textbox"
+                id="signin-email"
+                value={this.props.email}
+                onFocus={(e) => (this.props.onEnterEmailBox ? this.props.onEnterEmailBox(e.target.value) : null)}
+                onBlur={(e) => (this.props.onLeaveEmailBox ? this.props.onLeaveEmailBox(e.target.value) : null)}
+                onChange={(e) => this.props.onEditEmail(e.target.value)}
+                autoFocus
+              />
+              {this.props.validationEmailEmpty &&
+                <div className="form-control-supplement error">
+                  Please type your email address to sign in.
+                </div>
+              }
+              {this.props.validationEmailInvalid &&
+                <div className="form-control-supplement error">
+                  Please type a valid email address to sign in.
+                </div>
+              }
+              {this.props.validationEmailNotExist &&
+                <div className="form-control-supplement error">
+                  This email address is not registered.
+                </div>
+              }
+            </div>
           </div>
           {this.props.serverError && serverErrorElement}
           <div className="form-submit">
@@ -76,11 +87,11 @@ class SignInForm extends React.Component {
       );
     } else {
       const passwordClasses = classNames({
-        'form-group': true,
+        'form-control': true,
         error: this.props.validationPasswordEmpty || this.props.validationCredentialInvalid
       });
       const recaptchaClasses = classNames({
-        'form-group': true,
+        'form-control': true,
         error: this.props.validationRecaptchaInvalid
       });
       form = (
@@ -93,45 +104,58 @@ class SignInForm extends React.Component {
             <div className="user-name">{this.props.name}</div>
             <div className="user-email">{this.props.email}</div>
           </div>
-          <div className={passwordClasses}>
-            <label htmlFor="signin-password">Password</label>
-            <input
-              type="password"
-              className="textbox"
-              value={this.props.password}
-              onFocus={(e) => (this.props.onEnterPasswordBox ? this.props.onEnterPasswordBox(e.target.value) : null)}
-              onBlur={(e) => (this.props.onLeavePasswordBox ? this.props.onLeavePasswordBox(e.target.value) : null)}
-              onChange={(e) => this.props.onEditPassword(e.target.value)}
-              autoFocus
-            />
-            {this.props.validationPasswordEmpty &&
-              <div className="validation-error">Please type your password to sign in.</div>
-            }
-            {this.props.validationCredentialInvalid &&
-              <div className="validation-error">The email and password you entered don't match.</div>
-            }
+          <div className="form-group">
+            <label htmlFor="signin-password" className="control-label">Password</label>
+            <div className={passwordClasses}>
+              <input
+                type="password"
+                className="textbox"
+                id="signin-password"
+                value={this.props.password}
+                onFocus={(e) => (this.props.onEnterPasswordBox ? this.props.onEnterPasswordBox(e.target.value) : null)}
+                onBlur={(e) => (this.props.onLeavePasswordBox ? this.props.onLeavePasswordBox(e.target.value) : null)}
+                onChange={(e) => this.props.onEditPassword(e.target.value)}
+                autoFocus
+              />
+              {this.props.validationPasswordEmpty &&
+                <div className="form-control-supplement error">
+                  Please type your password to sign in.
+                </div>
+              }
+              {this.props.validationCredentialInvalid &&
+                <div className="form-control-supplement error">
+                  The email and password you entered don't match.
+                </div>
+              }
+            </div>
           </div>
           {this.props.recaptchaSiteKey &&
-            <div className={recaptchaClasses}>
-              <Recaptcha siteKey={this.props.recaptchaSiteKey} />
-              {this.props.validationRecaptchaInvalid &&
-                <div className="validation-error">Please verify that you are not a robot.</div>
-              }
+            <div className="form-group">
+              <div className={recaptchaClasses}>
+                <Recaptcha siteKey={this.props.recaptchaSiteKey} />
+                {this.props.validationRecaptchaInvalid &&
+                  <div className="form-control-supplement error">
+                    Please verify that you are not a robot.
+                  </div>
+                }
+              </div>
             </div>
           }
           {this.props.serverError && serverErrorElement}
           <div className="form-submit">
             <button className="btn btn-default" type="submit" disabled={this.props.submitting}>Sign in</button>
           </div>
-          <div className="form-checkbox">
-            <label>
-              <input
-                type="checkbox"
-                checked={this.props.rememberMe}
-                onChange={(e) => this.props.onEditRememberMe(e.target.checked)}
-              />
-              Stay signed in
-            </label>
+          <div className="form-group">
+            <div className="form-checkbox">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={this.props.rememberMe}
+                  onChange={(e) => this.props.onEditRememberMe(e.target.checked)}
+                />
+                Stay signed in
+              </label>
+            </div>
           </div>
         </form>
       );
