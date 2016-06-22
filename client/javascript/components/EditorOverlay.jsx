@@ -45,4 +45,8 @@ function EditorOverlay(props) {
   return overlay;
 }
 
+EditorOverlay.propTypes = {
+  state: React.PropTypes.string.isRequired
+};
+
 export default EditorOverlay;

@@ -11,7 +11,20 @@ const broadcastPermissionChange = require('../sharedb').broadcastPermissionChang
 const router = express.Router();
 const hashids = new Hashids(config.hashidSalt);
 
-router.get('/user', function (req, res) {
+router.get('/users/:email', function (req, res, next) {
+  userService.findUser(req.params.email, function (err, user) {
+    if (err) {
+      return next(err);
+    }
+    if (user) {
+      res.send({ email: user.email, name: user.name });
+    } else {
+      res.status(404).end();
+    }
+  });
+});
+
+router.get('/profile', function (req, res) {
   if (req.user) {
     userService.findUser(req.user.email, function (err, user) {
       if (err) {
@@ -24,7 +37,7 @@ router.get('/user', function (req, res) {
           status: user.status
         });
       } else {
-        res.send({})
+        res.send({});
       }
     });
   } else {
@@ -32,16 +45,19 @@ router.get('/user', function (req, res) {
   }
 });
 
-router.get('/users/:email', function (req, res, next) {
-  userService.findUser(req.params.email, function (err, user) {
+router.put('/profile', function (req, res) {
+  if (!req.user) {
+    return res.status(403).end();
+  }
+  const name = req.body.name.trim();
+  if (!name.length) {
+    return res.status(400).send({ errorNameEmpty: true });
+  }
+  userService.updateName(req.user.email, req.body.name, function (err) {
     if (err) {
       return next(err);
     }
-    if (user) {
-      res.send({ email: user.email, name: user.name });
-    } else {
-      res.status(404).end();
-    }
+    return res.status(200).end();
   });
 });
 

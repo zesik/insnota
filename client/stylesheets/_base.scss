@@ -347,19 +347,25 @@ form, .form {
     .form-control {
       width: 100%;
 
-      &.error {
-        .textbox {
-          border-color: $red-600;
-        }
-      }
-
       .form-control-supplement {
         color: $dark-text-secondary;
         font-size: 12px;
         margin-top: 6px;
+      }
 
-        &.error {
+      &.error {
+        .textbox {
+          border-color: $red-600;
+        }
+
+        .error {
           color: $red-600;
+        }
+      }
+
+      &.success {
+        .success {
+          color: $green-700;
         }
       }
     }
