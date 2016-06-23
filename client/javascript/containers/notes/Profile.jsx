@@ -21,17 +21,7 @@ class Profile extends React.Component {
   }
 
   render() {
-    let status;
-    switch (this.props.status) {
-      case 'normal':
-        status = 'Normal';
-        break;
-      case 'unverified':
-        status = 'Email address not verified.';
-        break;
-      default:
-        status = 'Unknown';
-    }
+    // TODO: show correct account status
     let nameClasses = classNames({
       'form-control': true,
       'error': this.props.errorNameEmpty
@@ -60,7 +50,7 @@ class Profile extends React.Component {
                   type="text"
                   className="textbox textbox-display-only"
                   id="status"
-                  value={status}
+                  value="Normal"
                   disabled
                 />
               </div>
@@ -102,7 +92,7 @@ class Profile extends React.Component {
                 </div>
               </div>
             </div>
-            {this.props.errorServer &&
+            {this.props.serverErrorProfile &&
               <div className="form-group">
                 <label className="control-label" />
                 <div className="form-control error">
@@ -137,9 +127,11 @@ Profile.propTypes = {
   name: React.PropTypes.string,
   email: React.PropTypes.string,
   status: React.PropTypes.string,
-  errorServer: React.PropTypes.bool,
   errorNameEmpty: React.PropTypes.bool,
-  successProfile: React.PropTypes.bool
+  successProfile: React.PropTypes.bool,
+  serverErrorProfile: React.PropTypes.bool,
+  setProfileName: React.PropTypes.func.isRequired,
+  updateProfile: React.PropTypes.func.isRequired
 };
 
 function mapStateToProps(state) {

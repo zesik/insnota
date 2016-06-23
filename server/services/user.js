@@ -144,6 +144,24 @@ function updateName(email, name, callback) {
   User.update({ email }, { name }, callback);
 }
 
+function updatePassword(email, password, callback) {
+  const descriptor = [
+    PBKDF2_ALGORITHM,
+    PBKDF2_DIGEST_METHOD,
+    PBKDF2_ITERATIONS,
+    PBKDF2_KEY_BYTE_SIZE,
+    crypto.randomBytes(PBKDF2_SALT_BYTE_SIZE).toString('hex')
+  ];
+  generateHash(descriptor, password, (err, hash) => {
+    if (err) {
+      return callback(err);
+    }
+    descriptor.push(hash);
+    const passwordInfo = descriptor.join(':');
+    User.update({ email }, { password: passwordInfo }, callback);
+  });
+}
+
 function resetLoginAttempts(email, callback) {
   User.resetLoginAttempts(email, callback);
 }
@@ -186,6 +204,7 @@ module.exports = {
   findUser,
   findUsersIn,
   updateName,
+  updatePassword,
   resetLoginAttempts,
   issueLoginToken,
   verifyLoginToken

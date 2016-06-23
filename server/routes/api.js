@@ -45,7 +45,7 @@ router.get('/profile', function (req, res) {
   }
 });
 
-router.put('/profile', function (req, res) {
+router.put('/settings/profile', function (req, res) {
   if (!req.user) {
     return res.status(403).end();
   }
@@ -60,6 +60,26 @@ router.put('/profile', function (req, res) {
     return res.status(200).end();
   });
 });
+
+router.put('/settings/password', function (req, res) {
+  // TODO: validate old password before updating
+  if (!req.user) {
+    return res.status(403).end();
+  }
+  if (!req.body.newPassword) {
+    return res.status(400).send({ errorNewPasswordEmpty: true });
+  }
+  if (req.body.newPassword.length < 6) {
+    return res.status(400).send({ errorNewPasswordShort: true });
+  }
+  userService.updatePassword(req.user.email, req.body.newPassword, function (err) {
+    if (err) {
+      return next(err);
+    }
+    return res.status(200).end();
+  });
+});
+
 
 router.get('/signup', function (req, res, next) {
   if (!config.allowSignUp) {
