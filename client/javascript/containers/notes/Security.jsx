@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import classNames from 'classnames';
-import { setOldPassword, setNewPassword, setPasswordConfirmation, updatePassword } from '../../actions/settings';
+import { editOldPassword, editNewPassword, editPasswordConfirmation, updatePassword } from '../../actions/settings';
 
 class Security extends React.Component {
   constructor(props) {
@@ -13,35 +13,35 @@ class Security extends React.Component {
   }
 
   handleSetOldPassword(e) {
-    this.props.setOldPassword(e.target.value);
+    this.props.onEditOldPassword(e.target.value);
   }
 
   handleSetNewPassword(e) {
-    this.props.setNewPassword(e.target.value);
+    this.props.onEditNewPassword(e.target.value);
   }
 
   handleSetPasswordConfirmation(e) {
-    this.props.setPasswordConfirmation(e.target.value);
+    this.props.onEditPasswordConfirmation(e.target.value);
   }
 
   handleUpdatePassword(e) {
-    const { updatePassword, oldPassword, newPassword, passwordConfirmation } = this.props;
+    const { onUpdatePassword, oldPassword, newPassword, passwordConfirmation } = this.props;
     e.preventDefault();
-    updatePassword(oldPassword, newPassword, passwordConfirmation);
+    onUpdatePassword(oldPassword, newPassword, passwordConfirmation);
   }
 
   render() {
     const oldPasswordClasses = classNames({
       'form-control': true,
-      'error': this.props.errorOldPasswordIncorrect
+      error: this.props.errorOldPasswordIncorrect
     });
     const newPasswordClasses = classNames({
       'form-control': true,
-      'error': this.props.errorNewPasswordEmpty || this.props.errorNewPasswordShort
+      error: this.props.errorNewPasswordEmpty || this.props.errorNewPasswordShort
     });
     const passwordConfirmationClasses = classNames({
       'form-control': true,
-      'error': this.props.errorPasswordConfirmationMismatch
+      error: this.props.errorPasswordConfirmationMismatch
     });
     return (
       <div>
@@ -140,10 +140,10 @@ Security.propTypes = {
   errorPasswordConfirmationMismatch: React.PropTypes.bool,
   successPassword: React.PropTypes.bool,
   serverErrorPassword: React.PropTypes.bool,
-  setOldPassword: React.PropTypes.func.isRequired,
-  setNewPassword: React.PropTypes.func.isRequired,
-  setPasswordConfirmation: React.PropTypes.func.isRequired,
-  updatePassword: React.PropTypes.func.isRequired
+  onEditOldPassword: React.PropTypes.func.isRequired,
+  onEditNewPassword: React.PropTypes.func.isRequired,
+  onEditPasswordConfirmation: React.PropTypes.func.isRequired,
+  onUpdatePassword: React.PropTypes.func.isRequired
 };
 
 function mapStateToProps(state) {
@@ -152,16 +152,16 @@ function mapStateToProps(state) {
 
 function mapDispatchToProps(dispatch) {
   return {
-    setOldPassword: oldPassword => {
-      dispatch(setOldPassword(oldPassword));
+    onEditOldPassword: oldPassword => {
+      dispatch(editOldPassword(oldPassword));
     },
-    setNewPassword: newPassword => {
-      dispatch(setNewPassword(newPassword));
+    onEditNewPassword: newPassword => {
+      dispatch(editNewPassword(newPassword));
     },
-    setPasswordConfirmation: passwordConfirmation => {
-      dispatch(setPasswordConfirmation(passwordConfirmation));
+    onEditPasswordConfirmation: passwordConfirmation => {
+      dispatch(editPasswordConfirmation(passwordConfirmation));
     },
-    updatePassword: (oldPassword, newPassword, passwordConfirmation) => {
+    onUpdatePassword: (oldPassword, newPassword, passwordConfirmation) => {
       dispatch(updatePassword(oldPassword, newPassword, passwordConfirmation));
     }
   };

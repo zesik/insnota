@@ -40,8 +40,8 @@ module.exports = {
     cachedAssets: VERBOSE
   },
   entry: {
+    account: './client/javascript/accountIndex.jsx',
     notes: './client/javascript/notesIndex.jsx',
-    home: './client/javascript/homeIndex.jsx'
   },
   resolve: {
     extensions: ['', '.js', '.jsx']

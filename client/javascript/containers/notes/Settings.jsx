@@ -40,6 +40,7 @@ class Settings extends React.Component {
 }
 
 Settings.propTypes = {
+  children: React.PropTypes.element.isRequired,
   dispatch: React.PropTypes.func.isRequired
 };
 

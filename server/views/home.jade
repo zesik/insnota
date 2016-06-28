@@ -1,0 +1,20 @@
+extends layout
+
+block css
+  link(rel="stylesheet", href="/stylesheets/index.css")
+
+block content
+  #home.full-size
+    .app-container
+      .app-content
+        .hero
+          .container
+            h1 Insnota
+            p A collaborative note-taking platform
+            .signup
+              a(href="/signin").btn.btn-transparent Sign in
+              &nbsp;
+              a(href="/signup").btn.btn-default Sign up
+      footer.app-footer
+        .container
+          .footer-content &copy; 2016 Yang Liu

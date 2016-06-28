@@ -9,14 +9,28 @@ export const FORM_STAGE_SIGN_IN_PASSWORD = 'SIGN_IN_PASSWORD';
 class SignInForm extends React.Component {
   constructor(props) {
     super(props);
+    this.handleEditEmail = this.handleEditEmail.bind(this);
+    this.handleEditPassword = this.handleEditPassword.bind(this);
+    this.handleEditRememberMe = this.handleEditRememberMe.bind(this);
     this.handleSubmitEmail = this.handleSubmitEmail.bind(this);
     this.handleSubmitPassword = this.handleSubmitPassword.bind(this);
   }
 
+  handleEditEmail(e) {
+    this.props.onEditEmail(e.target.value);
+  }
+
+  handleEditPassword(e) {
+    this.props.onEditPassword(e.target.value);
+  }
+
+  handleEditRememberMe(e) {
+    this.props.onEditRememberMe(e.target.checked);
+  }
+
   handleSubmitEmail(e) {
-    const { email, onSubmitEmail } = this.props;
     e.preventDefault();
-    onSubmitEmail(email);
+    this.props.onSubmitEmail(this.props.email);
   }
 
   handleSubmitPassword(e) {
@@ -44,8 +58,7 @@ class SignInForm extends React.Component {
     if (this.props.stage === FORM_STAGE_SIGN_IN_EMAIL) {
       const emailClasses = classNames({
         'form-control': true,
-        error: this.props.validationEmailEmpty || this.props.validationEmailInvalid ||
-          this.props.validationEmailNotExist
+        error: this.props.errorEmailEmpty || this.props.errorEmailInvalid || this.props.errorEmailNotExist
       });
       form = (
         <form method="post" onSubmit={this.handleSubmitEmail}>
@@ -57,42 +70,40 @@ class SignInForm extends React.Component {
                 className="textbox"
                 id="signin-email"
                 value={this.props.email}
-                onFocus={(e) => (this.props.onEnterEmailBox ? this.props.onEnterEmailBox(e.target.value) : null)}
-                onBlur={(e) => (this.props.onLeaveEmailBox ? this.props.onLeaveEmailBox(e.target.value) : null)}
-                onChange={(e) => this.props.onEditEmail(e.target.value)}
+                onChange={this.handleEditEmail}
                 autoFocus
               />
-              {this.props.validationEmailEmpty &&
+              {this.props.errorEmailEmpty &&
                 <div className="form-control-supplement error">
                   Please type your email address to sign in.
                 </div>
               }
-              {this.props.validationEmailInvalid &&
+              {this.props.errorEmailInvalid &&
                 <div className="form-control-supplement error">
                   Please type a valid email address to sign in.
                 </div>
               }
-              {this.props.validationEmailNotExist &&
+              {this.props.errorEmailNotExist &&
                 <div className="form-control-supplement error">
                   This email address is not registered.
                 </div>
               }
             </div>
           </div>
-          {this.props.serverError && serverErrorElement}
+          {this.props.errorServer && serverErrorElement}
           <div className="form-submit">
-            <button className="btn btn-default" type="submit" disabled={this.props.submitting}>Next</button>
+            <button className="btn btn-default" type="submit" disabled={this.props.loading}>Next</button>
           </div>
         </form>
       );
     } else {
       const passwordClasses = classNames({
         'form-control': true,
-        error: this.props.validationPasswordEmpty || this.props.validationCredentialInvalid
+        error: this.props.errorPasswordEmpty || this.props.errorCredentialInvalid
       });
       const recaptchaClasses = classNames({
         'form-control': true,
-        error: this.props.validationRecaptchaInvalid
+        error: this.props.errorRecaptchaInvalid
       });
       form = (
         <form method="post" onSubmit={this.handleSubmitPassword}>
@@ -112,17 +123,15 @@ class SignInForm extends React.Component {
                 className="textbox"
                 id="signin-password"
                 value={this.props.password}
-                onFocus={(e) => (this.props.onEnterPasswordBox ? this.props.onEnterPasswordBox(e.target.value) : null)}
-                onBlur={(e) => (this.props.onLeavePasswordBox ? this.props.onLeavePasswordBox(e.target.value) : null)}
-                onChange={(e) => this.props.onEditPassword(e.target.value)}
+                onChange={this.handleEditPassword}
                 autoFocus
               />
-              {this.props.validationPasswordEmpty &&
+              {this.props.errorPasswordEmpty &&
                 <div className="form-control-supplement error">
                   Please type your password to sign in.
                 </div>
               }
-              {this.props.validationCredentialInvalid &&
+              {this.props.errorCredentialInvalid &&
                 <div className="form-control-supplement error">
                   The email and password you entered don't match.
                 </div>
@@ -133,7 +142,7 @@ class SignInForm extends React.Component {
             <div className="form-group">
               <div className={recaptchaClasses}>
                 <Recaptcha siteKey={this.props.recaptchaSiteKey} />
-                {this.props.validationRecaptchaInvalid &&
+                {this.props.errorRecaptchaInvalid &&
                   <div className="form-control-supplement error">
                     Please verify that you are not a robot.
                   </div>
@@ -141,18 +150,14 @@ class SignInForm extends React.Component {
               </div>
             </div>
           }
-          {this.props.serverError && serverErrorElement}
+          {this.props.errorServer && serverErrorElement}
           <div className="form-submit">
-            <button className="btn btn-default" type="submit" disabled={this.props.submitting}>Sign in</button>
+            <button className="btn btn-default" type="submit" disabled={this.props.loading}>Sign in</button>
           </div>
           <div className="form-group">
             <div className="form-checkbox">
               <label>
-                <input
-                  type="checkbox"
-                  checked={this.props.rememberMe}
-                  onChange={(e) => this.props.onEditRememberMe(e.target.checked)}
-                />
+                <input type="checkbox" checked={this.props.rememberMe} onChange={this.handleEditRememberMe} />
                 Stay signed in
               </label>
             </div>
@@ -165,25 +170,21 @@ class SignInForm extends React.Component {
 }
 
 SignInForm.propTypes = {
-  submitting: React.PropTypes.bool,
+  loading: React.PropTypes.bool,
   stage: React.PropTypes.string.isRequired,
   name: React.PropTypes.string.isRequired,
   email: React.PropTypes.string.isRequired,
   password: React.PropTypes.string.isRequired,
   rememberMe: React.PropTypes.bool.isRequired,
   recaptchaSiteKey: React.PropTypes.string,
-  validationEmailEmpty: React.PropTypes.bool,
-  validationEmailInvalid: React.PropTypes.bool,
-  validationEmailNotExist: React.PropTypes.bool,
-  validationPasswordEmpty: React.PropTypes.bool,
-  validationCredentialInvalid: React.PropTypes.bool,
-  validationRecaptchaInvalid: React.PropTypes.bool,
-  serverError: React.PropTypes.bool,
-  onEnterEmailBox: React.PropTypes.func,
-  onLeaveEmailBox: React.PropTypes.func,
+  errorServer: React.PropTypes.bool,
+  errorEmailEmpty: React.PropTypes.bool,
+  errorEmailInvalid: React.PropTypes.bool,
+  errorEmailNotExist: React.PropTypes.bool,
+  errorPasswordEmpty: React.PropTypes.bool,
+  errorCredentialInvalid: React.PropTypes.bool,
+  errorRecaptchaInvalid: React.PropTypes.bool,
   onEditEmail: React.PropTypes.func.isRequired,
-  onEnterPasswordBox: React.PropTypes.func,
-  onLeavePasswordBox: React.PropTypes.func,
   onEditPassword: React.PropTypes.func.isRequired,
   onEditRememberMe: React.PropTypes.func.isRequired,
   onSubmitEmail: React.PropTypes.func.isRequired,

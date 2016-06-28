@@ -1,9 +1,9 @@
 import {
   INITIALIZE_SETTINGS_PAGE,
-  SET_SETTINGS_PROFILE_NAME,
-  SET_SETTINGS_OLD_PASSWORD,
-  SET_SETTINGS_NEW_PASSWORD,
-  SET_SETTINGS_PASSWORD_CONFIRMATION,
+  EDIT_SETTINGS_PROFILE_NAME,
+  EDIT_SETTINGS_OLD_PASSWORD,
+  EDIT_SETTINGS_NEW_PASSWORD,
+  EDIT_SETTINGS_PASSWORD_CONFIRMATION,
   START_SUBMITTING_SETTINGS,
   FINISH_SUBMITTING_SETTINGS
 } from '../actions/settings';
@@ -39,19 +39,19 @@ function settingsReducer(state = initialState, action) {
         email: action.email,
         status: action.status
       });
-    case SET_SETTINGS_PROFILE_NAME:
+    case EDIT_SETTINGS_PROFILE_NAME:
       return Object.assign({}, state, {
         name: action.name
       });
-    case SET_SETTINGS_OLD_PASSWORD:
+    case EDIT_SETTINGS_OLD_PASSWORD:
       return Object.assign({}, state, {
         oldPassword: action.oldPassword
       });
-    case SET_SETTINGS_NEW_PASSWORD:
+    case EDIT_SETTINGS_NEW_PASSWORD:
       return Object.assign({}, state, {
         newPassword: action.newPassword
       });
-    case SET_SETTINGS_PASSWORD_CONFIRMATION:
+    case EDIT_SETTINGS_PASSWORD_CONFIRMATION:
       return Object.assign({}, state, {
         passwordConfirmation: action.passwordConfirmation
       });

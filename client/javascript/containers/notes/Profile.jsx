@@ -2,7 +2,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 import classNames from 'classnames';
 import UserAvatar from '../../components/UserAvatar';
-import { setProfileName, updateProfile } from '../../actions/settings';
+import { editProfileName, updateProfile } from '../../actions/settings';
 
 class Profile extends React.Component {
   constructor(props) {
@@ -12,19 +12,19 @@ class Profile extends React.Component {
   }
 
   handleNameChanged(e) {
-    this.props.setProfileName(e.target.value);
+    this.props.onSetProfileName(e.target.value);
   }
 
   handleUpdateProfile(e) {
     e.preventDefault();
-    this.props.updateProfile(this.props.name)
+    this.props.onUpdateProfile(this.props.name);
   }
 
   render() {
     // TODO: show correct account status
     let nameClasses = classNames({
       'form-control': true,
-      'error': this.props.errorNameEmpty
+      error: this.props.errorNameEmpty
     });
     return (
       <div>
@@ -64,7 +64,7 @@ class Profile extends React.Component {
               <label className="control-label">Avatar</label>
               <div className="form-control">
                 <div id="form-control-avatar">
-                  <UserAvatar email={this.props.email} size={48} cornerRadius={48}/>
+                  <UserAvatar email={this.props.email} size={48} cornerRadius={48} />
                 </div>
                 <div className="form-control-supplement">
                   Insnota gets your avatar from Gravatar. If you would like to change this image, please visit <a
@@ -130,8 +130,8 @@ Profile.propTypes = {
   errorNameEmpty: React.PropTypes.bool,
   successProfile: React.PropTypes.bool,
   serverErrorProfile: React.PropTypes.bool,
-  setProfileName: React.PropTypes.func.isRequired,
-  updateProfile: React.PropTypes.func.isRequired
+  onSetProfileName: React.PropTypes.func.isRequired,
+  onUpdateProfile: React.PropTypes.func.isRequired
 };
 
 function mapStateToProps(state) {
@@ -140,10 +140,10 @@ function mapStateToProps(state) {
 
 function mapDispatchToProps(dispatch) {
   return {
-    setProfileName: name => {
-      dispatch(setProfileName(name));
+    onSetProfileName: name => {
+      dispatch(editProfileName(name));
     },
-    updateProfile: name => {
+    onUpdateProfile: name => {
       dispatch(updateProfile(name));
     }
   };

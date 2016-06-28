@@ -1,10 +1,10 @@
 import 'whatwg-fetch';
 
 export const INITIALIZE_SETTINGS_PAGE = 'INITIALIZE_SETTINGS_PAGE';
-export const SET_SETTINGS_PROFILE_NAME = 'SET_SETTINGS_PROFILE_NAME';
-export const SET_SETTINGS_OLD_PASSWORD = 'SET_SETTINGS_OLD_PASSWORD';
-export const SET_SETTINGS_NEW_PASSWORD = 'SET_SETTINGS_NEW_PASSWORD';
-export const SET_SETTINGS_PASSWORD_CONFIRMATION = 'SET_SETTINGS_PASSWORD_CONFIRMATION';
+export const EDIT_SETTINGS_PROFILE_NAME = 'EDIT_SETTINGS_PROFILE_NAME';
+export const EDIT_SETTINGS_OLD_PASSWORD = 'EDIT_SETTINGS_OLD_PASSWORD';
+export const EDIT_SETTINGS_NEW_PASSWORD = 'EDIT_SETTINGS_NEW_PASSWORD';
+export const EDIT_SETTINGS_PASSWORD_CONFIRMATION = 'EDIT_SETTINGS_PASSWORD_CONFIRMATION';
 export const START_SUBMITTING_SETTINGS = 'START_SUBMITTING_SETTINGS';
 export const FINISH_SUBMITTING_SETTINGS = 'FINISH_SUBMITTING_SETTINGS';
 
@@ -44,41 +44,41 @@ export function initializeSettingsPage() {
   };
 }
 
-export function setProfileName(name) {
+export function editProfileName(name) {
   return {
-    type: SET_SETTINGS_PROFILE_NAME,
+    type: EDIT_SETTINGS_PROFILE_NAME,
     name
   };
 }
 
-export function setOldPassword(oldPassword) {
+export function editOldPassword(oldPassword) {
   return {
-    type: SET_SETTINGS_OLD_PASSWORD,
+    type: EDIT_SETTINGS_OLD_PASSWORD,
     oldPassword
   };
 }
 
-export function setNewPassword(newPassword) {
+export function editNewPassword(newPassword) {
   return {
-    type: SET_SETTINGS_NEW_PASSWORD,
+    type: EDIT_SETTINGS_NEW_PASSWORD,
     newPassword
   };
 }
 
-export function setPasswordConfirmation(passwordConfirmation) {
+export function editPasswordConfirmation(passwordConfirmation) {
   return {
-    type: SET_SETTINGS_PASSWORD_CONFIRMATION,
+    type: EDIT_SETTINGS_PASSWORD_CONFIRMATION,
     passwordConfirmation
   };
 }
 
-function startSubmitting() {
+function startSubmittingSettings() {
   return {
     type: START_SUBMITTING_SETTINGS
   };
 }
 
-function finishSubmitting(errors) {
+function finishSubmittingSettings(errors) {
   return {
     type: FINISH_SUBMITTING_SETTINGS,
     errors
@@ -87,7 +87,7 @@ function finishSubmitting(errors) {
 
 export function updateProfile(name) {
   return dispatch => {
-    dispatch(startSubmitting());
+    dispatch(startSubmittingSettings());
     fetch('/api/settings/profile', {
       method: 'PUT',
       headers: {
@@ -106,16 +106,16 @@ export function updateProfile(name) {
       throw error;
     })
     .then(function () {
-      dispatch(finishSubmitting({ successProfile: true }));
+      dispatch(finishSubmittingSettings({ successProfile: true }));
     })
     .catch(function (err) {
       if (err.response.status >= 500) {
         console.error(err);
-        dispatch(finishSubmitting({ serverErrorProfile: true }));
+        dispatch(finishSubmittingSettings({ serverErrorProfile: true }));
         return;
       }
       err.response.json().then(function (json) {
-        dispatch(finishSubmitting(json));
+        dispatch(finishSubmittingSettings(json));
       });
     });
   };
@@ -123,16 +123,18 @@ export function updateProfile(name) {
 
 export function updatePassword(oldPassword, newPassword, passwordConfirmation) {
   return dispatch => {
-    dispatch(startSubmitting());
+    dispatch(startSubmittingSettings());
     const errors = {};
     if (newPassword.length === 0) {
       errors.errorNewPasswordEmpty = true;
+    } else if (newPassword.length < 6) {
+      errors.errorNewPasswordShort = true;
     }
     if (newPassword !== passwordConfirmation) {
       errors.errorPasswordConfirmationMismatch = true;
     }
     if (Object.keys(errors).length > 0) {
-      dispatch(finishSubmitting(errors));
+      dispatch(finishSubmittingSettings(errors));
       return;
     }
     fetch('/api/settings/password', {
@@ -154,7 +156,7 @@ export function updatePassword(oldPassword, newPassword, passwordConfirmation) {
     })
     .then(function () {
       // FIXME: Undesired coupling with state
-      dispatch(finishSubmitting({
+      dispatch(finishSubmittingSettings({
         oldPassword: '',
         newPassword: '',
         passwordConfirmation: '',
@@ -164,12 +166,12 @@ export function updatePassword(oldPassword, newPassword, passwordConfirmation) {
     .catch(function (err) {
       if (err.response.status >= 500) {
         console.error(err);
-        dispatch(finishSubmitting({ serverErrorPassword: true }));
+        dispatch(finishSubmittingSettings({ serverErrorPassword: true }));
         return;
       }
       err.response.json().then(function (json) {
-        dispatch(finishSubmitting(json));
+        dispatch(finishSubmittingSettings(json));
       });
     });
-  }
+  };
 }

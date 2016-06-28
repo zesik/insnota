@@ -1,7 +1,10 @@
 @import 'base';
 
-.home {
-  font-weight: $font-light;
+#home {
+  .app-footer {
+    background: $grey-800;
+    color: $light-text-disabled;
+  }
 }
 
 .hero {
@@ -15,6 +18,7 @@
   }
 
   p {
+    font-weight: $font-light;
     font-size: 18px;
     margin: 0;
   }

@@ -313,7 +313,7 @@ a {
 
   &.btn-transparent {
     background: none;
-    box-shadow:0 0 0 2px $light-text-primary inset;
+    box-shadow:0 0 0 1.25px $light-text-primary inset;
 
     &:hover, &:focus {
       background-color: rgba($light-text-primary, 0.15);
@@ -482,8 +482,8 @@ html, body {
   bottom: 0;
   left: 0;
   font-size: 12px;
-  color: $light-text-disabled;
-  background-color: $grey-800;
+  color: $dark-text-disabled;
+  background-color: $grey-100;
 }
 
 .container {

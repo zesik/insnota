@@ -13,17 +13,17 @@ function verifyCredentialForm(req, signupForm) {
   const recaptcha = req.body.recaptcha;
   const errors = {};
   if (!email || !email.trim().length) {
-    errors.validationEmailEmpty = true;
+    errors.errorEmailEmpty = true;
   }
   if (!password) {
-    errors.validationPasswordEmpty = true;
+    errors.errorPasswordEmpty = true;
   }
   if (signupForm) {
     if (!name || !name.trim().length) {
-      errors.validationNameEmpty = true;
+      errors.errorNameEmpty = true;
     }
     if (password && password.length < 6) {
-      errors.validationPasswordShort = true;
+      errors.errorPasswordShort = true;
     }
   }
   return { name, email, password, remember, recaptcha, errors };
@@ -33,18 +33,27 @@ function allValid(errors) {
   return Object.keys(errors).findIndex(key => errors[key]) === -1;
 }
 
-router.get('/', (req, res) => res.render('index'));
-router.get('/signin', (req, res) => res.render('index'));
-router.get('/signup', (req, res) => res.render('index'));
+router.get('/', function (req, res) {
+  if (req.user) {
+    res.redirect('notes');
+    return;
+  }
+  res.render('home');
+});
+
+router.get('/signin', (req, res) => res.render('account'));
+router.get('/signup', (req, res) => res.render('account'));
+
 router.ws('/notes', handleShareDBConnection);
 router.get('/notes', (req, res) => res.render('notes'));
 router.get('/notes/*', (req, res) => res.render('notes'));
+
 router.get('/settings', (req, res) => res.render('notes'));
 router.get('/settings/*', (req, res) => res.render('notes'));
 
 router.post('/signup', function (req, res, next) {
   if (!config.allowSignUp) {
-    res.status(403).send({ validationNotAllowed: true });
+    res.status(403).send({ errorNotAllowed: true });
     return;
   }
   const form = verifyCredentialForm(req, true);
@@ -58,14 +67,14 @@ router.post('/signup', function (req, res, next) {
     }
     if (result.recaptcha === 1) {
       res.status(403).send({
-        validationRecaptchaInvalid: true,
+        errorRecaptchaInvalid: true,
         recaptchaSiteKey: result.siteKey
       });
       return;
     }
     if (result.duplicate === 1) {
       res.status(409).send({
-        validationEmailOccupied: true,
+        errorEmailOccupied: true,
         recaptchaSiteKey: result.siteKey
       });
       return;
@@ -88,14 +97,14 @@ router.post('/signin', function (req, res, next) {
     }
     if (result.recaptcha === 1) {
       res.status(403).send({
-        validationRecaptchaInvalid: true,
+        errorRecaptchaInvalid: true,
         recaptchaSiteKey: result.siteKey
       });
       return;
     }
     if (result.password === 1) {
       res.status(403).send({
-        validationCredentialInvalid: true,
+        errorCredentialInvalid: true,
         recaptchaSiteKey: result.siteKey
       });
       return;
