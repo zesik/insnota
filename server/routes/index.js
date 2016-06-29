@@ -1,12 +1,35 @@
 const express = require('express');
 const config = require('../config');
+const recaptchaService = require('../services/recaptcha');
 const userService = require('../services/user');
+const User = require('../models/user');
 const handleShareDBConnection = require('../sharedb').handleSocketConnection;
 
 const router = express.Router();
 
-function verifyCredentialForm(req, signupForm) {
+function validateSignUpForm(req) {
   const name = req.body.name;
+  const email = req.body.email;
+  const password = req.body.password;
+  const recaptcha = req.body.recaptcha;
+  const errors = {};
+  if (!email || !email.trim().length) {
+    errors.errorEmailEmpty = true;
+  } else if (!/[^@]+@[^@]+/.test(email.trim())) {
+    errors.errorEmailInvalid = true;
+  }
+  if (!name || !name.trim().length) {
+    errors.errorNameEmpty = true;
+  }
+  if (!password) {
+    errors.errorPasswordEmpty = true;
+  } else if (password.length < 6) {
+    errors.errorPasswordShort = true;
+  }
+  return { name, email, password, recaptcha, errors };
+}
+
+function validateSignInForm(req) {
   const email = req.body.email;
   const password = req.body.password;
   const remember = req.body.remember;
@@ -14,19 +37,13 @@ function verifyCredentialForm(req, signupForm) {
   const errors = {};
   if (!email || !email.trim().length) {
     errors.errorEmailEmpty = true;
+  } else if (!/[^@]+@[^@]+/.test(email.trim())) {
+    errors.errorEmailInvalid = true;
   }
   if (!password) {
     errors.errorPasswordEmpty = true;
   }
-  if (signupForm) {
-    if (!name || !name.trim().length) {
-      errors.errorNameEmpty = true;
-    }
-    if (password && password.length < 6) {
-      errors.errorPasswordShort = true;
-    }
-  }
-  return { name, email, password, remember, recaptcha, errors };
+  return { email, password, remember, recaptcha, errors };
 }
 
 function allValid(errors) {
@@ -56,81 +73,86 @@ router.post('/signup', function (req, res, next) {
     res.status(403).send({ errorNotAllowed: true });
     return;
   }
-  const form = verifyCredentialForm(req, true);
+  const form = validateSignUpForm(req);
   if (!allValid(form.errors)) {
-    res.status(400).send(form.errors);
+    form.errors.recaptchaSiteKey = recaptchaService.getSignUpSiteKey();
+    res.status(422).send(form.errors);
     return;
   }
-  userService.createUserWithRecaptcha(form.name, form.email, form.password, form.recaptcha, function (err, result) {
-    if (err) {
-      return next(err);
-    }
-    if (result.recaptcha === 1) {
-      res.status(403).send({
-        errorRecaptchaInvalid: true,
-        recaptchaSiteKey: result.siteKey
-      });
-      return;
-    }
-    if (result.duplicate === 1) {
+  recaptchaService.verifySignUp(form.recaptcha).then(() => {
+    userService.createUser(form.name, form.email, form.password).then(user => {
+      req.session.userID = user._id;
+      res.status(201).end();
+    }).catch(err => {
+      if (err) {
+        next(err);
+        return;
+      }
       res.status(409).send({
         errorEmailOccupied: true,
-        recaptchaSiteKey: result.siteKey
+        recaptchaSiteKey: recaptchaService.getSignUpSiteKey()
       });
+    });
+  }).catch(err => {
+    if (err) {
+      next(err);
       return;
     }
-    const user = result.user;
-    req.session.email = user.email;
-    res.status(201).end();
+    res.status(422).send({
+      errorRecaptchaInvalid: true,
+      recaptchaSiteKey: recaptchaService.getSignUpSiteKey()
+    });
   });
 });
 
 router.post('/signin', function (req, res, next) {
-  const form = verifyCredentialForm(req, false);
+  const form = validateSignInForm(req);
   if (!allValid(form.errors)) {
-    res.status(400).send(form.errors);
+    res.status(422).send(form.errors);
     return;
   }
-  userService.verifyUserWithRecaptcha(form.email, form.password, form.recaptcha, function (err, result) {
-    if (err) {
-      return next(err);
-    }
-    if (result.recaptcha === 1) {
-      res.status(403).send({
-        errorRecaptchaInvalid: true,
-        recaptchaSiteKey: result.siteKey
-      });
-      return;
-    }
-    if (result.password === 1) {
-      res.status(403).send({
-        errorCredentialInvalid: true,
-        recaptchaSiteKey: result.siteKey
-      });
-      return;
-    }
-    const user = result.user;
-    userService.resetLoginAttempts(user.email, function (err) {
-      if (err) {
-        return next(err);
-      }
-      if (form.remember) {
-        userService.issueLoginToken(user.email, function (err, token) {
-          if (err) {
-            return next(err);
-          }
-          req.session.email = user.email;
-          res.cookie(config.loginTokenName, token._id, {
-            expires: token.expires,
-            signed: true
-          });
-          res.status(204).end();
-        });
-      } else {
-        req.session.email = user.email;
+  userService.findUserByEmail(form.email).then(user => {
+    recaptchaService.verifySignIn(user.password_attempts, form.recaptcha).then(() => {
+      userService.verifyPassword(user, form.password).then(newUser => {
+        if (form.remember) {
+          userService.issueLoginToken(newUser._id).then(token => {
+            req.session.userID = newUser._id;
+            res.cookie(config.loginTokenName, token._id, {
+              expires: token.expires,
+              signed: true
+            });
+            res.status(204).end();
+          }).catch(err => next(err));
+          return;
+        }
+        req.session.userID = newUser._id;
         res.status(204).end();
+      }).catch(err => {   // userService.verifyPassword rejected
+        if (err instanceof User) {
+          res.status(422).send({
+            errorCredentialInvalid: true,
+            recaptchaSiteKey: recaptchaService.getSignInSiteKey(err.password_attempts)
+          });
+          return;
+        }
+        next(err);
+      });
+    }).catch(err => {   // recaptchaService.verifySignIn rejected
+      if (err) {
+        next(err);
+        return;
       }
+      res.status(422).send({
+        errorRecaptchaInvalid: true,
+        recaptchaSiteKey: recaptchaService.getSignInSiteKey(user.password_attempts)
+      });
     });
+  }).catch(err => {   // userService.findUserByEmail rejected
+    if (err) {
+      next(err);
+      return;
+    }
+    res.status(422).send({ errorEmailNotExist: true });
   });
 });
 

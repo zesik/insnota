@@ -1,6 +1,6 @@
 const crypto = require('crypto');
 const mongoose = require('mongoose');
-const recaptchaService = require('../services/recaptcha');
+const logger = require('../logger');
 const User = require('../models/user');
 const LoginToken = require('../models/loginToken');
 
@@ -12,26 +12,29 @@ const PBKDF2_KEY_BYTE_SIZE = 64;
 const TOKEN_BYTE_SIZE = 20;
 const LOGIN_TOKEN_EXPIRE_DAYS = 14;
 
-function generateHash(params, password, callback) {
-  const algorithm = params[0];
-  switch (params[0]) {
-    case PBKDF2_ALGORITHM: {
-      const digest = params[1];
-      const iterations = parseInt(params[2], 10);
-      const keyByteSize = parseInt(params[3], 10);
-      const salt = params[4];
-      crypto.pbkdf2(password, salt, iterations, keyByteSize, digest, (err, key) => {
-        if (err) {
-          return callback(err);
-        }
-        callback(null, key.toString('hex'));
-      });
-      break;
+function generateHash(params, password) {
+  return new Promise((resolve, reject) => {
+    const algorithm = params[0];
+    switch (algorithm) {
+      case PBKDF2_ALGORITHM: {
+        const digest = params[1];
+        const iterations = parseInt(params[2], 10);
+        const keyByteSize = parseInt(params[3], 10);
+        const salt = params[4];
+        crypto.pbkdf2(password, salt, iterations, keyByteSize, digest, (err, key) => {
+          if (err) {
+            reject(err);
+            return;
+          }
+          resolve(key.toString('hex'));
+        });
+        break;
+      }
+      default:
+        reject(new Error(`Unsupported algorithm '${algorithm}'`));
+        break;
     }
-    default:
-      process.nextTick(() => callback(new TypeError(`Unknown algorithm '${params[0]}'`)));
-      break;
-  }
+  });
 }
 
 function isStringEqual(str1, str2) {
@@ -43,150 +46,229 @@ function isStringEqual(str1, str2) {
   return diff === 0;
 }
 
-function createUser(name, email, password, recaptchaSiteKey, callback) {
-  const descriptor = [
-    PBKDF2_ALGORITHM,
-    PBKDF2_DIGEST_METHOD,
-    PBKDF2_ITERATIONS,
-    PBKDF2_KEY_BYTE_SIZE,
-    crypto.randomBytes(PBKDF2_SALT_BYTE_SIZE).toString('hex')
-  ];
-  generateHash(descriptor, password, (err, hash) => {
-    if (err) {
-      return callback(err);
-    }
-    descriptor.push(hash);
-    const user = new User();
-    user.email = email;
-    user.password = descriptor.join(':');
-    user.name = name;
-    user.status = 'unverified';
-    user.save((err) => {
-      if (err) {
-        if (err.name === 'MongoError' && err.code === 11000) {
-          return callback(null, { duplicate: 1, siteKey: recaptchaSiteKey });
+function createUser(name, email, password) {
+  return new Promise((resolve, reject) => {
+    const params = [
+      PBKDF2_ALGORITHM,
+      PBKDF2_DIGEST_METHOD,
+      PBKDF2_ITERATIONS,
+      PBKDF2_KEY_BYTE_SIZE,
+      crypto.randomBytes(PBKDF2_SALT_BYTE_SIZE).toString('hex')
+    ];
+    generateHash(params, password).then(hash => {
+      params.push(hash);
+      const user = new User();
+      user.email = email;
+      user.password = params.join(':');
+      user.name = name;
+      user.status = 'unverified';
+      user.save(err => {
+        if (err) {
+          if (err.name === 'MongoError' && err.code === 11000) {
+            logger.warn('Duplication found when creating user');
+            reject();
+            return;
+          }
+          logger.error('Database error when creating user');
+          reject(err);
+          return;
         }
-        return callback(err);
-      }
-      callback(null, { user });
+        resolve(user);
+      });
+    }).catch(err => {
+      logger.error('Hashing error when creating user');
+      reject(err);
     });
   });
 }
 
-function createUserWithRecaptcha(name, email, password, recaptcha, callback) {
-  let recaptchaSiteKey = '';
-  if (recaptcha || recaptchaService.shouldCheckSignUp()) {
-    recaptchaSiteKey = recaptchaService.getSignUpSiteKey();
-    recaptchaService.verifySignUp(recaptcha, result => {
-      if (result) {
-        return createUser(name, email, password, recaptchaSiteKey, callback);
-      }
-      callback(null, { recaptcha: 1, siteKey: recaptchaSiteKey });
-    });
-    return;
-  }
-  createUser(name, email, password, recaptchaSiteKey, callback);
-}
-
-function verifyUserWithRecaptcha(email, password, recaptcha, callback) {
-  User.findOneAndUpdate({ email }, { $inc: { login_attempts: 1 } }, function (err, user) {
-    if (err) {
-      return callback(err);
-    }
+function verifyPassword(user, password) {
+  return new Promise((resolve, reject) => {
     if (!user) {
-      return callback();
-    }
-    let recaptchaSiteKey = '';
-    if (recaptcha || recaptchaService.shouldCheckSignIn(user.login_attempts)) {
-      recaptchaSiteKey = recaptchaService.getSignInSiteKey();
-      recaptchaService.verifySignIn(recaptcha, result => {
-        if (result) {
-          return verifyPassword(user, password, recaptchaSiteKey, callback);
-        }
-        callback(null, { recaptcha: 1, siteKey: recaptchaSiteKey });
-      });
+      reject();
       return;
     }
-    if (recaptchaService.shouldCheckSignIn(user.login_attempts + 1)) {
-      recaptchaSiteKey = recaptchaService.getSignInSiteKey();
-    }
-    verifyPassword(user, password, recaptchaSiteKey, callback);
+    const params = user.password.split(':');
+    const expected = params.splice(params.length - 1, 1)[0];
+    generateHash(params, password).then(hash => {
+      if (isStringEqual(hash, expected)) {
+        User.findOneAndUpdate({ _id: user._id }, { password_attempts: 0 }, { new: true }, (err, newUser) => {
+          if (err) {
+            logger.error('Database error while updating user password attempt');
+            reject(err);
+            return;
+          }
+          resolve(newUser);
+        });
+        return;
+      }
+      User.findOneAndUpdate({ _id: user._id }, { $inc: { password_attempts: 1 } }, { new: true }, (err, newUser) => {
+        if (err) {
+          logger.error('Database error while updating user password attempt');
+          reject(err);
+          return;
+        }
+        reject(newUser);
+      });
+    }).catch(err => {
+      logger.error('Hashing error when verifying password');
+      reject(err);
+    });
   });
 }
 
-function verifyPassword(user, password, recaptchaSiteKey, callback) {
-  const params = user.password.split(':');
-  const expected = params.splice(params.length - 1, 1)[0];
-  generateHash(params, password, (err, key) => {
-    if (err) {
-      return callback(err);
-    }
-    const result = {};
-    if (isStringEqual(key, expected)) {
-      result.user = user;
-    } else {
-      result.password = 1;
-      result.siteKey = recaptchaSiteKey;
-    }
-    callback(null, result);
+function findUser(id) {
+  return new Promise((resolve, reject) => {
+    User.findOne({ _id: id }, (err, user) => {
+      if (err) {
+        logger.error('Database error when finding user');
+        reject(err);
+        return;
+      }
+      if (!user) {
+        reject();
+        return;
+      }
+      resolve(user);
+    });
   });
 }
 
-function findUser(email, callback) {
-  User.findOneByEmail(email, callback);
-}
-
-function findUsersIn(emails, callback) {
-  User.find({ email: { $in: emails } }, callback);
-}
-
-function updateName(email, name, callback) {
-  User.update({ email }, { name }, callback);
-}
-
-function resetLoginAttempts(email, callback) {
-  User.resetLoginAttempts(email, callback);
-}
-
-function issueLoginToken(email, callback) {
-  const tokenID = (mongoose.Types.ObjectId().toString() +
-    crypto.randomBytes(TOKEN_BYTE_SIZE).toString('hex')).toLowerCase();
-  const date = new Date();
-  date.setDate(date.getDate() + LOGIN_TOKEN_EXPIRE_DAYS);
-  const token = new LoginToken();
-  token._id = tokenID;
-  token.expires = date;
-  token.email = email;
-  token.save(function (err) {
-    if (err) {
-      return callback(err);
-    }
-    callback(null, token);
+function findUsers(ids) {
+  return new Promise((resolve, reject) => {
+    User.find({ _id: { $in: ids } }, (err, users) => {
+      if (err) {
+        logger.error('Database error when finding user');
+        reject(err);
+        return;
+      }
+      resolve(users);
+    });
   });
 }
 
-function verifyLoginToken(token, callback) {
-  LoginToken.findOneAndUpdate({ _id: token }, { $set: { used: true } }, function (err, doc) {
-    if (err) {
-      return callback(err);
-    }
-    if (doc.used) {
-      return callback(null, { valid: false, reason: 'used' });
-    }
-    if (new Date() > doc.expires) {
-      return callback(null, { valid: false, reason: 'expired' });
-    }
-    return callback(null, { valid: true, email: doc.email });
+function findUserByEmail(email) {
+  return new Promise((resolve, reject) => {
+    User.findOneByEmail(email, (err, user) => {
+      if (err) {
+        logger.error('Database error when finding user');
+        reject(err);
+        return;
+      }
+      if (!user) {
+        reject();
+        return;
+      }
+      resolve(user);
+    });
+  });
+}
+
+function findUsersByEmails(emails) {
+  return new Promise((resolve, reject) => {
+    User.find({ email: { $in: emails } }, (err, users) => {
+      if (err) {
+        logger.error('Database error when finding user');
+        reject(err);
+        return;
+      }
+      resolve(users);
+    });
+  });
+}
+
+function issueLoginToken(userID) {
+  return new Promise((resolve, reject) => {
+    const tokenID = ((new mongoose.Types.ObjectId()).toString() +
+      crypto.randomBytes(TOKEN_BYTE_SIZE).toString('hex')).toLowerCase();
+    const date = new Date();
+    date.setDate(date.getDate() + LOGIN_TOKEN_EXPIRE_DAYS);
+    const token = new LoginToken();
+    token._id = tokenID;
+    token.expires = date;
+    token.user_id = userID;
+    token.save(err => {
+      if (err) {
+        logger.error('Database error when issuing new login token');
+        reject(err);
+        return;
+      }
+      resolve(token);
+    });
+  });
+}
+
+function verifyLoginToken(id) {
+  return new Promise((resolve, reject) => {
+    LoginToken.findOneAndUpdate({ _id: id }, { $set: { used: true } }, (err, token) => {
+      if (err) {
+        logger.error('Database error when verifying login token');
+        reject(err);
+        return;
+      }
+      if (token.used) {
+        logger.warn('Used login token detected');
+        reject('used');
+        return;
+      }
+      if (new Date() > token.expires) {
+        logger.warn('Expired login token detected');
+        reject('used');
+        return;
+      }
+      resolve(token.user_id);
+    });
+  });
+}
+
+function updateName(id, name) {
+  return new Promise((resolve, reject) => {
+    User.update({ _id: id }, { name }, err => {
+      if (err) {
+        logger.error('Database error when updating user profile');
+        reject(err);
+        return;
+      }
+      resolve();
+    });
+  });
+}
+
+function updatePassword(id, password) {
+  return new Promise((resolve, reject) => {
+    const params = [
+      PBKDF2_ALGORITHM,
+      PBKDF2_DIGEST_METHOD,
+      PBKDF2_ITERATIONS,
+      PBKDF2_KEY_BYTE_SIZE,
+      crypto.randomBytes(PBKDF2_SALT_BYTE_SIZE).toString('hex')
+    ];
+    generateHash(params, password).then(hash => {
+      params.push(hash);
+      User.update({ _id: id }, { password: params.join(':') }, err => {
+        if (err) {
+          logger.error('Database error when updating user password');
+          reject(err);
+          return;
+        }
+        resolve();
+      });
+    }).catch(err => {
+      logger.error('Hashing error when updating password');
+      reject(err);
+    });
   });
 }
 
 module.exports = {
-  createUserWithRecaptcha,
-  verifyUserWithRecaptcha,
+  createUser,
+  verifyPassword,
   findUser,
-  findUsersIn,
-  updateName,
-  resetLoginAttempts,
+  findUserByEmail,
+  findUsers,
+  findUsersByEmails,
   issueLoginToken,
-  verifyLoginToken
+  verifyLoginToken,
+  updateName,
+  updatePassword
 };

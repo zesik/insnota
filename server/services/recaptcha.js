@@ -1,7 +1,8 @@
-const https = require('https');
+const request = require('request');
 const config = require('../config');
+const logger = require('../logger');
 
-const accountAttempts = config.reCAPTCHA.signIn && !isNaN(parseFloat(config.reCAPTCHA.signIn.accountAttempts)) ?
+const maxPasswordAttempts = (config.reCAPTCHA.signIn && typeof config.reCAPTCHA.signIn.accountAttempts === 'number') ?
   config.reCAPTCHA.signIn.accountAttempts : -1;
 
 function shouldCheckSignUp() {
@@ -9,44 +10,65 @@ function shouldCheckSignUp() {
 }
 
 function shouldCheckSignIn(attempts) {
-  return (accountAttempts >= 0 && attempts >= accountAttempts);
+  return (maxPasswordAttempts >= 0 && attempts >= maxPasswordAttempts);
 }
 
-function getSignInSiteKey() {
-  return config.reCAPTCHA.signIn ? config.reCAPTCHA.signIn.siteKey : null;
+function getSignInSiteKey(attempts) {
+  return shouldCheckSignIn(attempts) ? config.reCAPTCHA.signIn.siteKey : null;
 }
 
 function getSignUpSiteKey() {
-  return config.reCAPTCHA.signUp ? config.reCAPTCHA.signUp.siteKey : null;
+  return shouldCheckSignUp() ? config.reCAPTCHA.signUp.siteKey : null;
 }
 
-function verifySignIn(response, callback) {
-  const secretKey = config.reCAPTCHA.signIn.secretKey;
-  return verifyRecaptcha(secretKey, response, callback);
-}
-
-function verifySignUp(response, callback) {
-  const secretKey = config.reCAPTCHA.signUp.secretKey;
-  return verifyRecaptcha(secretKey, response, callback);
-}
-
-function verifyRecaptcha(secretKey, response, callback) {
-  https.get(`https://www.google.com/recaptcha/api/siteverify?secret=${secretKey}&response=${response}`, function (res) {
-    let data = '';
-    res.on('data', chunk => { data += chunk.toString() });
-    res.on('end', function () {
-      try {
-        callback(JSON.parse(data).success);
-      } catch (e) {
-        callback(false);
+function verifyRecaptcha(secret, response) {
+  return new Promise((resolve, reject) => {
+    request.post({
+      url: 'https://www.google.com/recaptcha/api/siteverify',
+      form: { secret, response }
+    }, (err, res, body) => {
+      if (err) {
+        logger.error('Unable to verify reCAPTCHA');
+        reject(err);
+        return;
       }
+      if (res.statusCode !== 200) {
+        logger.error(`Unable to verify reCAPTCHA: ${res.statusCode}`);
+        reject();
+        return;
+      }
+      let result = false;
+      try {
+        result = JSON.parse(body).success;
+      } catch (e) {
+        logger.error(`Unable to parse result when verifying reCAPTCHA: ${e}`);
+      }
+      if (!result) {
+        reject();
+        return;
+      }
+      resolve();
     });
   });
 }
 
+function verifySignIn(passwordAttemptCount, response) {
+  if (shouldCheckSignIn(passwordAttemptCount) || response) {
+    const secretKey = config.reCAPTCHA.signIn.secretKey;
+    return verifyRecaptcha(secretKey, response);
+  }
+  return new Promise(resolve => resolve());
+}
+
+function verifySignUp(response) {
+  if (shouldCheckSignUp() || response) {
+    const secretKey = config.reCAPTCHA.signUp.secretKey;
+    return verifyRecaptcha(secretKey, response);
+  }
+  return new Promise(resolve => resolve());
+}
+
 module.exports = {
-  shouldCheckSignIn,
-  shouldCheckSignUp,
   getSignInSiteKey,
   getSignUpSiteKey,
   verifySignIn,

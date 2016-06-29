@@ -12,48 +12,45 @@ const router = express.Router();
 const hashids = new Hashids(config.hashidSalt);
 
 router.get('/users/:email', function (req, res, next) {
-  userService.findUser(req.params.email, function (err, user) {
-    if (err) {
-      return next(err);
-    }
-    if (user) {
-      res.send({ email: user.email, name: user.name });
-    } else {
-      res.status(404).end();
-    }
-  });
-});
-
-router.get('/profile', function (req, res) {
-  if (req.user) {
-    userService.findUser(req.user.email, function (err, user) {
+  userService.findUserByEmail(req.params.email)
+    .then(user => res.send({ email: user.email, name: user.name }))
+    .catch(err => {
       if (err) {
-        return next(err);
+        next(err);
+        return;
       }
-      if (user) {
-        res.send({
-          email: user.email,
-          name: user.name,
-          status: user.status
-        });
-      } else {
-        res.send({});
-      }
+      res.status(404).end();
     });
-  } else {
-    res.send({});
-  }
 });
 
-router.put('/profile', function (req, res) {
+router.put('/settings/profile', function (req, res) {
+  if (!req.user) {
+    res.status(403).end();
+    return;
+  }
+  userService.findUser(req.user._id)
+    .then(user => res.send({ email: user.email, name: user.name, status: user.status }))
+    .catch(err => {
+      if (err) {
+        next(err);
+        return;
+      }
+      res.send({});
+    });
+});
+
+router.put('/settings/password', function (req, res) {
+  // TODO: validate old password before updating
   if (!req.user) {
     return res.status(403).end();
   }
-  const name = req.body.name.trim();
-  if (!name.length) {
-    return res.status(400).send({ errorNameEmpty: true });
+  if (!req.body.newPassword) {
+    return res.status(422).send({ errorNewPasswordEmpty: true });
   }
-  userService.updateName(req.user.email, req.body.name, function (err) {
+  if (req.body.newPassword.length < 6) {
+    return res.status(422).send({ errorNewPasswordShort: true });
+  }
+  userService.updatePassword(req.user.email, req.body.newPassword, function (err) {
     if (err) {
       return next(err);
     }
@@ -61,27 +58,40 @@ router.put('/profile', function (req, res) {
   });
 });
 
-router.get('/signup', function (req, res, next) {
+router.put('/profile', function (req, res, next) {
+  if (!req.user) {
+    return res.status(403).end();
+  }
+  const name = req.body.name.trim();
+  if (!name.length) {
+    return res.status(422).send({ errorNameEmpty: true });
+  }
+  userService.updateName(req.user._id, req.body.name)
+    .then(() => res.status(200).end())
+    .catch(err => next(err));
+});
+
+router.get('/signup', function (req, res) {
   if (!config.allowSignUp) {
     return res.status(403).end();
   }
-  const siteKey = recaptchaService.shouldCheckSignUp() ? recaptchaService.getSignUpSiteKey() : null;
-  res.send({ recaptcha: siteKey });
+  res.send({ recaptcha: recaptchaService.getSignUpSiteKey() });
 });
 
 router.get('/signin/:email', function (req, res, next) {
-  userService.findUser(req.params.email, function (err, user) {
-    if (err) {
-      return next(err);
-    }
-    if (user) {
-      const siteKey = recaptchaService.shouldCheckSignIn(user.login_attempts) ?
-        recaptchaService.getSignInSiteKey() : null;
-      res.send({ email: user.email, name: user.name, recaptcha: siteKey });
-    } else {
+  userService.findUserByEmail(req.params.email)
+    .then(user => res.send({
+      email: user.email,
+      name: user.name,
+      recaptcha: recaptchaService.getSignInSiteKey(user.password_attempts)
+    }))
+    .catch(err => {
+      if (err) {
+        next(err);
+        return;
+      }
       res.status(404).end();
-    }
-  });
+    });
 });
 
 router.get('/notes', function (req, res, next) {
@@ -105,7 +115,7 @@ router.post('/notes', function (req, res, next) {
   if (!req.user) {
     return res.status(403).end();
   }
-  const id = hashids.encodeHex(mongoose.Types.ObjectId().toString());
+  const id = hashids.encodeHex((new mongoose.Types.ObjectId()).toString());
   createDocument(id, function (err, doc) {
     documentService.create(id, req.user.email, doc.t, function (err) {
       if (err) {

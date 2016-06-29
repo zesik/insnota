@@ -41,7 +41,7 @@ module.exports = {
   },
   entry: {
     account: './client/javascript/accountIndex.jsx',
-    notes: './client/javascript/notesIndex.jsx',
+    notes: './client/javascript/notesIndex.jsx'
   },
   resolve: {
     extensions: ['', '.js', '.jsx']

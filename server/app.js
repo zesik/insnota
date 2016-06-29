@@ -1,5 +1,3 @@
-'use strict';
-
 const http = require('http');
 const path = require('path');
 const express = require('express');
@@ -8,6 +6,7 @@ const bodyParser = require('body-parser');
 const session = require('express-session');
 const userService = require('./services/user');
 const config = require('./config');
+const logger = require('./logger');
 
 // Initialize express
 const app = express();
@@ -53,48 +52,29 @@ function initializeExpress() {
   // Deserialize user from session
   app.use(function (req, res, next) {
     // First try to check from session
-    if (req.session.email) {
-      userService.findUser(req.session.email, function (err, user) {
-        if (err) {
-          return next(err);
-        }
+    if (req.session.userID) {
+      userService.findUser(req.session.userID).then(user => {
         req.user = user;
-        return next();
-      });
+        next();
+      }).catch(err => next(err));
       return;
     }
     // Check whether the user has login token
-    if (!req.upgrade && req.signedCookies.login) {
-      userService.verifyLoginToken(req.signedCookies.login, function (err, result) {
-        if (err) {
-          return next(err);
-        }
-        res.clearCookie(config.loginTokenName);
-        if (!result.valid) {
-          return next();
-        }
-        userService.findUser(result.email, function (err, user) {
-          if (err) {
-            return next(err);
-          }
-          if (!user) {
-            return next();
-          }
-          userService.issueLoginToken(user.email, function (err, token) {
-            if (err) {
-              return next(err);
-            }
-            req.session.email = user.email;
+    if (!req.upgrade && req.signedCookies[config.loginTokenName]) {
+      userService.verifyLoginToken(req.signedCookies[config.loginTokenName]).then(userID => {
+        res.clearCookie(config.loginTokenName, {});
+        userService.findUser(userID).then(user => {
+          userService.issueLoginToken(user._id).then(token => {
+            req.session.userID = user._id;
             req.user = user;
             res.cookie(config.loginTokenName, token._id, {
               expires: token.expires,
               signed: true
             });
             return next();
-          });
-        });
-      });
-      return;
+          }).catch(err => next(err));
+        }).catch(err => next(err));
+      }).catch(err => next(err));
     }
     return next();
   });
@@ -126,6 +106,7 @@ function initializeExpress() {
 
   // Production error handler: no stacktraces leaked to user
   app.use(function (err, req, res, next) {
+    logger.error(err);
     res.status(err.status || 500);
     res.render('error', {
       title: err.message,
@@ -137,6 +118,6 @@ function initializeExpress() {
   // Listen
   const port = 3000;
   app.listen(port, function () {
-    console.log(`Listening on ${port}`);
+    logger.info(`Listening on ${port}`);
   });
 }

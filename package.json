@@ -14,11 +14,14 @@
     "express-ws": "^2.0.0-rc.1",
     "hashids": "^1.0.2",
     "jade": "^1.11.0",
+    "moment": "^2.13.0",
     "mongoose": "^4.4.12",
     "passport-local": "^1.0.0",
+    "request": "^2.72.0",
     "sharedb": "^0.11.35",
     "sharedb-logger": "^0.1.4",
     "sharedb-mongo": "^0.8.7",
+    "winston": "^2.2.0",
     "ws": "^1.0.1"
   },
   "devDependencies": {

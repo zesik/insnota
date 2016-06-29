@@ -23,7 +23,7 @@ const initialNoticeState = {
   errorEmailOccupied: false,
   errorPasswordEmpty: false,
   errorPasswordShort: false,
-  errorPasswordConfirmMismatch: false,
+  errorPasswordConfirmationMismatch: false,
   errorRecaptchaInvalid: false,
   errorCredentialInvalid: false,
   serverError: false
