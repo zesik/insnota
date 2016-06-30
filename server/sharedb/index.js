@@ -210,8 +210,8 @@ function tidyLooseConnections(callback) {
   });
 }
 
-function createDocument(id, callback) {
-  const sharedbDoc = serverConnection.get(config.documentCollection, id);
+function createDocument(collection, document, callback) {
+  const sharedbDoc = serverConnection.get(collection, document);
   sharedbDoc.fetch(function (err) {
     if (err) {
       return callback(err);

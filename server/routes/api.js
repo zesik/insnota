@@ -246,11 +246,12 @@ router.post('/notes', function (req, res, next) {
     res.status(403).end();
     return;
   }
-  const id = hashids.encodeHex((new mongoose.Types.ObjectId()).toString());
+  const collection = config.documentCollection;
+  const documentID = hashids.encodeHex((new mongoose.Types.ObjectId()).toString());
   const userID = req.user ? req.user._id : null;
-  createDocument(id, function (err, doc) {
-    documentService.create(id, userID, doc.t)
-      .then(() => res.send({ id, title: doc.t }))
+  createDocument(collection, documentID, function (err, doc) {
+    documentService.create(documentID, collection, userID, doc.t)
+      .then(() => res.send({ id: documentID, title: doc.t }))
       .catch(e => next(e));
   });
 });

@@ -1,5 +1,4 @@
 const Document = require('../models/document');
-const config = require('../config');
 const logger = require('../logger');
 
 /**
@@ -35,11 +34,11 @@ function findByOwner(userID) {
   });
 }
 
-function create(id, ownerID, title) {
+function create(id, collection, ownerID, title) {
   return new Promise((resolve, reject) => {
     const doc = new Document();
     doc._id = id;
-    doc.owner_collection = config.documentCollection;
+    doc.owner_collection = collection;
     doc.owner = ownerID;
     doc.title = title;
     doc.save(err => {
