@@ -21,6 +21,9 @@ function getSignUpSiteKey() {
   return shouldCheckSignUp() ? config.reCAPTCHA.signUp.siteKey : null;
 }
 
+/**
+ * @note reject() argument types: Error object or null (when reCAPTCHA invalid)
+ */
 function verifyRecaptcha(secret, response) {
   return new Promise((resolve, reject) => {
     request.post({
@@ -34,7 +37,7 @@ function verifyRecaptcha(secret, response) {
       }
       if (res.statusCode !== 200) {
         logger.error(`Unable to verify reCAPTCHA: ${res.statusCode}`);
-        reject();
+        reject(new Error(`Unexpected status code: ${res.statusCode}`));
         return;
       }
       let result = false;
@@ -42,6 +45,8 @@ function verifyRecaptcha(secret, response) {
         result = JSON.parse(body).success;
       } catch (e) {
         logger.error(`Unable to parse result when verifying reCAPTCHA: ${e}`);
+        reject(e);
+        return;
       }
       if (!result) {
         reject();

@@ -10,7 +10,7 @@ module.exports = {
     'no-multiple-empty-lines': [1, { 'max': 1 }],
     'no-param-reassign': [0],
     'no-unused-vars': [1],
-    'no-underscore-dangle': [1],
+    'no-underscore-dangle': [0],
     'prefer-arrow-callback': [0],
     'react/prefer-stateless-function': [1]
   }

@@ -46,6 +46,9 @@ function isStringEqual(str1, str2) {
   return diff === 0;
 }
 
+/**
+ * @note reject() argument types: Error object or null (when duplication found)
+ */
 function createUser(name, email, password) {
   return new Promise((resolve, reject) => {
     const params = [
@@ -82,6 +85,9 @@ function createUser(name, email, password) {
   });
 }
 
+/**
+ * @note reject() argument types: Error object, null (when user not found), or User object (when password mismatch)
+ */
 function verifyPassword(user, password) {
   return new Promise((resolve, reject) => {
     if (!user) {
@@ -117,6 +123,9 @@ function verifyPassword(user, password) {
   });
 }
 
+/**
+ * @note reject() argument types: Error object or null (when user not found)
+ */
 function findUser(id) {
   return new Promise((resolve, reject) => {
     User.findOne({ _id: id }, (err, user) => {
@@ -147,6 +156,9 @@ function findUsers(ids) {
   });
 }
 
+/**
+ * @note reject() argument types: Error object or null (when user not found)
+ */
 function findUserByEmail(email) {
   return new Promise((resolve, reject) => {
     User.findOneByEmail(email, (err, user) => {
@@ -198,12 +210,20 @@ function issueLoginToken(userID) {
   });
 }
 
+/**
+ * @note reject() argument types: Error object or string (when verification failed)
+ */
 function verifyLoginToken(id) {
   return new Promise((resolve, reject) => {
     LoginToken.findOneAndUpdate({ _id: id }, { $set: { used: true } }, (err, token) => {
       if (err) {
         logger.error('Database error when verifying login token');
         reject(err);
+        return;
+      }
+      if (!token) {
+        logger.warn('No such token found');
+        reject('notfound');
         return;
       }
       if (token.used) {
@@ -213,7 +233,7 @@ function verifyLoginToken(id) {
       }
       if (new Date() > token.expires) {
         logger.warn('Expired login token detected');
-        reject('used');
+        reject('expired');
         return;
       }
       resolve(token.user_id);

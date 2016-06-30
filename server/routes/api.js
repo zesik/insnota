@@ -2,14 +2,60 @@ const express = require('express');
 const mongoose = require('mongoose');
 const Hashids = require('hashids');
 const config = require('../config');
+const logger = require('../logger');
+const recaptchaService = require('../services/recaptcha');
+const User = require('../models/user');
 const userService = require('../services/user');
 const documentService = require('../services/document');
-const recaptchaService = require('../services/recaptcha');
 const createDocument = require('../sharedb').createDocument;
 const broadcastPermissionChange = require('../sharedb').broadcastPermissionChange;
 
+// eslint-disable-next-line new-cap
 const router = express.Router();
 const hashids = new Hashids(config.hashidSalt);
+
+function validateSignUpForm(req) {
+  const name = req.body.name;
+  const email = req.body.email;
+  const password = req.body.password;
+  const recaptcha = req.body.recaptcha;
+  const errors = {};
+  if (!email || !email.trim().length) {
+    errors.errorEmailEmpty = true;
+  } else if (!/[^@]+@[^@]+/.test(email.trim())) {
+    errors.errorEmailInvalid = true;
+  }
+  if (!name || !name.trim().length) {
+    errors.errorNameEmpty = true;
+  }
+  if (!password) {
+    errors.errorPasswordEmpty = true;
+  } else if (password.length < 6) {
+    errors.errorPasswordShort = true;
+  }
+  return { name, email, password, recaptcha, errors };
+}
+
+function validateSignInForm(req) {
+  const email = req.body.email;
+  const password = req.body.password;
+  const remember = req.body.remember;
+  const recaptcha = req.body.recaptcha;
+  const errors = {};
+  if (!email || !email.trim().length) {
+    errors.errorEmailEmpty = true;
+  } else if (!/[^@]+@[^@]+/.test(email.trim())) {
+    errors.errorEmailInvalid = true;
+  }
+  if (!password) {
+    errors.errorPasswordEmpty = true;
+  }
+  return { email, password, remember, recaptcha, errors };
+}
+
+function allValid(errors) {
+  return Object.keys(errors).findIndex(key => errors[key]) === -1;
+}
 
 router.get('/users/:email', function (req, res, next) {
   userService.findUserByEmail(req.params.email)
@@ -23,7 +69,7 @@ router.get('/users/:email', function (req, res, next) {
     });
 });
 
-router.put('/settings/profile', function (req, res) {
+router.get('/profile', function (req, res, next) {
   if (!req.user) {
     res.status(403).end();
     return;
@@ -35,113 +81,189 @@ router.put('/settings/profile', function (req, res) {
         next(err);
         return;
       }
-      res.send({});
+      res.status(404).end();
     });
 });
 
-router.put('/settings/password', function (req, res) {
-  // TODO: validate old password before updating
+router.put('/settings/profile', function (req, res, next) {
   if (!req.user) {
-    return res.status(403).end();
-  }
-  if (!req.body.newPassword) {
-    return res.status(422).send({ errorNewPasswordEmpty: true });
-  }
-  if (req.body.newPassword.length < 6) {
-    return res.status(422).send({ errorNewPasswordShort: true });
-  }
-  userService.updatePassword(req.user.email, req.body.newPassword, function (err) {
-    if (err) {
-      return next(err);
-    }
-    return res.status(200).end();
-  });
-});
-
-router.put('/profile', function (req, res, next) {
-  if (!req.user) {
-    return res.status(403).end();
+    res.status(403).end();
+    return;
   }
   const name = req.body.name.trim();
   if (!name.length) {
-    return res.status(422).send({ errorNameEmpty: true });
+    res.status(422).send({ errorNameEmpty: true });
+    return;
   }
   userService.updateName(req.user._id, req.body.name)
-    .then(() => res.status(200).end())
+    .then(() => res.status(204).end())
+    .catch(err => next(err));
+});
+
+router.put('/settings/password', function (req, res, next) {
+  // TODO: validate old password before updating
+  if (!req.user) {
+    res.status(403).end();
+    return;
+  }
+  if (!req.body.newPassword) {
+    res.status(422).send({ errorNewPasswordEmpty: true });
+    return;
+  }
+  if (req.body.newPassword.length < 6) {
+    res.status(422).send({ errorNewPasswordShort: true });
+    return;
+  }
+  userService.updatePassword(req.user.email, req.body.newPassword)
+    .then(() => res.status(204).end())
     .catch(err => next(err));
 });
 
 router.get('/signup', function (req, res) {
   if (!config.allowSignUp) {
-    return res.status(403).end();
+    res.status(403).end();
+    return;
   }
   res.send({ recaptcha: recaptchaService.getSignUpSiteKey() });
 });
 
-router.get('/signin/:email', function (req, res, next) {
-  userService.findUserByEmail(req.params.email)
-    .then(user => res.send({
-      email: user.email,
-      name: user.name,
-      recaptcha: recaptchaService.getSignInSiteKey(user.password_attempts)
-    }))
-    .catch(err => {
+router.post('/signup', function (req, res, next) {
+  if (!config.allowSignUp) {
+    res.status(403).send({ errorNotAllowed: true });
+    return;
+  }
+  const form = validateSignUpForm(req);
+  if (!allValid(form.errors)) {
+    form.errors.recaptchaSiteKey = recaptchaService.getSignUpSiteKey();
+    res.status(422).send(form.errors);
+    return;
+  }
+  recaptchaService.verifySignUp(form.recaptcha).then(() => {
+    userService.createUser(form.name, form.email, form.password).then(user => {
+      req.session.userID = user._id;
+      res.status(201).end();
+    }).catch(err => {
       if (err) {
         next(err);
         return;
       }
-      res.status(404).end();
+      res.status(409).send({
+        errorEmailOccupied: true,
+        recaptchaSiteKey: recaptchaService.getSignUpSiteKey()
+      });
     });
+  }).catch(err => {
+    if (err) {
+      next(err);
+      return;
+    }
+    res.status(422).send({
+      errorRecaptchaInvalid: true,
+      recaptchaSiteKey: recaptchaService.getSignUpSiteKey()
+    });
+  });
+});
+
+router.get('/signin/:email', function (req, res, next) {
+  userService.findUserByEmail(req.params.email).then(user => res.send({
+    email: user.email,
+    name: user.name,
+    recaptcha: recaptchaService.getSignInSiteKey(user.password_attempts)
+  })).catch(err => {
+    if (err) {
+      next(err);
+      return;
+    }
+    res.status(404).end();
+  });
+});
+
+router.post('/signin', function (req, res, next) {
+  const form = validateSignInForm(req);
+  if (!allValid(form.errors)) {
+    res.status(422).send(form.errors);
+    return;
+  }
+  userService.findUserByEmail(form.email).then(user => {
+    recaptchaService.verifySignIn(user.password_attempts, form.recaptcha).then(() => {
+      userService.verifyPassword(user, form.password).then(newUser => {
+        if (form.remember) {
+          userService.issueLoginToken(newUser._id).then(token => {
+            req.session.userID = newUser._id;
+            res.cookie(config.loginTokenName, token._id, {
+              expires: token.expires,
+              signed: true
+            });
+            res.status(204).end();
+          }).catch(err => next(err));
+          return;
+        }
+        req.session.userID = newUser._id;
+        res.status(204).end();
+      }).catch(err => {   // userService.verifyPassword rejected
+        if (err instanceof User) {
+          res.status(422).send({
+            errorCredentialInvalid: true,
+            recaptchaSiteKey: recaptchaService.getSignInSiteKey(err.password_attempts)
+          });
+          return;
+        }
+        next(err);
+      });
+    }).catch(err => {   // recaptchaService.verifySignIn rejected
+      if (err) {
+        next(err);
+        return;
+      }
+      res.status(422).send({
+        errorRecaptchaInvalid: true,
+        recaptchaSiteKey: recaptchaService.getSignInSiteKey(user.password_attempts)
+      });
+    });
+  }).catch(err => {   // userService.findUserByEmail rejected
+    if (err) {
+      next(err);
+      return;
+    }
+    res.status(422).send({ errorEmailNotExist: true });
+  });
 });
 
 router.get('/notes', function (req, res, next) {
   if (!req.user) {
-    return res.send({});
+    res.send({});
+    return;
   }
-  documentService.findByOwner(req.user.email, function (err, docs) {
-    if (err) {
-      return next(err);
-    }
-    res.send({
-      name: req.user.name,
-      email: req.user.email,
-      documents: docs.map(doc => ({ id: doc._id, title: doc.title }))
-    });
-  });
+  documentService.findByOwner(req.user._id).then(docs => res.send({
+    name: req.user.name,
+    email: req.user.email,
+    documents: docs.map(doc => ({ id: doc._id, title: doc.title }))
+  })).catch(err => next(err));
 });
 
 router.post('/notes', function (req, res, next) {
-  // TODO: check if we need to support anonymous creating
-  if (!req.user) {
-    return res.status(403).end();
+  if (!config.anonymousCreating && !req.user) {
+    res.status(403).end();
+    return;
   }
   const id = hashids.encodeHex((new mongoose.Types.ObjectId()).toString());
+  const userID = req.user ? req.user._id : null;
   createDocument(id, function (err, doc) {
-    documentService.create(id, req.user.email, doc.t, function (err) {
-      if (err) {
-        return next(err);
-      }
-      res.send({ id, title: doc.t });
-    });
+    documentService.create(id, userID, doc.t)
+      .then(() => res.send({ id, title: doc.t }))
+      .catch(e => next(e));
   });
 });
 
 router.get('/notes/:docID', function (req, res, next) {
-  documentService.findByID(req.params.docID, function (err, doc) {
-    if (err) {
-      return next(err);
-    }
-
-    if (!doc) {
-      return res.status(404).end();
-    }
-
+  documentService.find(req.params.docID).then(doc => {
     // Populate basic document information
     const docInfo = {
       collection: doc.owner_collection || config.documentCollection,
       document: doc._id,
-      owner: { email: doc.owner },
-      collaborators: []
+      owner: {},
+      collaborators: [],
+      editorInviting: !!doc.editor_inviting
     };
     if (doc.public_access === 'edit') {
       docInfo.anonymousEditing = 'edit';
@@ -150,133 +272,155 @@ router.get('/notes/:docID', function (req, res, next) {
     } else {
       docInfo.anonymousEditing = 'deny';
     }
-    const emails = [doc.owner];
-    Array.prototype.push.apply(emails, doc.viewable);
-    Array.prototype.push.apply(emails, doc.editable);
-    docInfo.editorInviting = !!doc.editor_inviting;
+
+    // Gather user IDs with access permission
+    const ids = [];
+    if (doc.owner) {
+      ids.push(doc.owner);
+    }
+    Array.prototype.push.apply(ids, doc.viewable);
+    Array.prototype.push.apply(ids, doc.editable);
 
     // Check whether user can access this document
-    if (docInfo.anonymousEditing === 'deny' && (!req.user || !emails.includes(req.user.email))) {
-      return res.status(404).end();
+    if (docInfo.anonymousEditing === 'deny' && (!req.user || !ids.find(id => id.equals(req.user._id)))) {
+      res.status(404).end();
+      return;
     }
 
-    userService.findUsersIn(emails, function (err, users) {
-      if (err) {
-        return next(err);
-      }
-
+    userService.findUsers(ids).then(users => {
       // Populate collaborators
-      const userMap = users.reduce((map, item) => {
-        map[item.email] = item;
-        return map;
-      }, {});
+      const userMap = users.reduce((map, user) => { map[user._id] = user; return map; }, {});
       if (typeof userMap[doc.owner] !== 'undefined') {
-        docInfo.owner = { email: doc.owner, name: userMap[doc.owner].name };
+        docInfo.owner = { email: userMap[doc.owner].email, name: userMap[doc.owner].name };
       }
-      const collaborators = {};
-      doc.viewable.forEach(item => {
-        if (typeof userMap[item] !== 'undefined') {
-          collaborators[item] = { email: item, name: userMap[item].name, permission: 'view' };
+      doc.viewable.forEach(id => {
+        if (typeof userMap[id] !== 'undefined') {
+          docInfo.collaborators.push({ email: userMap[id].email, name: userMap[id].name, permission: 'view' });
         }
       });
-      doc.editable.forEach(item => {
-        if (typeof userMap[item] !== 'undefined') {
-          collaborators[item] = { email: item, name: userMap[item].name, permission: 'edit' };
+      doc.editable.forEach(id => {
+        if (typeof userMap[id] !== 'undefined') {
+          docInfo.collaborators.push({ email: userMap[id].email, name: userMap[id].name, permission: 'edit' });
         }
       });
-      Object.keys(collaborators).forEach(email => docInfo.collaborators.push(collaborators[email]));
       docInfo.collaborators.sort((a, b) => a.email.toLowerCase().localeCompare(b.email.toLowerCase()));
 
+      // Send result
       res.send(docInfo);
-    });
+    }).catch(err => next(err));
+  }).catch(err => {
+    if (err) {
+      next(err);
+      return;
+    }
+    res.status(404).end();
   });
 });
 
 router.put('/notes/:docID', function (req, res, next) {
   if (!req.user) {
-    return res.status(404).end();
+    res.status(404).end();
+    return;
   }
-  documentService.findByID(req.params.docID, function (err, doc) {
-    if (err) {
-      return next(err);
-    }
-
-    if (!doc) {
-      return res.status(404).end();
+  documentService.find(req.params.docID).then(doc => {
+    if (!doc.owner) {
+      res.status(403).end();
+      return;
     }
 
     // Check whether user is allowed to modify document sharing settings
-    if (doc.owner !== req.user.email && (!doc.editor_inviting || !doc.editable.includes(req.user.email))) {
-      return res.status(404).end();
+    if (!doc.owner.equals(req.user._id) &&
+        (!doc.editor_inviting || !doc.editable.find(id => id.equals(req.user._id)))) {
+      res.status(404).end();
+      return;
     }
 
     // Populate collaborators
-    const editable = [];
-    const viewable = [];
+    const collaborators = {};
     req.body.collaborators.forEach(item => {
-      if (item.permission === 'edit') {
-        editable.push(item.email);
-      } else {
-        viewable.push(item.email);
-      }
+      collaborators[item.email] = item.permission;
     });
-    doc.viewable = viewable;
-    doc.editable = editable;
-
-    // Only owner can modify certain settings
-    if (doc.owner === req.user.email) {
-      doc.public_access = req.body.anonymousEditing;
-      doc.editor_inviting = !!req.body.editorInviting;
-    }
-
-    doc.save(function (err) {
-      if (err) {
-        return next(err);
-      }
-      const collection = doc.owner_collection || config.documentCollection;
-      broadcastPermissionChange(collection, doc._id, function (err) {
-        if (err) {
-          return next(err);
+    userService.findUsersByEmails(Object.keys(collaborators)).then(users => {
+      const editable = [];
+      const viewable = [];
+      users.forEach(user => {
+        if (collaborators[user.email] === 'edit') {
+          editable.push(user._id);
+        } else {
+          viewable.push(user._id);
         }
-        res.status(204).end();
       });
-    });
+      doc.viewable = viewable;
+      doc.editable = editable;
+
+      // Only owner can modify certain settings
+      if (doc.owner === req.user.email) {
+        doc.public_access = req.body.anonymousEditing;
+        doc.editor_inviting = !!req.body.editorInviting;
+      }
+
+      doc.save().then(() => {
+        const collection = doc.owner_collection || config.documentCollection;
+        broadcastPermissionChange(collection, doc._id, function (err) {
+          if (err) {
+            next(err);
+            return;
+          }
+          res.status(204).end();
+        });
+      }).catch(err => {
+        logger.error('Database error while saving document permission');
+        next(err);
+      });
+    }).catch(err => next(err));
+  }).catch(err => {
+    if (err) {
+      next(err);
+      return;
+    }
+    res.status(404).end();
   });
 });
 
 router.delete('/notes/:docID', function (req, res, next) {
   if (!req.user) {
-    return res.status(404).end();
+    res.status(404).end();
+    return;
   }
-  documentService.findByID(req.params.docID, function (err, doc) {
-    if (err) {
-      return next(err);
-    }
-
-    if (!doc) {
-      return res.status(404).end();
+  documentService.find(req.params.docID).then(doc => {
+    if (!doc.owner) {
+      res.status(404).end();
+      return;
     }
 
     // Check whether user is allowed to modify document sharing settings
-    if (doc.owner !== req.user.email) {
-      return res.status(404).end();
+    if (!doc.owner.equals(req.user._id)) {
+      res.status(404).end();
+      return;
     }
 
     // Mark document deleted
     doc.deleted_at = new Date();
 
-    doc.save(function (err) {
-      if (err) {
-        return next(err);
-      }
+    doc.save(() => {
       const collection = doc.owner_collection || config.documentCollection;
       broadcastPermissionChange(collection, doc._id, function (err) {
         if (err) {
-          return next(err);
+          next(err);
+          return;
         }
         res.status(204).end();
       });
+    }).catch(err => {
+      logger.error('Database error while saving document permission');
+      next(err);
     });
+  }).catch(err => {
+    if (err) {
+      next(err);
+      return;
+    }
+    res.status(404).end();
   });
 });
 

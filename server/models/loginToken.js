@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const LoginTokenSchema = new Schema({
-  _id: { type: String, index: true },
+  _id: { type: String, index: true, unique: true },
   user_id: { type: Schema.Types.ObjectId },
   used: { type: Boolean, default: false },
   expires: { type: Date },

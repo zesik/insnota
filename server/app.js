@@ -71,12 +71,20 @@ function initializeExpress() {
               expires: token.expires,
               signed: true
             });
-            return next();
+            next();
           }).catch(err => next(err));
         }).catch(err => next(err));
-      }).catch(err => next(err));
+      }).catch(err => {   // userService.verifyLoginToken rejected
+        if (typeof err === 'string') {
+          res.clearCookie(config.loginTokenName, {});
+          next();
+          return;
+        }
+        next(err);
+      });
+      return;
     }
-    return next();
+    next();
   });
 
   // Set up routers

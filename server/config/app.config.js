@@ -37,5 +37,5 @@ module.exports = {
   // TODO: Whether anonymous users (not signed in) can edit documents.
   anonymousEditing: true,
   // Configure name of document collection.
-  documentCollection: 'collection'
+  documentCollection: 'notes'
 };

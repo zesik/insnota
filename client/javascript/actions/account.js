@@ -180,7 +180,7 @@ export function submitSignUpForm(name, email, password, passwordConfirmation, re
       dispatch(finishSubmittingAccount(errors));
       return;
     }
-    fetch('/signup', {
+    fetch('/api/signup', {
       method: 'POST',
       headers: {
         Accept: 'application/json',
@@ -252,7 +252,7 @@ export function submitSignInForm(email, password, remember, recaptcha) {
       dispatch(finishSubmittingAccount(errors));
       return;
     }
-    fetch('/signin', {
+    fetch('/api/signin', {
       method: 'POST',
       headers: {
         Accept: 'application/json',

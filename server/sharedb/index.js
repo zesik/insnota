@@ -1,5 +1,6 @@
 const async = require('async');
 const config = require('../config');
+const logger = require('../logger');
 const sharedb = require('sharedb');
 const sharedbDatabase = require('sharedb-mongo')(config.mongo);
 const SocketStream = require('./socket-stream');
@@ -107,19 +108,21 @@ function handleShareDBConnect(req, next) {
 }
 
 function ensureReadPermission(documentID, user, next) {
-  Document.findOneByID(documentID, function (err, doc) {
+  Document.findOne(documentID, function (err, doc) {
     if (err) {
       return next(err);
     }
     if (!doc) {
       return next(ERROR_NOT_FOUND);
     }
-    if (doc.public_access !== 'view' && doc.public_access !== 'edit') {
+    if (doc.owner && doc.public_access !== 'view' && doc.public_access !== 'edit') {
       if (!user) {
         // Permission denied due to anonymous user trying to access private document
         return next(ERROR_ACCESS_DENIED);
       }
-      if (doc.owner !== user.email && !doc.viewable.includes(user.email) && !doc.editable.includes(user.email)) {
+      if (!doc.owner.equals(user._id) &&
+          !doc.viewable.find(id => id.equals(user._id)) &&
+          !doc.editable.find(id => id.equals(user._id))) {
         // Permission denied due to non-collaborator trying to access the document
         return next(ERROR_ACCESS_DENIED);
       }
@@ -129,19 +132,19 @@ function ensureReadPermission(documentID, user, next) {
 }
 
 function ensureWritePermission(documentID, user, next) {
-  Document.findOneByID(documentID, function (err, doc) {
+  Document.findOne(documentID, function (err, doc) {
     if (err) {
       return next(err);
     }
     if (!doc) {
       return next(ERROR_NOT_FOUND);
     }
-    if (doc.public_access !== 'edit') {
+    if (doc.owner && doc.public_access !== 'edit') {
       if (!user) {
         // Permission denied due to anonymous user trying to edit private document
         return next(ERROR_ACCESS_DENIED);
       }
-      if (doc.owner !== user.email && doc.editable.indexOf(user.email) === -1) {
+      if (!doc.owner.equals(user._id) && !doc.editable.find(id => id.equals(user._id))) {
         // Permission denied due to collaborator without editing permission trying to edit the document
         return next(ERROR_ACCESS_DENIED);
       }
@@ -200,15 +203,15 @@ function handleSocketConnection(ws, req) {
 }
 
 function tidyLooseConnections(callback) {
-  console.log('Tidying loose connections...');
+  logger.info('Tidying loose connections...');
   handleClientUnsubscribing(null, null, null, function (err) {
-    console.log('Finished');
+    logger.info('Finished tidying connections');
     callback(err);
   });
 }
 
 function createDocument(id, callback) {
-  const sharedbDoc = serverConnection.get('collection', id);
+  const sharedbDoc = serverConnection.get(config.documentCollection, id);
   sharedbDoc.fetch(function (err) {
     if (err) {
       return callback(err);

@@ -493,7 +493,9 @@ class SyncedEditor extends React.Component {
           break;
         case 'a': // Collaborators
           if (operation.p[1] === this.shareDBConnection.id) {
-            this.submitCursorActivity(getCursors(this.codeMirror));
+            if (operation.length === 2) {
+              this.submitCursorActivity(getCursors(this.codeMirror));
+            }
           } else {
             this.setDocumentCollaborators();
           }

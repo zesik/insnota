@@ -5,9 +5,9 @@ const DocumentSchema = new Schema({
   _id: { type: String, index: true },
   owner_collection: { type: String },
   title: String,
-  owner: { type: String, required: true, index: true },
-  viewable: { type: [String], index: true },
-  editable: { type: [String], index: true },
+  owner: { type: Schema.Types.ObjectId, index: true },
+  viewable: { type: [Schema.Types.ObjectId], index: true },
+  editable: { type: [Schema.Types.ObjectId], index: true },
   public_access: { type: String },
   editor_inviting: { type: Boolean },
   created_at: { type: Date, default: Date.now },
@@ -15,12 +15,8 @@ const DocumentSchema = new Schema({
   deleted_at: { type: Date, default: null }
 });
 
-DocumentSchema.static('findOneByID', function (id, callback) {
-  return this.findOne({ _id: id }, callback);
-});
-
-DocumentSchema.static('findByOwner', function (email, callback) {
-  return this.find({ owner: email }, callback);
+DocumentSchema.static('findByOwner', function (id, callback) {
+  return this.find({ owner: id }, callback);
 });
 
 const Document = mongoose.model('Document', DocumentSchema);

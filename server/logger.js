@@ -6,7 +6,7 @@ const logger = new (winston.Logger)({
   transports: [
     new (winston.transports.Console)({
       timestamp: () => moment().format(),
-      formatter: options => `${options.timestamp()} [${options.level.toUpperCase()}] ${options.message}`
+      formatter: options => `${options.timestamp()} [${options.level.toUpperCase()}] ${options.message || ''}`
     })
   ]
 });
