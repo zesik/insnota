@@ -9,32 +9,17 @@ function SocketStream(socket, req) {
   this.remoteAddress = socket.upgradeReq.connection.remoteAddress;
   this.user = req.user;
 
-  this.on('error', function (error) {
-    console.warn('ShareDB client message stream error', error);
-    socket.close('stopped');
-  });
-
-  // Readable stream is ended.
-  this.on('end', function () {
-    socket.close();
-  });
-
-  // The server ended the writable stream. Triggered by calling stream.end()
-  // in agent.close()
-  this.on('finish', function () {
-    socket.close('stopped');
-  });
+  this.on('error', () => socket.close());
+  this.on('end', () => socket.close());
 
   const self = this;
-  socket.on('message', function (data) {
-    self.push(data);
-  });
-
+  socket.on('message', data => self.push(data));
   socket.on('close', function () {
     self.push(null);
+    self.end();
+
     self.emit('close');
     self.emit('end');
-    self.end();
   });
 }
 inherits(SocketStream, Duplex);
@@ -45,12 +30,10 @@ SocketStream.prototype._read = function () {};
 
 SocketStream.prototype._write = function (chunk, encoding, callback) {
   const socket = this.socket;
-  process.nextTick(function () {
-    if (socket.readyState === 1) {
-      socket.send(JSON.stringify(chunk));
-    }
-    callback();
-  });
+  if (socket.readyState === 1) {
+    this.socket.send(JSON.stringify(chunk));
+  }
+  callback();
 };
 
 module.exports = SocketStream;
