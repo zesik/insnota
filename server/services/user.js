@@ -1,5 +1,6 @@
 const crypto = require('crypto');
 const mongoose = require('mongoose');
+const config = require('../config');
 const logger = require('../logger');
 const User = require('../models/user');
 const LoginToken = require('../models/loginToken');
@@ -280,6 +281,43 @@ function updatePassword(id, password) {
   });
 }
 
+function deserializeUser(req, res, next) {
+  // First try to check from session
+  if (req.session.userID) {
+    findUser(req.session.userID).then(user => {
+      req.user = user;
+      next();
+    }).catch(err => next(err));
+    return;
+  }
+  // Check whether the user has login token
+  if (!req.upgrade && req.signedCookies[config.loginTokenName]) {
+    verifyLoginToken(req.signedCookies[config.loginTokenName]).then(userID => {
+      res.clearCookie(config.loginTokenName, {});
+      findUser(userID).then(user => {
+        issueLoginToken(user._id).then(token => {
+          req.session.userID = user._id;
+          req.user = user;
+          res.cookie(config.loginTokenName, token._id, {
+            expires: token.expires,
+            signed: true
+          });
+          next();
+        }).catch(err => next(err));
+      }).catch(err => next(err));
+    }).catch(err => {   // userService.verifyLoginToken rejected
+      if (typeof err === 'string') {
+        res.clearCookie(config.loginTokenName, {});
+        next();
+        return;
+      }
+      next(err);
+    });
+    return;
+  }
+  next();
+}
+
 module.exports = {
   createUser,
   verifyPassword,
@@ -290,5 +328,6 @@ module.exports = {
   issueLoginToken,
   verifyLoginToken,
   updateName,
-  updatePassword
+  updatePassword,
+  deserializeUser
 };

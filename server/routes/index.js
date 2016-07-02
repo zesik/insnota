@@ -1,5 +1,5 @@
 const express = require('express');
-const handleShareDBConnection = require('../sharedb').handleSocketConnection;
+const sharedbService = require('../services/sharedb');
 
 // eslint-disable-next-line new-cap
 const router = express.Router();
@@ -15,7 +15,7 @@ router.get('/', function (req, res) {
 router.get('/signin', (req, res) => res.render('account'));
 router.get('/signup', (req, res) => res.render('account'));
 
-router.ws('/notes', handleShareDBConnection);
+router.ws('/notes', sharedbService.handleSocketConnection);
 router.get('/notes', (req, res) => res.render('notes'));
 router.get('/notes/*', (req, res) => res.render('notes'));
 

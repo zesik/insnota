@@ -1,4 +1,5 @@
 const config = require('../config');
+const logger = require('../logger');
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
@@ -21,15 +22,16 @@ ClientConnectionSchema.static('purgeSubscriptions', function (clientID, collecti
   } else {
     promise = this.collection.remove(query);
   }
-  promise.then(function (result) {
+  promise.then(result => {
     if (callback) {
       if (result.result.ok) {
-        callback();
+        callback(null, true);
       } else {
-        callback(result);
+        logger.warn(`Unexpected result when purging subscription: ${result}`);
+        callback(null, result);
       }
     }
-  });
+  }).catch(err => callback(err));
 });
 
 const ClientConnection = mongoose.model('ClientConnection', ClientConnectionSchema, `connections_${config.serverID}`);

@@ -1,18 +1,14 @@
 const express = require('express');
-const mongoose = require('mongoose');
-const Hashids = require('hashids');
 const config = require('../config');
 const logger = require('../logger');
 const recaptchaService = require('../services/recaptcha');
 const User = require('../models/user');
 const userService = require('../services/user');
 const documentService = require('../services/document');
-const createDocument = require('../sharedb').createDocument;
-const broadcastPermissionChange = require('../sharedb').broadcastPermissionChange;
+const sharedbService = require('../services/sharedb');
 
 // eslint-disable-next-line new-cap
 const router = express.Router();
-const hashids = new Hashids(config.hashidSalt);
 
 function validateSignUpForm(req) {
   const name = req.body.name;
@@ -246,14 +242,12 @@ router.post('/notes', function (req, res, next) {
     res.status(403).end();
     return;
   }
-  const collection = config.documentCollection;
-  const documentID = hashids.encodeHex((new mongoose.Types.ObjectId()).toString());
   const userID = req.user ? req.user._id : null;
-  createDocument(collection, documentID, function (err, doc) {
-    documentService.create(documentID, collection, userID, doc.t)
-      .then(() => res.send({ id: documentID, title: doc.t }))
+  sharedbService.createDocument(config.documentCollection).then(doc => {
+    documentService.create(doc.id, doc.collection, userID, doc.title)
+      .then(() => res.send({ id: doc.id, title: doc.t }))
       .catch(e => next(e));
-  });
+  }).catch(err => next(err));
 });
 
 router.get('/notes/:docID', function (req, res, next) {
@@ -361,14 +355,10 @@ router.put('/notes/:docID', function (req, res, next) {
       }
 
       doc.save().then(() => {
-        const collection = doc.owner_collection || config.documentCollection;
-        broadcastPermissionChange(collection, doc._id, function (err) {
-          if (err) {
-            next(err);
-            return;
-          }
-          res.status(204).end();
-        });
+        const collection = doc.owner_collection;
+        sharedbService.broadcastPermissionChange(collection, doc._id)
+          .then(() => res.status(204).end())
+          .catch(err => next(err));
       }).catch(err => {
         logger.error('Database error while saving document permission');
         next(err);
@@ -404,14 +394,10 @@ router.delete('/notes/:docID', function (req, res, next) {
     doc.deleted_at = new Date();
 
     doc.save(() => {
-      const collection = doc.owner_collection || config.documentCollection;
-      broadcastPermissionChange(collection, doc._id, function (err) {
-        if (err) {
-          next(err);
-          return;
-        }
-        res.status(204).end();
-      });
+      const collection = doc.owner_collection;
+      sharedbService.broadcastPermissionChange(collection, doc._id)
+        .then(() => res.status(204).end())
+        .catch(err => next(err));
     }).catch(err => {
       logger.error('Database error while saving document permission');
       next(err);
