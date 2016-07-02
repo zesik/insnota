@@ -109,9 +109,9 @@ function handleClientUnsubscribing(clientID, collection, document) {
               }
               connectionCallback();
             });
-          } else {
-            connectionCallback();
+            return;
           }
+          connectionCallback();
         }, err => callback(err));
       }, err => {
         if (err) {
