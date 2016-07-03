@@ -765,6 +765,7 @@ class SyncedEditor extends React.Component {
         // Document is now populated
         this.setState({ docStatus: DOC_SYNCED });
         this.codeMirror.focus();
+        this.handleContentCursorActivity(this.codeMirror);
         this.setDocumentCollaborators();
 
         // Bind document updating event
