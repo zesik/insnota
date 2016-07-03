@@ -233,6 +233,7 @@ PermissionModal.propTypes = {
   editorInviting: React.PropTypes.bool.isRequired,
   anonymousEditing: React.PropTypes.string.isRequired,
   editingNewCollaborator: React.PropTypes.string.isRequired,
+  errorAdding: React.PropTypes.string,
   newCollaboratorEmail: React.PropTypes.string.isRequired,
   onEditCollaboratorPermission: React.PropTypes.func.isRequired,
   onAddCollaboratorPlaceholder: React.PropTypes.func.isRequired,

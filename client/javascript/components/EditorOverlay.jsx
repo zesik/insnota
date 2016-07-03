@@ -24,7 +24,11 @@ function EditorOverlay(props) {
       overlay = (
         <div className="overlay">
           <div className="content">
-            Server Error
+            <h2>Server Error</h2>
+            <p>
+              We cannot show the page because the server may be experiencing some trouble.
+              Please refresh the page in a few minutes.
+            </p>
           </div>
         </div>
       );
@@ -33,7 +37,8 @@ function EditorOverlay(props) {
       overlay = (
         <div className="overlay">
           <div className="content">
-            Access denied
+            <h2>Access Denied</h2>
+            <p>You do not have permission to access this note.</p>
           </div>
         </div>
       );

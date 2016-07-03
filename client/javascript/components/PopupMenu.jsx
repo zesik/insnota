@@ -7,7 +7,7 @@ function PopupMenu(props) {
 }
 
 PopupMenu.propTypes = {
-  children: React.PropTypes.element.isRequired
+  children: React.PropTypes.arrayOf(React.PropTypes.element).isRequired
 };
 
 export default PopupMenu;
