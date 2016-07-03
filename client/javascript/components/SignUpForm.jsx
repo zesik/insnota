@@ -171,8 +171,8 @@ class SignUpForm extends React.Component {
               </div>
             </div>
           }
-          {this.props.errorServer && serverErrorElement}
           {this.props.errorNotAllowed && notAllowedElement}
+          {this.props.serverError && serverErrorElement}
           <div className="form-submit">
             <button className="btn btn-default" type="submit" disabled={this.props.loading}>Sign up</button>
           </div>
@@ -182,7 +182,7 @@ class SignUpForm extends React.Component {
       form = (
         <div className="form-info-container">
           {this.props.loading && <div>Loading...</div>}
-          {this.props.errorServer && serverErrorElement}
+          {this.props.serverError && serverErrorElement}
         </div>
       );
     }
@@ -198,7 +198,6 @@ SignUpForm.propTypes = {
   password: React.PropTypes.string.isRequired,
   passwordConfirmation: React.PropTypes.string.isRequired,
   recaptchaSiteKey: React.PropTypes.string,
-  errorServer: React.PropTypes.bool,
   errorNotAllowed: React.PropTypes.bool,
   errorNameEmpty: React.PropTypes.bool,
   errorEmailEmpty: React.PropTypes.bool,
@@ -208,6 +207,7 @@ SignUpForm.propTypes = {
   errorPasswordShort: React.PropTypes.bool,
   errorPasswordConfirmationMismatch: React.PropTypes.bool,
   errorRecaptchaInvalid: React.PropTypes.bool,
+  serverError: React.PropTypes.bool,
   onEditName: React.PropTypes.func.isRequired,
   onEditEmail: React.PropTypes.func.isRequired,
   onEditPassword: React.PropTypes.func.isRequired,

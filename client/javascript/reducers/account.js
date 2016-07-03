@@ -50,11 +50,13 @@ function accountReducer(state = initialState, action) {
     case FINISH_INITIALIZING_SIGN_UP_FORM:
       if (action.serverError) {
         return Object.assign({}, initialState, {
+          loading: false,
           serverError: true
         });
       }
       if (action.forbidden) {
         return Object.assign({}, initialState, {
+          loading: false,
           stage: FORM_STAGE_SIGN_UP_FORBIDDEN,
           errorNotAllowed: true
         });

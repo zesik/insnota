@@ -2,19 +2,19 @@ const request = require('request');
 const config = require('../config');
 const logger = require('../logger');
 
-const maxPasswordAttempts = (config.reCAPTCHA.signIn && typeof config.reCAPTCHA.signIn.accountAttempts === 'number') ?
-  config.reCAPTCHA.signIn.accountAttempts : -1;
+const maxPasswordAttempts = (config.reCAPTCHA.password && typeof config.reCAPTCHA.password.attempts === 'number') ?
+  config.reCAPTCHA.password.attempts : -1;
 
 function shouldCheckSignUp() {
   return !!config.reCAPTCHA.signUp;
 }
 
-function shouldCheckSignIn(attempts) {
+function shouldCheckPasswordAttempt(attempts) {
   return (maxPasswordAttempts >= 0 && attempts >= maxPasswordAttempts);
 }
 
-function getSignInSiteKey(attempts) {
-  return shouldCheckSignIn(attempts) ? config.reCAPTCHA.signIn.siteKey : null;
+function getPasswordAttemptSiteKey(attempts) {
+  return shouldCheckPasswordAttempt(attempts) ? config.reCAPTCHA.password.siteKey : null;
 }
 
 function getSignUpSiteKey() {
@@ -57,8 +57,8 @@ function verifyRecaptcha(secret, response) {
   });
 }
 
-function verifySignIn(passwordAttemptCount, response) {
-  if (shouldCheckSignIn(passwordAttemptCount) || response) {
+function verifyPasswordAttempt(passwordAttemptCount, response) {
+  if (shouldCheckPasswordAttempt(passwordAttemptCount) || response) {
     const secretKey = config.reCAPTCHA.signIn.secretKey;
     return verifyRecaptcha(secretKey, response);
   }
@@ -74,8 +74,8 @@ function verifySignUp(response) {
 }
 
 module.exports = {
-  getSignInSiteKey,
+  getPasswordAttemptSiteKey,
   getSignUpSiteKey,
-  verifySignIn,
+  verifyPasswordAttempt,
   verifySignUp
 };

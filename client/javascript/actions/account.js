@@ -234,7 +234,7 @@ export function submitSignInEmail(email) {
       } else {
         dispatch(finishSubmittingAccount({ errorEmailNotExist: true }));
       }
-    }, function (err) {
+    }).catch(function (err) {
       console.error(err);
       dispatch(finishSubmittingAccount({ serverError: true }));
     });

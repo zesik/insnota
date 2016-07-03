@@ -47,7 +47,7 @@ class SignInForm extends React.Component {
   render() {
     const serverErrorElement = (
       <div className="form-group">
-        <div className="form-control">
+        <div className="form-control error">
           <div className="form-control-supplement error">
             Unable to sign in due to an internal server error. Please try again in a few minutes.
           </div>
@@ -90,7 +90,7 @@ class SignInForm extends React.Component {
               }
             </div>
           </div>
-          {this.props.errorServer && serverErrorElement}
+          {this.props.serverError && serverErrorElement}
           <div className="form-submit">
             <button className="btn btn-default" type="submit" disabled={this.props.loading}>Next</button>
           </div>
@@ -150,7 +150,7 @@ class SignInForm extends React.Component {
               </div>
             </div>
           }
-          {this.props.errorServer && serverErrorElement}
+          {this.props.serverError && serverErrorElement}
           <div className="form-submit">
             <button className="btn btn-default" type="submit" disabled={this.props.loading}>Sign in</button>
           </div>
@@ -177,13 +177,13 @@ SignInForm.propTypes = {
   password: React.PropTypes.string.isRequired,
   rememberMe: React.PropTypes.bool.isRequired,
   recaptchaSiteKey: React.PropTypes.string,
-  errorServer: React.PropTypes.bool,
   errorEmailEmpty: React.PropTypes.bool,
   errorEmailInvalid: React.PropTypes.bool,
   errorEmailNotExist: React.PropTypes.bool,
   errorPasswordEmpty: React.PropTypes.bool,
   errorCredentialInvalid: React.PropTypes.bool,
   errorRecaptchaInvalid: React.PropTypes.bool,
+  serverError: React.PropTypes.bool,
   onEditEmail: React.PropTypes.func.isRequired,
   onEditPassword: React.PropTypes.func.isRequired,
   onEditRememberMe: React.PropTypes.func.isRequired,

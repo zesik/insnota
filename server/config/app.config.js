@@ -14,16 +14,14 @@ module.exports = {
       // reCAPTCHA secret key for sign-up.
       secretKey: '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe'
     },
-    // Controls how to enforce reCAPTCHA when sign in. Set to `false` to disable this feature at all.
-    signIn: {
+    // Controls how to enforce reCAPTCHA when verifying password. Set to `false` to disable this feature at all.
+    password: {
       // reCAPTCHA site key for sign-in.
       siteKey: '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI',
       // reCAPTCHA secret key for sign-in.
       secretKey: '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe',
       // Failed attempts for an account before reCAPTCHA is required. Set to `false` to disable this feature.
-      accountAttempts: 5,
-      // TODO: Failed attempts for an IP address before reCAPTCHA is required. Set to `false` to disable this feature.
-      ipAddress: false
+      attempts: 5
     }
   },
   // Whether new users can sign up.

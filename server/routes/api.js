@@ -164,7 +164,7 @@ router.get('/signin/:email', function (req, res, next) {
   userService.findUserByEmail(req.params.email).then(user => res.send({
     email: user.email,
     name: user.name,
-    recaptcha: recaptchaService.getSignInSiteKey(user.password_attempts)
+    recaptcha: recaptchaService.getPasswordAttemptSiteKey(user.password_attempts)
   })).catch(err => {
     if (err) {
       next(err);
@@ -181,7 +181,7 @@ router.post('/signin', function (req, res, next) {
     return;
   }
   userService.findUserByEmail(form.email).then(user => {
-    recaptchaService.verifySignIn(user.password_attempts, form.recaptcha).then(() => {
+    recaptchaService.verifyPasswordAttempt(user.password_attempts, form.recaptcha).then(() => {
       userService.verifyPassword(user, form.password).then(newUser => {
         if (form.remember) {
           userService.issueLoginToken(newUser._id).then(token => {
@@ -200,20 +200,20 @@ router.post('/signin', function (req, res, next) {
         if (err instanceof User) {
           res.status(422).send({
             errorCredentialInvalid: true,
-            recaptchaSiteKey: recaptchaService.getSignInSiteKey(err.password_attempts)
+            recaptchaSiteKey: recaptchaService.getPasswordAttemptSiteKey(err.password_attempts)
           });
           return;
         }
         next(err);
       });
-    }).catch(err => {   // recaptchaService.verifySignIn rejected
+    }).catch(err => {   // recaptchaService.verifyPasswordAttempt rejected
       if (err) {
         next(err);
         return;
       }
       res.status(422).send({
         errorRecaptchaInvalid: true,
-        recaptchaSiteKey: recaptchaService.getSignInSiteKey(user.password_attempts)
+        recaptchaSiteKey: recaptchaService.getPasswordAttemptSiteKey(user.password_attempts)
       });
     });
   }).catch(err => {   // userService.findUserByEmail rejected
