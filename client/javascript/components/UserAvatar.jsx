@@ -11,7 +11,7 @@ function UserAvatar(props) {
   const email = (props.email || '').trim().toLowerCase();
   const size = props.size || 48;
   const cornerRadius = props.cornerRadius;
-  const color = props.color;
+  const color = props.color || 'none';
   const style = {
     width: size,
     height: size,
@@ -22,7 +22,7 @@ function UserAvatar(props) {
     style.backgroundImage = `url(${getAvatarURL(email)})`;
   }
   return (
-    <div className={classNames({ 'user-avatar': true, [`color-${color}`]: true })}style={style} />
+    <div className={classNames({ 'user-avatar': true, [`color-${color}`]: true })} style={style} />
   );
 }
 

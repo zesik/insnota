@@ -4,7 +4,10 @@ import { Link } from 'react-router';
 import classNames from 'classnames';
 import Document from '../../components/Document';
 import UserAvatar from '../../components/UserAvatar';
-import { initializeManager, createDocument } from '../../actions/documentManager';
+import PopupBox from '../../components/PopupBox';
+import PopupMenu from '../../components/PopupMenu';
+import PopupMenuItem from '../../components/PopupMenuItem';
+import { initializeManager, createDocument, navigateToSettings, signOut } from '../../actions/documentManager';
 import { openDeleteModal } from '../../actions/deleteModal';
 
 function textifyNoteCounter(count) {
@@ -23,6 +26,8 @@ class DocumentManager extends React.Component {
     super(props);
     this.handleNewDocumentClicked = this.handleNewDocumentClicked.bind(this);
     this.handleDeleteDocumentClicked = this.handleDeleteDocumentClicked.bind(this);
+    this.handleNavigateToSettingsClicked = this.handleNavigateToSettingsClicked.bind(this);
+    this.handleSignOutClicked = this.handleSignOutClicked.bind(this);
   }
 
   componentDidMount() {
@@ -42,6 +47,14 @@ class DocumentManager extends React.Component {
     this.props.onDeleteDocumentClicked(documentID, title);
   }
 
+  handleNavigateToSettingsClicked() {
+    this.props.onNavigateToSettingsClicked();
+  }
+
+  handleSignOutClicked() {
+    this.props.onSignOutClicked();
+  }
+
   render() {
     const newDocClasses = classNames({
       btn: true,
@@ -58,11 +71,19 @@ class DocumentManager extends React.Component {
       <div className={containerClasses}>
         <div className="document-list-header">
           {this.props.user &&
-            <div>
+            <div className="document-list-header-content-container">
               <UserAvatar email={this.props.user.email} size={32} cornerRadius={32} />
               <div className="user-info">
                 <div className="user-name">{this.props.user.name}</div>
                 <div className="user-email">{this.props.user.email}</div>
+              </div>
+              <div className="account-menu">
+                <PopupBox left={true}>
+                  <PopupMenu>
+                    <PopupMenuItem text="Settings" onClick={this.handleNavigateToSettingsClicked} />
+                    <PopupMenuItem text="Sign out" onClick={this.handleSignOutClicked} />
+                  </PopupMenu>
+                </PopupBox>
               </div>
             </div>
           }
@@ -115,7 +136,9 @@ DocumentManager.propTypes = {
   collapsed: React.PropTypes.bool.isRequired,
   initializeManager: React.PropTypes.func.isRequired,
   onNewDocumentClicked: React.PropTypes.func.isRequired,
-  onDeleteDocumentClicked: React.PropTypes.func.isRequired
+  onDeleteDocumentClicked: React.PropTypes.func.isRequired,
+  onNavigateToSettingsClicked: React.PropTypes.func.isRequired,
+  onSignOutClicked: React.PropTypes.func.isRequired
 };
 
 function mapStateToProps(state, ownProps) {
@@ -140,6 +163,12 @@ function mapDispatchToProps(dispatch) {
     },
     onDeleteDocumentClicked: (id, title) => {
       dispatch(openDeleteModal(id, title));
+    },
+    onNavigateToSettingsClicked: () => {
+      dispatch(navigateToSettings());
+    },
+    onSignOutClicked: () => {
+      dispatch(signOut());
     }
   };
 }

@@ -97,3 +97,24 @@ export function changeDocumentTitle(documentID, title) {
     title
   };
 }
+
+export function navigateToSettings() {
+  return dispatch => {
+    dispatch(push('/settings/profile'));
+  }
+}
+
+export function signOut() {
+  return dispatch => {
+    dispatch(startCreatingDocument());
+    fetch('/api/signout', {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json'
+      },
+      credentials: 'same-origin'
+    })
+    .then(() => window.location = '/');
+  };
+}

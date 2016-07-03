@@ -225,6 +225,12 @@ router.post('/signin', function (req, res, next) {
   });
 });
 
+router.post('/signout', function (req, res) {
+  delete req.session.userID;
+  res.clearCookie(config.loginTokenName, {});
+  res.status(204).end();
+});
+
 router.get('/notes', function (req, res, next) {
   if (!req.user) {
     res.send({});

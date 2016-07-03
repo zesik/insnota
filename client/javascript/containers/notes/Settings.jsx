@@ -12,6 +12,9 @@ class Settings extends React.Component {
     return (
       <div className="app-container">
         <header className="app-title">
+          <nav className="container">
+            <Link to="/notes"><i className="fa fa-angle-double-left" /> My Notes</Link>
+          </nav>
           <h1 className="container">Settings</h1>
         </header>
         <nav className="app-navigation">
