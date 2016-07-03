@@ -14,7 +14,7 @@ class PopupMenuItem extends React.Component {
   render() {
     if (this.props.divider) {
       return (
-        <li className="popup-menu-item popup-menu-item-divider"/>
+        <li className="popup-menu-item popup-menu-item-divider" />
       );
     } else if (this.props.disabled) {
       return (

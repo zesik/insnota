@@ -26,14 +26,19 @@ class PopupBox extends React.Component {
           <i className="fa fa-ellipsis-v" />
         </button>
         {this.state.visible && <div className="popup-backdrop" onClick={this.toggleVisibility} />}
-        {this.state.visible && <PopupBoxContent>{this.props.children}</PopupBoxContent>}
+        {this.state.visible &&
+          <PopupBoxContent onClose={this.toggleVisibility}>
+            {this.props.children}
+          </PopupBoxContent>
+        }
       </div>
     );
   }
 }
 
 PopupBox.propTypes = {
-  left: React.PropTypes.bool
+  left: React.PropTypes.bool,
+  children: React.PropTypes.element.isRequired
 };
 
 export default PopupBox;

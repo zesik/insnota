@@ -59,7 +59,7 @@ function initializeExpress() {
   // Development error handler: will print stacktrace
   if (app.get('env') === 'development') {
     app.use(function (err, req, res, next) {
-      logger.error(err);
+      logger.error(`${err.message}\n${err.stack}`);
       res.status(err.status || 500);
       res.render('error', {
         title: err.message,
@@ -71,7 +71,7 @@ function initializeExpress() {
 
   // Production error handler: no stacktraces leaked to user
   app.use(function (err, req, res, next) {
-    logger.error(err);
+    logger.error(`${err.message}\n${err.stack}`);
     res.status(err.status || 500);
     res.render('error', {
       title: err.message,

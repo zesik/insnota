@@ -59,7 +59,7 @@ function verifyRecaptcha(secret, response) {
 
 function verifyPasswordAttempt(passwordAttemptCount, response) {
   if (shouldCheckPasswordAttempt(passwordAttemptCount) || response) {
-    const secretKey = config.reCAPTCHA.signIn.secretKey;
+    const secretKey = config.reCAPTCHA.password.secretKey;
     return verifyRecaptcha(secretKey, response);
   }
   return new Promise(resolve => resolve());

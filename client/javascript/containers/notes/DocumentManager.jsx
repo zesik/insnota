@@ -78,7 +78,7 @@ class DocumentManager extends React.Component {
                 <div className="user-email">{this.props.user.email}</div>
               </div>
               <div className="account-menu">
-                <PopupBox left={true}>
+                <PopupBox left>
                   <PopupMenu>
                     <PopupMenuItem text="Settings" onClick={this.handleNavigateToSettingsClicked} />
                     <PopupMenuItem text="Sign out" onClick={this.handleSignOutClicked} />

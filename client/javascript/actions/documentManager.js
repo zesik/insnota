@@ -101,7 +101,7 @@ export function changeDocumentTitle(documentID, title) {
 export function navigateToSettings() {
   return dispatch => {
     dispatch(push('/settings/profile'));
-  }
+  };
 }
 
 export function signOut() {
@@ -115,6 +115,8 @@ export function signOut() {
       },
       credentials: 'same-origin'
     })
-    .then(() => window.location = '/');
+    .then(function () {
+      window.location = '/';
+    });
   };
 }

@@ -9,7 +9,7 @@ export const EDIT_FORM_EMAIL = 'EDIT_FORM_EMAIL';
 export const EDIT_FORM_PASSWORD = 'EDIT_FORM_PASSWORD';
 export const EDIT_FORM_PASSWORD_CONFIRMATION = 'EDIT_FORM_PASSWORD_CONFIRMATION';
 export const EDIT_FORM_REMEMBER_ME = 'EDIT_FORM_REMEMBER_ME';
-export const RESET_RECAPTCHA = 'RESET_RECAPTCHA';
+export const RESET_FORM_RECAPTCHA = 'RESET_FORM_RECAPTCHA';
 export const START_SUBMITTING_ACCOUNT_FORM = 'START_SUBMITTING_ACCOUNT_FORM';
 export const FINISH_SUBMITTING_ACCOUNT_FORM = 'FINISH_SUBMITTING_ACCOUNT_FORM';
 
@@ -65,7 +65,7 @@ function getSignUpResponse() {
 
 function resetRecaptcha() {
   return {
-    type: RESET_RECAPTCHA
+    type: RESET_FORM_RECAPTCHA
   };
 }
 
@@ -201,13 +201,13 @@ export function submitSignUpForm(name, email, password, passwordConfirmation, re
       window.location = '/notes';
     })
     .catch(function (err) {
+      dispatch(resetRecaptcha());
       if (err.response.status >= 500) {
         console.error(err);
         dispatch(finishSubmittingAccount({ serverError: true }));
         return;
       }
       err.response.json().then(function (json) {
-        dispatch(resetRecaptcha());
         dispatch(finishSubmittingAccount(json));
       });
     });
@@ -273,13 +273,13 @@ export function submitSignInForm(email, password, remember, recaptcha) {
       window.location = '/notes';
     })
     .catch(function (err) {
+      dispatch(resetRecaptcha());
       if (err.response.status >= 500) {
         console.error(err);
         dispatch(finishSubmittingAccount({ serverError: true }));
         return;
       }
       err.response.json().then(function (json) {
-        dispatch(resetRecaptcha());
         dispatch(finishSubmittingAccount(json));
       });
     });

@@ -1,6 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import classNames from 'classnames';
+import Recaptcha from '../../components/Recaptcha';
 import { editOldPassword, editNewPassword, editPasswordConfirmation, updatePassword } from '../../actions/settings';
 
 class Security extends React.Component {
@@ -27,13 +28,18 @@ class Security extends React.Component {
   handleUpdatePassword(e) {
     const { onUpdatePassword, oldPassword, newPassword, passwordConfirmation } = this.props;
     e.preventDefault();
-    onUpdatePassword(oldPassword, newPassword, passwordConfirmation);
+    let recaptcha = null;
+    const elements = document.getElementsByName('g-recaptcha-response');
+    if (elements.length) {
+      recaptcha = elements[0].value;
+    }
+    onUpdatePassword(oldPassword, newPassword, passwordConfirmation, recaptcha);
   }
 
   render() {
     const oldPasswordClasses = classNames({
       'form-control': true,
-      error: this.props.errorOldPasswordIncorrect
+      error: this.props.errorCredentialInvalid
     });
     const newPasswordClasses = classNames({
       'form-control': true,
@@ -42,6 +48,10 @@ class Security extends React.Component {
     const passwordConfirmationClasses = classNames({
       'form-control': true,
       error: this.props.errorPasswordConfirmationMismatch
+    });
+    const recaptchaClasses = classNames({
+      'form-control': true,
+      error: this.props.errorRecaptchaInvalid
     });
     return (
       <div>
@@ -58,7 +68,7 @@ class Security extends React.Component {
                   value={this.props.oldPassword}
                   onChange={this.handleSetOldPassword}
                 />
-                {this.props.errorOldPasswordIncorrect &&
+                {this.props.errorCredentialInvalid &&
                   <div className="form-control-supplement error">
                     The password is incorrect.
                   </div>
@@ -75,6 +85,11 @@ class Security extends React.Component {
                   value={this.props.newPassword}
                   onChange={this.handleSetNewPassword}
                 />
+                {this.props.errorNewPasswordEmpty &&
+                  <div className="form-control-supplement error">
+                    Please type new password.
+                  </div>
+                }
                 {this.props.errorNewPasswordShort &&
                   <div className="form-control-supplement error">
                     This password is too short.
@@ -99,6 +114,19 @@ class Security extends React.Component {
                 }
               </div>
             </div>
+            {this.props.recaptchaSiteKey &&
+              <div className="form-group">
+                <label className="control-label" />
+                <div className={recaptchaClasses}>
+                  <Recaptcha siteKey={this.props.recaptchaSiteKey} />
+                  {this.props.errorRecaptchaInvalid &&
+                    <div className="form-control-supplement error">
+                      Please verify that you are not a robot.
+                    </div>
+                  }
+                </div>
+              </div>
+            }
             {this.props.serverErrorPassword &&
               <div className="form-group">
                 <label className="control-label" />
@@ -134,10 +162,12 @@ Security.propTypes = {
   oldPassword: React.PropTypes.string,
   newPassword: React.PropTypes.string,
   passwordConfirmation: React.PropTypes.string,
-  errorOldPasswordIncorrect: React.PropTypes.bool,
+  recaptchaSiteKey: React.PropTypes.string,
   errorNewPasswordEmpty: React.PropTypes.bool,
   errorNewPasswordShort: React.PropTypes.bool,
   errorPasswordConfirmationMismatch: React.PropTypes.bool,
+  errorCredentialInvalid: React.PropTypes.bool,
+  errorRecaptchaInvalid: React.PropTypes.bool,
   successPassword: React.PropTypes.bool,
   serverErrorPassword: React.PropTypes.bool,
   onEditOldPassword: React.PropTypes.func.isRequired,
@@ -161,8 +191,8 @@ function mapDispatchToProps(dispatch) {
     onEditPasswordConfirmation: passwordConfirmation => {
       dispatch(editPasswordConfirmation(passwordConfirmation));
     },
-    onUpdatePassword: (oldPassword, newPassword, passwordConfirmation) => {
-      dispatch(updatePassword(oldPassword, newPassword, passwordConfirmation));
+    onUpdatePassword: (oldPassword, newPassword, passwordConfirmation, recaptcha) => {
+      dispatch(updatePassword(oldPassword, newPassword, passwordConfirmation, recaptcha));
     }
   };
 }

@@ -7,13 +7,15 @@ export const EDIT_SETTINGS_NEW_PASSWORD = 'EDIT_SETTINGS_NEW_PASSWORD';
 export const EDIT_SETTINGS_PASSWORD_CONFIRMATION = 'EDIT_SETTINGS_PASSWORD_CONFIRMATION';
 export const START_SUBMITTING_SETTINGS = 'START_SUBMITTING_SETTINGS';
 export const FINISH_SUBMITTING_SETTINGS = 'FINISH_SUBMITTING_SETTINGS';
+export const RESET_SETTINGS_RECAPTCHA = 'RESET_SETTINGS_RECAPTCHA';
 
-function initializeIdentity(name, email, status) {
+function initializeIdentity(name, email, status, recaptcha) {
   return {
     type: INITIALIZE_SETTINGS_PAGE,
     name,
     email,
-    status
+    status,
+    recaptchaSiteKey: recaptcha
   };
 }
 
@@ -32,7 +34,7 @@ export function initializeSettingsPage() {
     })
     .then(function (json) {
       if (json.email) {
-        dispatch(initializeIdentity(json.name, json.email, json.status));
+        dispatch(initializeIdentity(json.name, json.email, json.status, json.recaptcha));
       } else {
         window.location = '/';
       }
@@ -85,6 +87,12 @@ function finishSubmittingSettings(errors) {
   };
 }
 
+export function resetRecaptcha() {
+  return {
+    type: RESET_SETTINGS_RECAPTCHA
+  };
+}
+
 export function updateProfile(name) {
   return dispatch => {
     dispatch(startSubmittingSettings());
@@ -121,7 +129,7 @@ export function updateProfile(name) {
   };
 }
 
-export function updatePassword(oldPassword, newPassword, passwordConfirmation) {
+export function updatePassword(oldPassword, newPassword, passwordConfirmation, recaptcha) {
   return dispatch => {
     dispatch(startSubmittingSettings());
     const errors = {};
@@ -143,7 +151,7 @@ export function updatePassword(oldPassword, newPassword, passwordConfirmation) {
         Accept: 'application/json',
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ oldPassword, newPassword }),
+      body: JSON.stringify({ oldPassword, newPassword, recaptcha }),
       credentials: 'same-origin'
     })
     .then(function (response) {
@@ -164,6 +172,7 @@ export function updatePassword(oldPassword, newPassword, passwordConfirmation) {
       }));
     })
     .catch(function (err) {
+      dispatch(resetRecaptcha());
       if (err.response.status >= 500) {
         console.error(err);
         dispatch(finishSubmittingSettings({ serverErrorPassword: true }));

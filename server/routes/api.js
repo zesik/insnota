@@ -71,7 +71,12 @@ router.get('/profile', function (req, res, next) {
     return;
   }
   userService.findUser(req.user._id)
-    .then(user => res.send({ email: user.email, name: user.name, status: user.status }))
+    .then(user => res.send({
+      email: user.email,
+      name: user.name,
+      status: user.status,
+      recaptcha: recaptchaService.getPasswordAttemptSiteKey(user.password_attempts)
+    }))
     .catch(err => {
       if (err) {
         next(err);
@@ -97,7 +102,6 @@ router.put('/settings/profile', function (req, res, next) {
 });
 
 router.put('/settings/password', function (req, res, next) {
-  // TODO: validate old password before updating
   if (!req.user) {
     res.status(403).end();
     return;
@@ -110,9 +114,39 @@ router.put('/settings/password', function (req, res, next) {
     res.status(422).send({ errorNewPasswordShort: true });
     return;
   }
-  userService.updatePassword(req.user.email, req.body.newPassword)
-    .then(() => res.status(204).end())
-    .catch(err => next(err));
+  userService.findUser(req.user._id).then(user => {
+    recaptchaService.verifyPasswordAttempt(user.password_attempts, req.body.recaptcha).then(() => {
+      userService.verifyPassword(user, req.body.oldPassword).then(() => {
+        userService.updatePassword(req.user._id, req.body.newPassword)
+          .then(() => res.status(204).end())
+          .catch(err => next(err));
+      }).catch(err => {   // userService.verifyPassword rejected
+        if (err instanceof User) {
+          res.status(422).send({
+            errorCredentialInvalid: true,
+            recaptchaSiteKey: recaptchaService.getPasswordAttemptSiteKey(err.password_attempts)
+          });
+          return;
+        }
+        next(err);
+      });
+    }).catch(err => {   // recaptchaService.verifyPasswordAttempt rejected
+      if (err) {
+        next(err);
+        return;
+      }
+      res.status(422).send({
+        errorRecaptchaInvalid: true,
+        recaptchaSiteKey: recaptchaService.getPasswordAttemptSiteKey(user.password_attempts)
+      });
+    });
+  }).catch(err => {   // userService.findUser rejected
+    if (err) {
+      next(err);
+      return;
+    }
+    res.status(404).end();
+  });
 });
 
 router.get('/signup', function (req, res) {

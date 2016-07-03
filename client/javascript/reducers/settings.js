@@ -5,14 +5,16 @@ import {
   EDIT_SETTINGS_NEW_PASSWORD,
   EDIT_SETTINGS_PASSWORD_CONFIRMATION,
   START_SUBMITTING_SETTINGS,
-  FINISH_SUBMITTING_SETTINGS
+  FINISH_SUBMITTING_SETTINGS,
+  RESET_SETTINGS_RECAPTCHA
 } from '../actions/settings';
 
 const initialNoticeState = {
   errorNameEmpty: false,
-  errorOldPasswordIncorrect: false,
   errorNewPasswordEmpty: false,
   errorNewPasswordShort: false,
+  errorCredentialInvalid: false,
+  errorRecaptchaInvalid: false,
   errorPasswordConfirmationMismatch: false,
   successProfile: false,
   successPassword: false,
@@ -27,7 +29,8 @@ const initialState = Object.assign({
   status: '',
   oldPassword: '',
   newPassword: '',
-  passwordConfirmation: ''
+  passwordConfirmation: '',
+  recaptchaSiteKey: ''
 }, initialNoticeState);
 
 function settingsReducer(state = initialState, action) {
@@ -37,7 +40,8 @@ function settingsReducer(state = initialState, action) {
         loading: false,
         name: action.name,
         email: action.email,
-        status: action.status
+        status: action.status,
+        recaptchaSiteKey: action.recaptchaSiteKey
       });
     case EDIT_SETTINGS_PROFILE_NAME:
       return Object.assign({}, state, {
@@ -63,6 +67,10 @@ function settingsReducer(state = initialState, action) {
       return Object.assign({}, state, {
         loading: false
       }, action.errors);
+    case RESET_SETTINGS_RECAPTCHA:
+      return Object.assign({}, state, {
+        recaptchaSiteKey: ''
+      });
     default:
       return state;
   }

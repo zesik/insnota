@@ -7,7 +7,7 @@ import {
   EDIT_FORM_PASSWORD,
   EDIT_FORM_PASSWORD_CONFIRMATION,
   EDIT_FORM_REMEMBER_ME,
-  RESET_RECAPTCHA,
+  RESET_FORM_RECAPTCHA,
   START_SUBMITTING_ACCOUNT_FORM,
   FINISH_SUBMITTING_ACCOUNT_FORM
 } from '../actions/account';
@@ -90,7 +90,7 @@ function accountReducer(state = initialState, action) {
       return Object.assign({}, state, {
         rememberMe: action.rememberMe
       });
-    case RESET_RECAPTCHA:
+    case RESET_FORM_RECAPTCHA:
       return Object.assign({}, state, {
         recaptchaSiteKey: ''
       });
