@@ -582,6 +582,10 @@ $status-bar-line-height:
       flex: 1 1 auto;
       margin-left: 12px;
 
+      .form-group {
+        margin: 0;
+      }
+
       .name {
         font-weight: $font-bold;
       }

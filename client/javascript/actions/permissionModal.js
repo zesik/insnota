@@ -135,8 +135,28 @@ function finishAddCollaborator(email, name) {
 export function startAddCollaborator(email) {
   return dispatch => {
     dispatch(updateCollaboratorPlaceholderStatus(true));
-    // TODO: validate email address
-    dispatch(finishAddCollaborator(email, ''));
+    fetch(`/api/users/${email}`, {
+      credentials: 'same-origin'
+    })
+    .then(function (response) {
+      if (response.status >= 200 && response.status < 300) {
+        return response.json();
+      }
+      const error = new Error(response.statusText);
+      error.response = response;
+      throw error;
+    })
+    .then(function (json) {
+      dispatch(finishAddCollaborator(email, json.name));
+    })
+    .catch(function (err) {
+      if (err.response.status >= 500) {
+        console.error(err);
+        dispatch(updateCollaboratorPlaceholderStatus(false, 'Server error'));
+        return;
+      }
+      dispatch(updateCollaboratorPlaceholderStatus(false, 'This address is not registered.'));
+    });
   };
 }
 

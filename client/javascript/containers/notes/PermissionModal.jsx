@@ -60,6 +60,10 @@ class PermissionModal extends React.Component {
       bodyElement = (<div className="modal-body" id="permission-modal-body">Loading...</div>);
     } else {
       const { anonymousEditing, canEdit } = this.props;
+      const collaboratorClasses = classNames({
+        'form-control': true,
+        error: this.props.errorAdding
+      });
       bodyElement = (
         <div className="modal-body" id="permission-modal-body">
           <div className="modal-body-section-title">Owner</div>
@@ -101,13 +105,20 @@ class PermissionModal extends React.Component {
                 <form onSubmit={this.handleStartAddCollaborator}>
                   <div className="collaborator-permission-item new-item">
                     <div className="collaborator-identity">
-                      <input
-                        ref="newCollaborator"
-                        type="text"
-                        className="textbox"
-                        value={this.props.newCollaboratorEmail}
-                        onChange={e => this.props.onEditCollaboratorPlaceholder(e.target.value)}
-                      />
+                      <div className="form-group">
+                        <div className={collaboratorClasses}>
+                          <input
+                            ref="newCollaborator"
+                            type="text"
+                            className="textbox"
+                            value={this.props.newCollaboratorEmail}
+                            onChange={e => this.props.onEditCollaboratorPlaceholder(e.target.value)}
+                          />
+                          {this.props.errorAdding &&
+                            <div className="form-control-supplement error">{this.props.errorAdding}</div>
+                          }
+                        </div>
+                      </div>
                     </div>
                     <div className="collaborator-operations">
                       <div className="btn btn-link" onClick={this.handleStartAddCollaborator}>

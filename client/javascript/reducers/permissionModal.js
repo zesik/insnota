@@ -8,6 +8,7 @@ import {
   EDIT_COLLABORATOR_PLACEHOLDER,
   UPDATE_COLLABORATOR_PLACEHOLDER_STATUS,
   FINISH_ADD_COLLABORATOR,
+  FAILED_ADD_COLLABORATOR,
   CANCEL_ADD_COLLABORATOR,
   REMOVE_COLLABORATOR,
   INITIALIZE_PERMISSION_MODAL
@@ -89,6 +90,7 @@ function permissionModalReducer(state = initialState, action) {
       });
     case FINISH_ADD_COLLABORATOR:
       return Object.assign({}, state, {
+        errorAdding: null,
         editingNewCollaborator: '',
         newCollaboratorEmail: '',
         collaborators: [
