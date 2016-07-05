@@ -1,6 +1,8 @@
 'use strict';
 
 const webpack = require('webpack');
+const ExtractTextPlugin = require('extract-text-webpack-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 // Configuration of variables
 const DEBUG = process.argv.indexOf('--release') === -1;
@@ -11,21 +13,28 @@ const GLOBALS = {
 };
 
 // Configuration of webpack plugins
-const plugins = [
+const jsPlugins = [
   new webpack.optimize.OccurenceOrderPlugin(),
   new webpack.DefinePlugin(GLOBALS)
 ];
+const cssPlugins = [
+  new CopyWebpackPlugin([{ from: 'node_modules/codemirror/lib/codemirror.css' }]),
+  new ExtractTextPlugin('[name].css')
+];
+let extractTextArgument = 'css!sass';
 if (!DEBUG) {
-  plugins.push(new webpack.optimize.DedupePlugin());
-  plugins.push(new webpack.optimize.UglifyJsPlugin({
+  jsPlugins.push(new webpack.optimize.DedupePlugin());
+  jsPlugins.push(new webpack.optimize.UglifyJsPlugin({
     compress: { warnings: VERBOSE },
     comments: false
   }));
+  extractTextArgument = 'css?minimize!sass';
 }
-plugins.push(new webpack.optimize.CommonsChunkPlugin('common.js'));
+jsPlugins.push(new webpack.optimize.CommonsChunkPlugin('common.js'));
 
 // Export configurations
-module.exports = {
+module.exports = [{
+  name: 'javascripts',
   cache: DEBUG,
   debug: DEBUG,
   stats: {
@@ -63,5 +72,25 @@ module.exports = {
       }
     ]
   },
-  plugins
-};
+  plugins: jsPlugins
+}, {
+  name: 'stylesheets',
+  entry: {
+    index: './client/stylesheets/index.scss',
+    notes: './client/stylesheets/notes.scss'
+  },
+  output: {
+    path: 'build/stylesheets',
+    filename: '[name].css'
+  },
+  module: {
+    loaders: [
+      {
+        test: /\.scss$/,
+        loader: ExtractTextPlugin.extract(extractTextArgument),
+        exclude: /node_modules/
+      }
+    ]
+  },
+  plugins: cssPlugins
+}];
