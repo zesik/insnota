@@ -65,6 +65,7 @@
     "bundle-release": "webpack --progress --release --config tools/webpack.config.js",
     "clean": "rm -rf build/",
     "develop": "webpack --watch --progress --config tools/webpack.config.js",
-    "release": "npm-run-all clean bundle-release"
+    "release": "npm-run-all clean bundle-release",
+    "start": "node ./server/app.js"
   }
 }

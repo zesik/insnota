@@ -83,6 +83,6 @@ function initializeExpress() {
   // Listen
   const port = 3000;
   app.listen(port, function () {
-    logger.info(`Listening on ${port}`);
+    logger.info(`Insnota (${app.get('env') === 'development' ? 'development' : 'production'}) listening on ${port}`);
   });
 }
