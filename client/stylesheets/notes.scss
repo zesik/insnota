@@ -183,10 +183,9 @@ $title-section-height: 64px;
 
 .popup-menu-container {
   min-width: 120px;
-  border: 1px solid $grey-400;
   padding-top: 4px;
   padding-bottom: 4px;
-  @include drop-shadow(0, 0, 4px, rgba(0, 0, 0, 0.3));
+  @include drop-shadow(0, 0, 2px, rgba(0, 0, 0, 0.5));
   background-color: $white;
 
   .popup-menu-item {
@@ -204,6 +203,26 @@ $title-section-height: 64px;
         background-color: $blue-500;
       }
     }
+  }
+}
+
+.popup-collaborators {
+  width: 276px;
+  padding: 8px;
+  @include drop-shadow(0, 0, 2px, rgba(0, 0, 0, 0.5));
+  background-color: $white;
+
+  .popup-collaborator-list {
+    display: flex;
+    flex-wrap: wrap;
+
+    .collaborator {
+      margin-bottom: 4px;
+    }
+  }
+
+  .popup-collaborator-settings {
+    padding-left: 20px;
   }
 }
 
@@ -229,7 +248,7 @@ $status-bar-line-height:
 
   .title-editor {
     height: $title-section-height;
-    margin-right: 148px;
+    margin-right: 180px;
 
     .document-title {
       outline: none;
@@ -253,11 +272,13 @@ $status-bar-line-height:
   }
 
   .collaborator-list {
+    display: flex;
     float: right;
-    width: 120px;
+    width: 150px;
     height: 30px;
     margin: 10px 8px 8px 8px;
-    text-align: right;
+    align-items: center;
+    justify-content: flex-end;
 
     .user-avatar {
       @include colorize;
@@ -265,7 +286,9 @@ $status-bar-line-height:
 
     .collaborator {
       display: inline-block;
-      margin: 0 1px;
+      margin-left: 1px;
+      margin-right: 1px;
+      flex: 0 0 auto;
 
       .collaborator-color {
         width: 24px;
@@ -273,6 +296,11 @@ $status-bar-line-height:
         margin-top: 1px;
         @include colorize;
       }
+    }
+
+    .popup-trigger {
+      margin-left: 4px;
+      margin-right: 4px;
     }
   }
 
@@ -493,7 +521,7 @@ $status-bar-line-height:
   left: 0;
   height: 100%;
   width: 100%;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0, 0, 0, 0.5);
   z-index: 2000;
 
   .modal-dialog {
@@ -644,7 +672,7 @@ $status-bar-line-height:
   top: 0;
   right: 0;
   width: 320px;
-  z-index: 1000;
+  z-index: 5000;
 
   .notification-item {
     display: block;
@@ -724,6 +752,14 @@ $status-bar-line-height:
     &.app-name {
       color: $dark-text-divider;
       margin: 0;
+    }
+
+    h2 {
+      margin-top: 0;
+    }
+
+    p {
+      margin-bottom: 0;
     }
   }
 }

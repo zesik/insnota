@@ -3,7 +3,7 @@ import {
   NOTIFICATION_WARNING,
   NOTIFICATION_ERROR,
   NOTIFICATION_DISPLAY_TIME
-} from '../constants/notificationLevels';
+} from '../constants/notifications';
 
 let nextNotificationID = 0;
 

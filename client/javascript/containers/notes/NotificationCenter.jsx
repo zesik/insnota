@@ -2,7 +2,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 import classNames from 'classnames';
 import ReactCSSTransitionGroup from 'react-addons-css-transition-group';
-import { NOTIFICATION_INFORMATION, NOTIFICATION_WARNING, NOTIFICATION_ERROR } from '../../constants/notificationLevels';
+import { NOTIFICATION_INFORMATION, NOTIFICATION_WARNING, NOTIFICATION_ERROR } from '../../constants/notifications';
 
 class NotificationCenter extends React.Component {
   render() {

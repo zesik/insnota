@@ -389,7 +389,7 @@ router.put('/notes/:docID', function (req, res, next) {
       doc.editable = editable;
 
       // Only owner can modify certain settings
-      if (doc.owner === req.user.email) {
+      if (doc.owner.equals(req.user._id)) {
         doc.public_access = req.body.anonymousEditing;
         doc.editor_inviting = !!req.body.editorInviting;
       }

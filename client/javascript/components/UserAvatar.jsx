@@ -11,7 +11,7 @@ function UserAvatar(props) {
   const email = (props.email || '').trim().toLowerCase();
   const size = props.size || 48;
   const cornerRadius = props.cornerRadius;
-  const color = props.color || 'none';
+  const color = typeof props.color === 'undefined' ? 'none': `${props.color}`;
   const style = {
     width: size,
     height: size,

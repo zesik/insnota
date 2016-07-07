@@ -175,6 +175,7 @@ class SyncedEditor extends React.Component {
     // Title editor events
     this.handleTitleKeyUp = this.handleTitleKeyUp.bind(this);
     this.handleTitleBoxSubmit = this.handleTitleBoxSubmit.bind(this);
+    this.handleChangeCollaboratorCursorsVisibility = this.handleChangeCollaboratorCursorsVisibility.bind(this);
     // Content editor events
     this.handleContentChanged = this.handleContentChanged.bind(this);
     this.handleContentCursorActivity = this.handleContentCursorActivity.bind(this);
@@ -456,6 +457,13 @@ class SyncedEditor extends React.Component {
 
     // Submit title changes to server
     this.submitTitleChange(titleTextBox.value);
+  }
+
+  //
+  // Collaborator list event handlers
+  //
+  handleChangeCollaboratorCursorsVisibility(visible) {
+    this.setState({ collaboratorCursorsVisible: visible });
   }
 
   //
@@ -862,7 +870,11 @@ class SyncedEditor extends React.Component {
       <div className={containerClasses}>
         <EditorOverlay state={this.state.docStatus} />
         <div id="document-editor">
-          <Collaborators collaborators={this.state.collaborators} />
+          <Collaborators
+            collaborators={this.state.collaborators}
+            collaboratorCursorsVisible={this.state.collaboratorCursorsVisible}
+            onShowCursorChecked={this.handleChangeCollaboratorCursorsVisibility}
+          />
           <form onSubmit={this.handleTitleBoxSubmit}>
             <div className="title-editor">
               <input

@@ -1,6 +1,6 @@
 module.exports = {
   // Configures the database string of MongoDB used to store users, notes, sessions, etc.
-  'mongo': 'mongodb://localhost:27017/test',
+  'mongo': 'mongodb://localhost:27017/insnota',
   // Configures the salt for generating HashID.
   // Changing this settings after server starts for the first time may result in duplicate document IDs.
   'hashidSalt': 'this is my salt',
