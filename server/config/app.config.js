@@ -35,6 +35,5 @@ module.exports = {
   // TODO: Whether anonymous users (not signed in) can edit documents.
   'anonymousEditing': true,
   // Configure name of document collection.
-  // This setting is used to create database table, and cannot be changed once server starts for the first time.
   'documentCollection': 'notes'
 };
