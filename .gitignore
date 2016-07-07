@@ -22,3 +22,6 @@ pids
 # Output
 .sass-cache
 build
+
+# Local configuration file
+server/config/local.config.js
