@@ -1,10 +1,6 @@
 # Insnota
 
-A collaborative note-taking platform.
-
-## Shoulders of Giants
-
-Insnota is built upon the following technologies:
+Insnota is a collaborative note-taking platform, using the following technologies:
 
 * [Node.js](https://nodejs.org/)
 * [React](https://facebook.github.io/react/) and [Redux](http://redux.js.org/)
@@ -12,7 +8,7 @@ Insnota is built upon the following technologies:
 * [CodeMirror](https://codemirror.net)
 * [ShareDB](https://github.com/share/sharedb)
 * [MongoDB](https://www.mongodb.com/)
-* ...and [many more](package.json)
+* ... and [many more](package.json)
 
 ## Getting Started
 
@@ -36,7 +32,7 @@ Refers to comments in `app.config.js` for more information.
 
 To launch Insnota for production with minified JS and CSS, run the following commands.
 
-```bash
+```sh
 $ npm install
 $ npm run release
 $ npm start
@@ -44,7 +40,7 @@ $ npm start
 
 To launch Insnota for development and watch changes of front-side JS and CSS, run the following commands.
 
-```bash
+```sh
 $ npm install
 $ npm run develop
 ```
