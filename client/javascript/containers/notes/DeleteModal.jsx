@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import Modal from '../../components/Modal';
-import { closeDeleteModal, startDeleteDocument } from '../../actions/deleteModal';
+import { closeDeleteModal, deleteDocument } from '../../actions/deleteModal';
 
 function DeleteModal(props) {
   const titleElement = (
@@ -9,16 +9,27 @@ function DeleteModal(props) {
       Are you sure you want to delete <strong>{props.title}</strong>?
     </div>
   );
-  const body = 'You cannot undo this operation. You and all collaborators will no longer be able to view or edit ' +
-    'this file.';
+  const bodyElement = (
+    <div>
+      <div className="modal-body">
+        You cannot undo this operation. You and all collaborators will no longer be able to view or edit this file.
+      </div>
+      {props.serverError &&
+        <div className="modal-footer error">
+          Unable to delete the document due to an internal server error. Please try again in a few minutes.
+        </div>
+      }
+    </div>
+  );
   return (
     <div>
       {props.opened &&
         <Modal
           titleElement={titleElement}
-          body={body}
+          bodyElement={bodyElement}
           confirmButtonDestructive
           confirmButtonTitle="Delete Note"
+          confirmButtonDisabled={props.loading}
           cancelButtonFocused
           onConfirm={() => props.onDeleteDocument(props.documentID)}
           onCancel={props.onClose}
@@ -32,6 +43,7 @@ DeleteModal.propTypes = {
   opened: React.PropTypes.bool.isRequired,
   documentID: React.PropTypes.string.isRequired,
   title: React.PropTypes.string,
+  serverError: React.PropTypes.bool,
   onDeleteDocument: React.PropTypes.func.isRequired,
   onClose: React.PropTypes.func.isRequired
 };
@@ -43,7 +55,7 @@ function mapStateToProps(state) {
 function mapDispatchToProps(dispatch, ownProps) {
   return {
     onDeleteDocument: documentID => {
-      dispatch(startDeleteDocument(documentID, documentID === ownProps.selectedDocumentID));
+      dispatch(deleteDocument(documentID, documentID === ownProps.selectedDocumentID));
     },
     onClose: () => {
       dispatch(closeDeleteModal());

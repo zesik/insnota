@@ -3,7 +3,8 @@ import { push } from 'react-router-redux';
 
 export const SHOW_DELETE_MODAL = 'SHOW_DELETE_MODAL';
 export const HIDE_DELETE_MODAL = 'HIDE_DELETE_MODAL';
-export const UPDATE_DELETE_STATUS = 'UPDATE_DELETE_STATUS';
+export const START_DELETING_DOCUMENT = 'START_DELETING_DOCUMENT';
+export const FINISH_DELETING_DOCUMENT = 'FINISH_DELETING_DOCUMENT';
 
 export function openDeleteModal(documentID, title) {
   return {
@@ -20,17 +21,22 @@ export function closeDeleteModal(deletedDocumentID) {
   };
 }
 
-function updateDeleteStatus(deleting, error) {
+function startDeletingDocument() {
   return {
-    type: UPDATE_DELETE_STATUS,
-    deleting,
-    error
+    type: START_DELETING_DOCUMENT
   };
 }
 
-export function startDeleteDocument(documentID, isOpened) {
+function finishDeletingDocument(errors) {
+  return {
+    type: FINISH_DELETING_DOCUMENT,
+    errors
+  };
+}
+
+export function deleteDocument(documentID, isOpened) {
   return dispatch => {
-    dispatch(updateDeleteStatus(true));
+    dispatch(startDeletingDocument());
     fetch(`/api/notes/${documentID}`, {
       method: 'DELETE',
       headers: {
@@ -48,7 +54,7 @@ export function startDeleteDocument(documentID, isOpened) {
       throw error;
     })
     .then(function () {
-      dispatch(updateDeleteStatus(false));
+      dispatch(finishDeletingDocument());
       dispatch(closeDeleteModal(documentID));
       if (isOpened) {
         dispatch(push('/notes'));
@@ -57,11 +63,11 @@ export function startDeleteDocument(documentID, isOpened) {
     .catch(function (err) {
       if (err.response.status >= 500) {
         console.error(err);
-        dispatch(updateDeleteStatus(false, 'Server error'));
+        dispatch(finishDeletingDocument({ serverError: true }));
         return;
       }
       err.response.json().then(function (json) {
-        dispatch(updateDeleteStatus(false, json));
+        dispatch(finishDeletingDocument(json));
       });
     });
   };

@@ -1,12 +1,20 @@
-import { SHOW_DELETE_MODAL, HIDE_DELETE_MODAL } from '../actions/deleteModal';
+import {
+  SHOW_DELETE_MODAL,
+  HIDE_DELETE_MODAL,
+  START_DELETING_DOCUMENT,
+  FINISH_DELETING_DOCUMENT
+} from '../actions/deleteModal';
 
-const initialState = {
+const initialNoticeState = {
+  serverError: false
+};
+
+const initialState = Object.assign({
+  loading: false,
   opened: false,
   documentID: '',
-  title: '',
-  deleting: false,
-  error: null
-};
+  title: ''
+}, initialNoticeState);
 
 function deleteModalReducer(state = initialState, action) {
   switch (action.type) {
@@ -19,6 +27,14 @@ function deleteModalReducer(state = initialState, action) {
     }
     case HIDE_DELETE_MODAL:
       return Object.assign({}, initialState);
+    case START_DELETING_DOCUMENT:
+      return Object.assign({}, state, {
+        loading: true
+      }, initialNoticeState);
+    case FINISH_DELETING_DOCUMENT:
+      return Object.assign({}, state, {
+        loading: false
+      }, action.errors);
     default:
       return state;
   }

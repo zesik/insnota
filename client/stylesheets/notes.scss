@@ -541,6 +541,15 @@ $status-bar-line-height:
       font-size: $h1-font-size;
     }
 
+    .modal-footer {
+      margin-top: 12px;
+      font-size: $small-font-size;
+
+      &.error {
+        color: $red-600;
+      }
+    }
+
     .modal-buttons {
       margin-top: 30px;
       text-align: right;
