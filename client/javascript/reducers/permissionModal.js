@@ -1,57 +1,64 @@
 import {
   SHOW_PERMISSION_MODAL,
   HIDE_PERMISSION_MODAL,
+  INITIALIZE_PERMISSION_MODAL,
   EDIT_COLLABORATOR_PERMISSION,
   EDIT_EDITOR_INVITING,
   EDIT_ANONYMOUS_EDITING,
   ADD_COLLABORATOR_PLACEHOLDER,
   EDIT_COLLABORATOR_PLACEHOLDER,
-  UPDATE_COLLABORATOR_PLACEHOLDER_STATUS,
-  FINISH_ADD_COLLABORATOR,
-  CANCEL_ADD_COLLABORATOR,
+  START_ADDING_COLLABORATOR,
+  FINISH_ADDING_COLLABORATOR,
+  CANCEL_ADDING_COLLABORATOR,
   REMOVE_COLLABORATOR,
-  INITIALIZE_PERMISSION_MODAL
+  START_SUBMITTING_PERMISSIONS,
+  FINISH_SUBMITTING_PERMISSIONS
 } from '../actions/permissionModal';
 
-const initialState = {
+const initialNoticeState = {
+  errorNotFound: false,
+  errorEmailEmpty: false,
+  errorEmailInvalid: false,
+  errorEmailNotExist: false,
+  errorEmailAlreadyExists: false,
+  errorEmailIsOwner: false,
+  serverError: false
+};
+
+const initialState = Object.assign({
+  loading: false,
   opened: false,
   documentID: '',
-  loading: false,
-  saving: false,
-  adding: false,
-  error: null,
-  errorAdding: null,
   canEdit: '',
   ownerName: '',
   ownerEmail: '',
   collaborators: [],
+  collaboratorPlaceholderVisible: false,
+  collaboratorPlaceholderEmail: '',
   editorInviting: false,
-  anonymousEditing: '',
-  editingNewCollaborator: '',
-  newCollaboratorEmail: ''
-};
+  anonymousEditing: ''
+}, initialNoticeState);
 
 function permissionModalReducer(state = initialState, action) {
   switch (action.type) {
     case SHOW_PERMISSION_MODAL:
       return Object.assign({}, initialState, {
+        loading: true,
         opened: true,
-        documentID: action.documentID,
-        loading: true
+        documentID: action.documentID
       });
     case HIDE_PERMISSION_MODAL:
       return Object.assign({}, initialState);
     case INITIALIZE_PERMISSION_MODAL:
       return Object.assign({}, state, {
         loading: false,
-        error: action.error,
         canEdit: action.canEdit,
         ownerName: action.ownerName,
         ownerEmail: action.ownerEmail,
         collaborators: action.collaborators,
         editorInviting: action.editorInviting,
         anonymousEditing: action.anonymousEditing
-      });
+      }, action.errors);
     case EDIT_COLLABORATOR_PERMISSION:
       return Object.assign({}, state, {
         collaborators: state.collaborators.map(item => {
@@ -75,23 +82,27 @@ function permissionModalReducer(state = initialState, action) {
       });
     case ADD_COLLABORATOR_PLACEHOLDER:
       return Object.assign({}, state, {
-        editingNewCollaborator: 'editing',
-        newCollaboratorEmail: ''
+        collaboratorPlaceholderVisible: true,
+        collaboratorPlaceholderEmail: ''
       });
     case EDIT_COLLABORATOR_PLACEHOLDER:
       return Object.assign({}, state, {
-        newCollaboratorEmail: action.email
+        collaboratorPlaceholderEmail: action.email
       });
-    case UPDATE_COLLABORATOR_PLACEHOLDER_STATUS:
+    case START_ADDING_COLLABORATOR:
       return Object.assign({}, state, {
-        editingNewCollaborator: action.adding ? 'adding' : 'editing',
-        errorAdding: action.error || ''
-      });
-    case FINISH_ADD_COLLABORATOR:
+        loading: true
+      }, initialNoticeState);
+    case FINISH_ADDING_COLLABORATOR:
+      if (action.errors && Object.keys(action.errors).length > 0) {
+        return Object.assign({}, state, {
+          loading: false
+        }, action.errors);
+      }
       return Object.assign({}, state, {
-        errorAdding: null,
-        editingNewCollaborator: '',
-        newCollaboratorEmail: '',
+        loading: false,
+        collaboratorPlaceholderVisible: false,
+        collaboratorPlaceholderEmail: '',
         collaborators: [
           ...state.collaborators,
           {
@@ -101,15 +112,23 @@ function permissionModalReducer(state = initialState, action) {
           }
         ]
       });
-    case CANCEL_ADD_COLLABORATOR:
+    case CANCEL_ADDING_COLLABORATOR:
       return Object.assign({}, state, {
-        editingNewCollaborator: '',
-        newCollaboratorEmail: ''
+        collaboratorPlaceholderVisible: false,
+        collaboratorPlaceholderEmail: ''
       });
     case REMOVE_COLLABORATOR:
       return Object.assign({}, state, {
         collaborators: state.collaborators.filter(item => item.email !== action.email)
       });
+    case START_SUBMITTING_PERMISSIONS:
+      return Object.assign({}, state, {
+        loading: true
+      }, initialNoticeState);
+    case FINISH_SUBMITTING_PERMISSIONS:
+      return Object.assign({}, state, {
+        loading: false
+      }, action.errors);
     default:
       return state;
   }

@@ -6,6 +6,7 @@ import {
 } from '../actions/deleteModal';
 
 const initialNoticeState = {
+  errorNotFound: false,
   serverError: false
 };
 

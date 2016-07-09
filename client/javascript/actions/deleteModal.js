@@ -66,9 +66,7 @@ export function deleteDocument(documentID, isOpened) {
         dispatch(finishDeletingDocument({ serverError: true }));
         return;
       }
-      err.response.json().then(function (json) {
-        dispatch(finishDeletingDocument(json));
-      });
+      dispatch(finishDeletingDocument({ errorNotFound: true }));
     });
   };
 }

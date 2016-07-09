@@ -14,6 +14,11 @@ function DeleteModal(props) {
       <div className="modal-body">
         You cannot undo this operation. You and all collaborators will no longer be able to view or edit this file.
       </div>
+      {props.errorNotFound &&
+        <div className="modal-footer error">
+          The note no longer exists or you don't have permission to access this note.
+        </div>
+      }
       {props.serverError &&
         <div className="modal-footer error">
           Unable to delete the document due to an internal server error. Please try again in a few minutes.
@@ -43,7 +48,8 @@ DeleteModal.propTypes = {
   opened: React.PropTypes.bool.isRequired,
   documentID: React.PropTypes.string.isRequired,
   title: React.PropTypes.string,
-  serverError: React.PropTypes.bool,
+  errorNotFound: React.PropTypes.bool.isRequired,
+  serverError: React.PropTypes.bool.isRequired,
   onDeleteDocument: React.PropTypes.func.isRequired,
   onClose: React.PropTypes.func.isRequired
 };

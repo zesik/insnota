@@ -8,11 +8,12 @@ export const EDIT_EDITOR_INVITING = 'EDIT_EDITOR_INVITING';
 export const EDIT_ANONYMOUS_EDITING = 'EDIT_ANONYMOUS_EDITING';
 export const ADD_COLLABORATOR_PLACEHOLDER = 'ADD_COLLABORATOR_PLACEHOLDER';
 export const EDIT_COLLABORATOR_PLACEHOLDER = 'EDIT_COLLABORATOR_PLACEHOLDER';
-export const UPDATE_COLLABORATOR_PLACEHOLDER_STATUS = 'UPDATE_COLLABORATOR_PLACEHOLDER_STATUS';
-export const FINISH_ADD_COLLABORATOR = 'FINISH_ADD_COLLABORATOR';
-export const CANCEL_ADD_COLLABORATOR = 'CANCEL_ADD_COLLABORATOR';
+export const START_ADDING_COLLABORATOR = 'START_ADDING_COLLABORATOR';
+export const FINISH_ADDING_COLLABORATOR = 'FINISH_ADDING_COLLABORATOR';
+export const CANCEL_ADDING_COLLABORATOR = 'CANCEL_ADDING_COLLABORATOR';
 export const REMOVE_COLLABORATOR = 'REMOVE_COLLABORATOR';
-export const UPDATE_SUBMISSION_STATUS = 'UPDATE_SUBMISSION_STATUS';
+export const START_SUBMITTING_PERMISSIONS = 'START_SUBMITTING_PERMISSIONS';
+export const FINISH_SUBMITTING_PERMISSIONS = 'FINISH_SUBBMITING_PERMISSIONS';
 
 function showPermissionModal(documentID) {
   return {
@@ -21,11 +22,10 @@ function showPermissionModal(documentID) {
   };
 }
 
-function initializePermissionModal(error, ownerName, ownerEmail, collaborators, editorInviting, anonymousEditing,
-                                   canEdit) {
+function initializeModal(errors, ownerName, ownerEmail, collaborators, editorInviting, anonymousEditing, canEdit) {
   return {
     type: INITIALIZE_PERMISSION_MODAL,
-    error,
+    errors,
     canEdit,
     ownerName,
     ownerEmail,
@@ -66,11 +66,16 @@ export function openPermissionModal(documentID) {
           }
         }
       }
-      dispatch(initializePermissionModal(null, json.owner.name, json.owner.email, json.collaborators,
-        json.editorInviting, json.anonymousEditing, permission));
+      dispatch(initializeModal(null, json.owner.name, json.owner.email, json.collaborators, json.editorInviting,
+        json.anonymousEditing, permission));
     })
     .catch(function (err) {
-      dispatch(initializePermissionModal(err));
+      if (err.response.status >= 500) {
+        console.error(err);
+        dispatch(initializeModal({ serverError: true }));
+        return;
+      }
+      dispatch(initializeModal({ errorNotFound: true }));
     });
   };
 }
@@ -116,25 +121,40 @@ export function editCollaboratorPlaceholder(email) {
   };
 }
 
-function updateCollaboratorPlaceholderStatus(adding, error) {
+function startAddingCollaborator() {
   return {
-    type: UPDATE_COLLABORATOR_PLACEHOLDER_STATUS,
-    adding,
-    error
+    type: START_ADDING_COLLABORATOR
   };
 }
 
-function finishAddCollaborator(email, name) {
+function finishAddingCollaborator(errors, email, name) {
   return {
-    type: FINISH_ADD_COLLABORATOR,
+    type: FINISH_ADDING_COLLABORATOR,
+    errors,
     email,
     name
   };
 }
 
-export function startAddCollaborator(email) {
-  return dispatch => {
-    dispatch(updateCollaboratorPlaceholderStatus(true));
+export function addCollaborator(email) {
+  return (dispatch, getState) => {
+    dispatch(startAddingCollaborator());
+    const errors = {};
+    if (email.trim().length === 0) {
+      errors.errorEmailEmpty = true;
+    } else if (!/[^@]+@[^@]+/.test(email.trim())) {
+      errors.errorEmailInvalid = true;
+    }
+    const state = getState().permissionModal;
+    if (state.ownerEmail === email) {
+      errors.errorEmailIsOwner = true;
+    } else if (state.collaborators.find(item => item.email === email)) {
+      errors.errorEmailAlreadyExists = true;
+    }
+    if (Object.keys(errors).length > 0) {
+      dispatch(finishAddingCollaborator(errors));
+      return;
+    }
     fetch(`/api/users/${email}`, {
       credentials: 'same-origin'
     })
@@ -147,22 +167,22 @@ export function startAddCollaborator(email) {
       throw error;
     })
     .then(function (json) {
-      dispatch(finishAddCollaborator(email, json.name));
+      dispatch(finishAddingCollaborator(null, email, json.name));
     })
     .catch(function (err) {
       if (err.response.status >= 500) {
         console.error(err);
-        dispatch(updateCollaboratorPlaceholderStatus(false, 'Server error'));
+        dispatch(finishAddingCollaborator({ serverError: true }));
         return;
       }
-      dispatch(updateCollaboratorPlaceholderStatus(false, 'This address is not registered.'));
+      dispatch(finishAddingCollaborator({ errorEmailNotExist: true }));
     });
   };
 }
 
-export function cancelAddCollaborator() {
+export function cancelAddingCollaborator() {
   return {
-    type: CANCEL_ADD_COLLABORATOR
+    type: CANCEL_ADDING_COLLABORATOR
   };
 }
 
@@ -173,17 +193,22 @@ export function removeCollaborator(email) {
   };
 }
 
-function updateSubmissionStatus(submitting, error) {
+function startSubmittingPermissions() {
   return {
-    type: UPDATE_SUBMISSION_STATUS,
-    submitting,
-    error
+    type: START_SUBMITTING_PERMISSIONS
   };
 }
 
-export function startSubmitPermission() {
+function finishSubmittingPermissions(errors) {
+  return {
+    type: FINISH_SUBMITTING_PERMISSIONS,
+    errors
+  };
+}
+
+export function submitPermission() {
   return (dispatch, getState) => {
-    dispatch(updateSubmissionStatus(true));
+    dispatch(startSubmittingPermissions());
     const modalData = getState().permissionModal;
     const data = {
       collaborators: modalData.collaborators.map(item => ({ email: item.email, permission: item.permission }))
@@ -215,12 +240,10 @@ export function startSubmitPermission() {
     .catch(function (err) {
       if (err.response.status >= 500) {
         console.error(err);
-        dispatch(updateSubmissionStatus(false, 'Server error'));
+        dispatch(finishSubmittingPermissions({ serverError: true }));
         return;
       }
-      err.response.json().then(function (json) {
-        dispatch(updateSubmissionStatus(false, json));
-      });
+      dispatch(finishSubmittingPermissions({ errorNotFound: true }));
     });
   };
 }

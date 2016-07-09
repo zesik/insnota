@@ -630,6 +630,10 @@ $status-bar-line-height:
       .email {
         color: $dark-text-secondary;
       }
+
+      .collaborator-placeholder {
+        width: 320px;
+      }
     }
 
     .collaborator-permission {
@@ -638,9 +642,14 @@ $status-bar-line-height:
 
     .collaborator-operations {
       margin-left: 12px;
-      visibility: hidden;
+
+      .collaborator-self {
+        color: $dark-text-secondary;
+        font-size: $small-font-size;
+      }
 
       .btn {
+        visibility: hidden;
         display: inline-block;
         width: 14px;
         margin-left: 6px;
@@ -658,7 +667,7 @@ $status-bar-line-height:
 
   &.editable .collaborator-permission-item {
     &.new-item, &:hover {
-      .collaborator-operations {
+      .collaborator-operations .btn {
         visibility: visible;
       }
     }

@@ -67,8 +67,8 @@ class Profile extends React.Component {
                   <UserAvatar email={this.props.email} size={48} cornerRadius={48} />
                 </div>
                 <div className="form-control-supplement">
-                  Insnota gets your avatar from Gravatar. If you would like to change this image, please visit <a
-                  href="https://gravatar.com/">https://gravatar.com</a>.
+                  Insnota gets your avatar from Gravatar. If you would like to change this image,
+                  please visit <a href="https://gravatar.com/">https://gravatar.com</a>.
                 </div>
               </div>
             </div>

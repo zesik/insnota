@@ -37,8 +37,8 @@ function EditorOverlay(props) {
       overlay = (
         <div className="overlay">
           <div className="content">
-            <h2>Access Denied</h2>
-            <p>You do not have permission to access this note.</p>
+            <h2>Cannot Access</h2>
+            <p>The note does not exist or you do not have permission to access this note.</p>
           </div>
         </div>
       );
