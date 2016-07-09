@@ -59,7 +59,8 @@ $collaborator-color-9: #607d8b;
   }
 }
 
-$title-section-height: 64px;
+$manager-title-section-height: 64px;
+$editor-title-section-height: 48px;
 
 #editor-container {
   overflow: hidden;
@@ -80,7 +81,7 @@ $title-section-height: 64px;
   .document-list-header {
     flex: 0 0 auto;
     position: relative;
-    height: $title-section-height;
+    height: $manager-title-section-height;
 
     .document-list-header-content-container {
       display: flex;
@@ -247,7 +248,7 @@ $status-bar-line-height:
   }
 
   .title-editor {
-    height: $title-section-height;
+    height: $editor-title-section-height;
     margin-right: 180px;
 
     .document-title {
@@ -305,7 +306,7 @@ $status-bar-line-height:
   }
 
   .editor {
-    height: calc(100vh - #{$title-section-height + $status-bar-height});
+    height: calc(100vh - #{$editor-title-section-height + $status-bar-height});
 
     .CodeMirror {
       height: 100%;
@@ -313,6 +314,10 @@ $status-bar-line-height:
       font-size: 14px;
       line-height: 1.4;
       font-variant-ligatures: no-common-ligatures;
+
+      .CodeMirror-scroll {
+        padding-top: 16px;
+      }
 
       .CodeMirror-dialog input {
         font-family: Inconsolata, monospace;
