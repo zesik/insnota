@@ -493,7 +493,7 @@ class SyncedEditor extends React.Component {
           }
           // Change events are raised by CodeMirror event handlers
           // Need to reset collaborator cursors because CodeMirror bookmark replaces along with content
-          this.setDocumentCollaborators();
+          this.updateDocumentCollaborators();
           break;
         case 'm': // Language mode
           this.setState({ languageMode: operation.oi });
@@ -505,7 +505,7 @@ class SyncedEditor extends React.Component {
               this.submitCursorActivity(getCursors(this.codeMirror));
             }
           } else {
-            this.setDocumentCollaborators();
+            this.updateDocumentCollaborators();
           }
           break;
         case 'p': // Permission
@@ -619,7 +619,7 @@ class SyncedEditor extends React.Component {
     }, 100);
   }
 
-  setDocumentCollaborators() {
+  updateDocumentCollaborators() {
     const collaboratorData = this.shareDBDoc.data.a;
     const currentCollaborators = Object.keys(collaboratorData)
       .filter(clientID => clientID !== this.shareDBConnection.id)
@@ -774,7 +774,7 @@ class SyncedEditor extends React.Component {
         this.setState({ docStatus: DOC_SYNCED });
         this.codeMirror.focus();
         this.handleContentCursorActivity(this.codeMirror);
-        this.setDocumentCollaborators();
+        this.updateDocumentCollaborators();
 
         // Bind document updating event
         doc.on('op', this.handleShareDBDocOperation);
