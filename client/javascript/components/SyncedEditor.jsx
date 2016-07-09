@@ -1,7 +1,12 @@
 import React from 'react';
 import classNames from 'classnames';
 import CodeMirror from 'codemirror';
+import 'codemirror/addon/comment/comment';
+import 'codemirror/addon/dialog/dialog';
+import 'codemirror/addon/search/search';
+import 'codemirror/addon/search/searchcursor';
 import 'codemirror/addon/selection/active-line';
+import 'codemirror/keymap/sublime';
 import 'whatwg-fetch';
 import ShareDB from 'sharedb/lib/client';
 import Collaborators from './Collaborators';
@@ -210,6 +215,7 @@ class SyncedEditor extends React.Component {
     // Initialize CodeMirror
     this.codeMirror = CodeMirror.fromTextArea(this.refs.textarea, {
       styleActiveLine: true,
+      keyMap: 'sublime',
       lineNumbers: true,
       showCursorWhenSelecting: true,
       readOnly: 'nocursor',

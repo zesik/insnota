@@ -18,7 +18,10 @@ const jsPlugins = [
   new webpack.DefinePlugin(GLOBALS)
 ];
 const cssPlugins = [
-  new CopyWebpackPlugin([{ from: 'node_modules/codemirror/lib/codemirror.css' }]),
+  new CopyWebpackPlugin([
+    { from: 'node_modules/codemirror/lib/codemirror.css' },
+    { from: 'node_modules/codemirror/addon/dialog/dialog.css', to: 'cm-dialog.css' }
+  ]),
   new ExtractTextPlugin('[name].css')
 ];
 let extractTextArgument = 'css!sass';

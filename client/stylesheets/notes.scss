@@ -313,6 +313,10 @@ $status-bar-line-height:
       font-size: 14px;
       line-height: 1.4;
       font-variant-ligatures: no-common-ligatures;
+
+      .CodeMirror-dialog input {
+        font-family: Inconsolata, monospace;
+      }
     }
   }
 }
