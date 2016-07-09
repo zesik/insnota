@@ -19,7 +19,7 @@ function appendNotification(id, level, message) {
   };
 }
 
-function removeNotification(id) {
+export function removeNotification(id) {
   return {
     type: REMOVE_NOTIFICATION,
     id

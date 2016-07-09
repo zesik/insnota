@@ -696,9 +696,9 @@ $status-bar-line-height:
     display: block;
     position: relative;
     margin: 20px 20px 0 0;
-    padding: 16px;
+    padding: 14px;
     max-height: 200px;
-    border-left: 6px solid $grey-600;
+    border-left: 4px solid $grey-600;
     background-color: $grey-300;
     color: $dark-text-primary;
     @include drop-shadow(0, 0, 2px, rgba(0, 0, 0, 0.5));
@@ -720,6 +720,14 @@ $status-bar-line-height:
       background-color: $red-50;
       color: $red-900;
     }
+
+    .notification-close {
+      float: right;
+    }
+
+    .notification-content {
+      margin-right: 16px;
+    }
   }
 
   .notification-item-enter {
@@ -735,8 +743,8 @@ $status-bar-line-height:
     opacity: 1;
     max-height: 200px;
     margin-top: 20px;
-    padding-top: 16px;
-    padding-bottom: 16px;
+    padding-top: 14px;
+    padding-bottom: 14px;
   }
 
   .notification-item-leave.notification-item-leave-active {
