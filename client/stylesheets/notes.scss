@@ -1,5 +1,4 @@
 @import 'base';
-@import url("https://fonts.googleapis.com/css?family=Inconsolata:400,700");
 
 $collaborator-color-0: #0097a7;
 $collaborator-color-1: #e91e63;
@@ -310,7 +309,7 @@ $status-bar-line-height:
 
     .CodeMirror {
       height: 100%;
-      font-family: Inconsolata, monospace;
+      font-family: $mono-font-family;
       font-size: 14px;
       line-height: 1.4;
       font-variant-ligatures: no-common-ligatures;
@@ -320,7 +319,7 @@ $status-bar-line-height:
       }
 
       .CodeMirror-dialog input {
-        font-family: Inconsolata, monospace;
+        font-family: $mono-font-family;
       }
     }
   }

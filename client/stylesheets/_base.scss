@@ -2,14 +2,9 @@
 @import '../../node_modules/normalize-scss/sass/normalize';
 @include normalize();
 
-/* -------- Use Lato font -------- */
-@import url("https://fonts.googleapis.com/css?family=Lato:300,400,700");
-
-/* -------- Use Font Awesome -------- */
-@import url("https://maxcdn.bootstrapcdn.com/font-awesome/4.6.1/css/font-awesome.min.css");
-
 /* -------- Font Definitions -------- */
 $base-font-family: "Lato", sans-serif;
+$mono-font-family: "Inconsolata", monospace;
 $base-font-size: 14px;
 $base-line-height: 1.4;
 $h1-font-size: 18px;
