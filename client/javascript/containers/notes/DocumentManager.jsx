@@ -99,6 +99,12 @@ class DocumentManager extends React.Component {
           </button>
         </div>
         <div className="document-list">
+          {this.props.documents.length === 0 &&
+            <div className="document-empty-tip">
+              You don't have any notes.
+              Click the plus sign to create new note.
+            </div>
+          }
           {this.props.documents.map(item => {
             const classes = classNames({
               'document-item': true,

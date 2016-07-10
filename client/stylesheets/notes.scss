@@ -124,6 +124,39 @@ $editor-title-section-height: 48px;
     flex: 1 1 auto;
     overflow-y: auto;
 
+    .document-empty-tip {
+      position: relative;
+      margin: 12px 8px;
+      padding: 8px;
+      background-color: $white;
+      color: $dark-text-secondary;
+      font-size: $small-font-size;
+      border-radius: 4px;
+      border: 1px solid $grey-250;
+
+      &:before, &:after {
+        position: absolute;
+        bottom: 100%;
+        right: 5px;
+        content: " ";
+        width: 0;
+        height: 0;
+      }
+
+      &:after {
+        border-left: 5px solid transparent;
+        border-right: 5px solid transparent;
+        border-bottom: 5px solid $white;
+        margin-right: 1px;
+      }
+
+      &:before {
+        border-left: 6px solid transparent;
+        border-right: 6px solid transparent;
+        border-bottom: 6px solid $grey-250;
+      }
+    }
+
     .document-item {
       display: block;
       color: $dark-text-primary;
