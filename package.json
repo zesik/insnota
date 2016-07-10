@@ -1,10 +1,17 @@
 {
   "name": "insnota",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "A collaberative web-based note-taking platform",
   "author": "Yang Liu <hi@zesik.com>",
   "license": "BSD-3-Clause",
   "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zesik/insnota"
+  },
+  "bugs": {
+    "url": "https://github.com/zesik/insnota/issues"
+  },
   "dependencies": {
     "async": "^2.0.0-rc.6",
     "body-parser": "^1.15.0",

@@ -45,6 +45,11 @@ $ npm install
 $ npm run develop
 ```
 
+## Release History
+
+* 0.1.0: Jul 10, 2016
+  * First proper release.
+
 ## License
 
 [BSD 3-Clause](LICENSE)
