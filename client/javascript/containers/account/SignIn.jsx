@@ -20,6 +20,7 @@ class SignIn extends React.Component {
 
   componentDidMount() {
     this.props.initializeForm();
+    document.title = 'Sign In | Insnota';
   }
 
   handleSwitchAccountClicked(e) {

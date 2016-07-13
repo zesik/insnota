@@ -14,6 +14,7 @@ import {
 class SignUp extends React.Component {
   componentDidMount() {
     this.props.initializeForm();
+    document.title = 'Sign Up | Insnota';
   }
 
   render() {

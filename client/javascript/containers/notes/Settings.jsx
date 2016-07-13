@@ -6,6 +6,7 @@ import { initializeSettingsPage } from '../../actions/settings';
 class Settings extends React.Component {
   componentDidMount() {
     this.props.dispatch(initializeSettingsPage());
+    document.title = 'Settings | Insnota';
   }
 
   render() {

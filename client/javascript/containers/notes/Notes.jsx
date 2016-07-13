@@ -18,6 +18,10 @@ class Notes extends React.Component {
     this.handleOpenPermissionModal = this.handleOpenPermissionModal.bind(this);
   }
 
+  componentDidMount() {
+    document.title = 'Insnota';
+  }
+
   handleLanguageModeChanged(mimeType, remote) {
     const { dispatch } = this.props;
     if (remote === OP_REMOTE) {
