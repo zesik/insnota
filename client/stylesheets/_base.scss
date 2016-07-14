@@ -388,12 +388,12 @@ form, .form {
 
   &.form-horizontal {
     .form-group {
-      &:before {
+      &::before {
         display: table;
         content: " ";
       }
 
-      &:after {
+      &::after {
         display: table;
         content: " ";
         clear: both;
