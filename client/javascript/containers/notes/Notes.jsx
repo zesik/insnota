@@ -1,14 +1,13 @@
 import React from 'react';
 import { connect } from 'react-redux';
+import NotificationSystem, { showInformation, showError } from 're-alert';
 import { changeDocumentTitle } from '../../actions/documentManager';
 import { openPermissionModal } from '../../actions/permissionModal';
-import { showInformation, showError } from '../../actions/notificationCenter';
 import { getModeName } from '../../utils/editorLanguageModes';
 import DocumentManager from './DocumentManager';
 import SyncedEditor, { OP_REMOTE } from '../../components/SyncedEditor';
 import PermissionModal from './PermissionModal';
 import DeleteModal from './DeleteModal';
-import NotificationCenter from './NotificationCenter';
 
 class Notes extends React.Component {
   constructor(props) {
@@ -55,7 +54,7 @@ class Notes extends React.Component {
         />
         <DeleteModal selectedDocumentID={this.props.selectedDocumentID} />
         <PermissionModal />
-        <NotificationCenter />
+        <NotificationSystem customClassName="notification-drop-shadow" />
       </div>
     );
   }
