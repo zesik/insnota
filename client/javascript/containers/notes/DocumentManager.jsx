@@ -181,6 +181,7 @@ class DocumentManager extends React.Component {
           {this.props.documents.map(item =>
             <Document
               id={item.id}
+              key={item.id}
               selected={item.id === this.props.selectedDocumentID}
               title={item.title}
               createTime={item.createTime}

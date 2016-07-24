@@ -592,7 +592,7 @@ class SyncedEditor extends React.Component {
     }
 
     // Get reconnecting wait time
-    const seconds = getReconnectWaitTime(this.state.connectionRetries);
+    const seconds = getReconnectWaitTime(this.state.netRetryCount);
     const expire = new Date();
     expire.setSeconds(expire.getSeconds() + seconds[0]);
     expire.setMilliseconds(expire.getMilliseconds() + seconds[1]);
@@ -836,11 +836,13 @@ class SyncedEditor extends React.Component {
     })
     .catch(err => {
       // We could not access the document
-      if (err.response.status >= 500) {
-        console.error(`Server error: ${err}`);
-        this.setState({ docStatus: DOC_ERROR });
-      } else {
-        this.setState({ docStatus: DOC_DENIED });
+      if (err.response) {
+        if (err.response.status >= 500) {
+          console.error(`Server error: ${err}`);
+          this.setState({ docStatus: DOC_ERROR });
+        } else {
+          this.setState({ docStatus: DOC_DENIED });
+        }
       }
       return callback(err);
     });
