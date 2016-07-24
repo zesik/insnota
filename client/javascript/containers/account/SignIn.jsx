@@ -52,7 +52,6 @@ class SignIn extends React.Component {
           onEditRememberMe={this.props.onEditRememberMe}
           onSubmitEmail={this.props.onSubmitEmail}
           onSubmitPassword={this.props.onSubmitPassword}
-          onGoToEmailForm={this.props.onGoBack}
         />
         <div className="form-footer">
           {this.props.stage === FORM_STAGE_SIGN_IN_EMAIL && <Link to="/signup">Create an account</Link>}
@@ -84,7 +83,6 @@ SignIn.propTypes = {
   onEditEmail: React.PropTypes.func.isRequired,
   onEditPassword: React.PropTypes.func.isRequired,
   onEditRememberMe: React.PropTypes.func.isRequired,
-  onGoBack: React.PropTypes.func.isRequired,
   onSubmitEmail: React.PropTypes.func.isRequired,
   onSubmitPassword: React.PropTypes.func.isRequired
 };
@@ -112,9 +110,6 @@ function mapDispatchToProps(dispatch) {
     },
     onSubmitPassword: (email, password, rememberMe, recaptcha) => {
       dispatch(submitSignInForm(email, password, rememberMe, recaptcha));
-    },
-    onGoBack: () => {
-      dispatch(setFormStage(FORM_STAGE_SIGN_IN_EMAIL));
     }
   };
 }
