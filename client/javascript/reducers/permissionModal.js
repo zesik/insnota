@@ -15,15 +15,18 @@ import {
   FINISH_SUBMITTING_PERMISSIONS
 } from '../actions/permissionModal';
 
-const initialNoticeState = {
-  errorNotFound: false,
+const initialEmailNoticeState = {
   errorEmailEmpty: false,
   errorEmailInvalid: false,
   errorEmailNotExist: false,
   errorEmailAlreadyExists: false,
   errorEmailIsOwner: false,
-  serverError: false
 };
+
+const initialNoticeState = Object.assign({
+  errorNotFound: false,
+  serverError: false
+}, initialEmailNoticeState);
 
 const initialState = Object.assign({
   loading: false,
@@ -84,7 +87,7 @@ function permissionModalReducer(state = initialState, action) {
       return Object.assign({}, state, {
         collaboratorPlaceholderVisible: true,
         collaboratorPlaceholderEmail: ''
-      });
+      }, initialEmailNoticeState);
     case EDIT_COLLABORATOR_PLACEHOLDER:
       return Object.assign({}, state, {
         collaboratorPlaceholderEmail: action.email
