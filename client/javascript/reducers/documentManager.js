@@ -3,9 +3,13 @@ import {
   FINISH_LOADING_DOCUMENTS,
   START_CREATING_DOCUMENT,
   FINISH_CREATING_DOCUMENT,
-  CHANGE_DOCUMENT_TITLE
+  CHANGE_DOCUMENT_TITLE,
+  CHANGE_SORTING_ORDER,
+  TOGGLE_SHOW_OWNED_DOCUMENTS,
+  TOGGLE_SHOW_SHARED_DOCUMENTS
 } from '../actions/documentManager';
 import { HIDE_DELETE_MODAL } from '../actions/deleteModal';
+import { SORTING_CREATE_TIME_DESCENDING } from '../constants/documentManager';
 
 const initialState = {
   // User information
@@ -14,7 +18,10 @@ const initialState = {
   // Document list
   documents: [],
   loading: false,
-  creating: false
+  creating: false,
+  showingOwned: true,
+  showingShared: true,
+  sorting: SORTING_CREATE_TIME_DESCENDING
 };
 
 function documentManagerReducer(state = initialState, action) {
@@ -45,7 +52,9 @@ function documentManagerReducer(state = initialState, action) {
         documents: [
           {
             id: action.id,
-            title: action.title
+            title: action.title,
+            createTime: action.createTime,
+            access: 'owner'
           },
           ...state.documents
         ]
@@ -67,6 +76,18 @@ function documentManagerReducer(state = initialState, action) {
       }
       return Object.assign({}, state, {
         documents: state.documents.filter(doc => doc.id !== action.deletedDocumentID)
+      });
+    case CHANGE_SORTING_ORDER:
+      return Object.assign({}, state, {
+        sorting: action.order
+      });
+    case TOGGLE_SHOW_OWNED_DOCUMENTS:
+      return Object.assign({}, state, {
+        showingOwned: !state.showingOwned
+      });
+    case TOGGLE_SHOW_SHARED_DOCUMENTS:
+      return Object.assign({}, state, {
+        showingShared: !state.showingShared
       });
     default:
       return state;

@@ -9,7 +9,10 @@ class PopupMenuItem extends React.Component {
 
   handleClick(e) {
     e.preventDefault();
-    this.props.onClick();
+    this.props.onClose();
+    if (this.props.onClick) {
+      this.props.onClick();
+    }
   }
 
   render() {
@@ -39,7 +42,8 @@ PopupMenuItem.propTypes = {
   divider: React.PropTypes.bool,
   disabled: React.PropTypes.bool,
   checked: React.PropTypes.bool,
-  onClick: React.PropTypes.func.isRequired
+  onClick: React.PropTypes.func,
+  onClose: React.PropTypes.func
 };
 
 export default PopupMenuItem;

@@ -6,6 +6,9 @@ export const FINISH_LOADING_DOCUMENTS = 'FINISH_LOADING_DOCUMENTS';
 export const START_CREATING_DOCUMENT = 'START_CREATING_DOCUMENT';
 export const FINISH_CREATING_DOCUMENT = 'FINISH_CREATING_DOCUMENT';
 export const CHANGE_DOCUMENT_TITLE = 'CHANGE_DOCUMENT_TITLE';
+export const CHANGE_SORTING_ORDER = 'CHANGE_SORTING_ORDER';
+export const TOGGLE_SHOW_OWNED_DOCUMENTS = 'TOGGLE_SHOW_OWNED_DOCUMENTS';
+export const TOGGLE_SHOW_SHARED_DOCUMENTS = 'TOGGLE_SHOW_SHARED_DOCUMENTS';
 
 function startLoadingDocuments() {
   return {
@@ -20,21 +23,6 @@ function finishLoadingDocuments(error, name, email, documents) {
     name,
     email,
     documents: documents || []
-  };
-}
-
-function startCreatingDocument() {
-  return {
-    type: START_CREATING_DOCUMENT
-  };
-}
-
-function finishCreatingDocument(error, id, title) {
-  return {
-    type: FINISH_CREATING_DOCUMENT,
-    error,
-    id,
-    title
   };
 }
 
@@ -61,6 +49,22 @@ export function initializeManager() {
   };
 }
 
+function startCreatingDocument() {
+  return {
+    type: START_CREATING_DOCUMENT
+  };
+}
+
+function finishCreatingDocument(error, id, title, createTime) {
+  return {
+    type: FINISH_CREATING_DOCUMENT,
+    error,
+    id,
+    title,
+    createTime
+  };
+}
+
 export function createDocument() {
   return dispatch => {
     dispatch(startCreatingDocument());
@@ -81,7 +85,7 @@ export function createDocument() {
       throw error;
     })
     .then(function (json) {
-      dispatch(finishCreatingDocument(null, json.id, json.title));
+      dispatch(finishCreatingDocument(null, json.id, json.title, json.createTime));
       dispatch(push(`/notes/${json.id}`));
     })
     .catch(function (err) {
@@ -118,5 +122,24 @@ export function signOut() {
     .then(function () {
       window.location = '/';
     });
+  };
+}
+
+export function changeSortingOrder(order) {
+  return {
+    type: CHANGE_SORTING_ORDER,
+    order
+  };
+}
+
+export function toggleShowOwnedDocuments() {
+  return {
+    type: TOGGLE_SHOW_OWNED_DOCUMENTS
+  };
+}
+
+export function toggleShowSharedDocuments() {
+  return {
+    type: TOGGLE_SHOW_SHARED_DOCUMENTS
   };
 }

@@ -1,14 +1,27 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { Link } from 'react-router';
 import classNames from 'classnames';
 import Document from '../../components/Document';
 import UserAvatar from '../../components/UserAvatar';
 import PopupBox from '../../components/PopupBox';
 import PopupMenu from '../../components/PopupMenu';
 import PopupMenuItem from '../../components/PopupMenuItem';
-import { initializeManager, createDocument, navigateToSettings, signOut } from '../../actions/documentManager';
+import {
+  initializeManager,
+  createDocument,
+  navigateToSettings,
+  signOut,
+  changeSortingOrder,
+  toggleShowOwnedDocuments,
+  toggleShowSharedDocuments
+} from '../../actions/documentManager';
 import { openDeleteModal } from '../../actions/deleteModal';
+import {
+  SORTING_CREATE_TIME_ASCENDING,
+  SORTING_CREATE_TIME_DESCENDING,
+  SORTING_TITLE_ASCENDING,
+  SORTING_TITLE_DESCENDING
+} from '../../constants/documentManager';
 
 function textifyNoteCounter(count) {
   switch (count) {
@@ -28,6 +41,9 @@ class DocumentManager extends React.Component {
     this.handleDeleteDocumentClicked = this.handleDeleteDocumentClicked.bind(this);
     this.handleNavigateToSettingsClicked = this.handleNavigateToSettingsClicked.bind(this);
     this.handleSignOutClicked = this.handleSignOutClicked.bind(this);
+    this.handleChangeSortingOrder = this.handleChangeSortingOrder.bind(this);
+    this.handleToggleShowOwnedDocuments = this.handleToggleShowOwnedDocuments.bind(this);
+    this.handleToggleShowSharedDocuments = this.handleToggleShowSharedDocuments.bind(this);
   }
 
   componentDidMount() {
@@ -55,6 +71,18 @@ class DocumentManager extends React.Component {
     this.props.onSignOutClicked();
   }
 
+  handleChangeSortingOrder(order) {
+    this.props.onChangeSortingOrder(order);
+  }
+
+  handleToggleShowOwnedDocuments() {
+    this.props.onToggleShowOwnedDocuments();
+  }
+
+  handleToggleShowSharedDocuments() {
+    this.props.onToggleShowSharedDocuments();
+  }
+
   render() {
     const newDocClasses = classNames({
       btn: true,
@@ -78,7 +106,7 @@ class DocumentManager extends React.Component {
                 <div className="user-email">{this.props.user.email}</div>
               </div>
               <div className="account-menu">
-                <PopupBox left>
+                <PopupBox>
                   <PopupMenu>
                     <PopupMenuItem text="Settings" onClick={this.handleNavigateToSettingsClicked} />
                     <PopupMenuItem text="Sign out" onClick={this.handleSignOutClicked} />
@@ -94,44 +122,72 @@ class DocumentManager extends React.Component {
             {!this.props.loading && <div>{textifyNoteCounter(this.props.documents.length)}</div>}
           </div>
           <div className="tool-bar-item flex-width" />
-          <button className={newDocClasses} onClick={this.handleNewDocumentClicked}>
-            <i className="fa fa-plus" />
-          </button>
+          {this.props.showingOwned &&
+            <button className={newDocClasses} onClick={this.handleNewDocumentClicked}>
+              <i className="fa fa-plus" />
+            </button>
+          }
           <div className="tool-bar-item icon-button">
-            <PopupBox left>
+            <PopupBox>
               <PopupMenu>
                 <PopupMenuItem text="Show Notes" disabled />
-                <PopupMenuItem text="Created by me" checked />
-                <PopupMenuItem text="Shared to me" />
+                <PopupMenuItem
+                  text="Created by Me"
+                  checked={this.props.showingOwned}
+                  onClick={this.handleToggleShowOwnedDocuments}
+                />
+                <PopupMenuItem
+                  text="Shared to Me"
+                  checked={this.props.showingShared}
+                  onClick={this.handleToggleShowSharedDocuments}
+                />
                 <PopupMenuItem divider />
-                <PopupMenuItem text="Sorting by" disabled />
-                <PopupMenuItem text="Date Created" checked />
+                <PopupMenuItem text="Sort By" disabled />
+                <PopupMenuItem
+                  text="Date Created (oldest first)"
+                  checked={this.props.sorting === SORTING_CREATE_TIME_ASCENDING}
+                  onClick={e => this.handleChangeSortingOrder(SORTING_CREATE_TIME_ASCENDING)}
+                />
+                <PopupMenuItem
+                  text="Date Created (newest first)"
+                  checked={this.props.sorting === SORTING_CREATE_TIME_DESCENDING}
+                  onClick={e => this.handleChangeSortingOrder(SORTING_CREATE_TIME_DESCENDING)}
+                />
+                <PopupMenuItem
+                  text="Title (ascending)"
+                  checked={this.props.sorting === SORTING_TITLE_ASCENDING}
+                  onClick={e => this.handleChangeSortingOrder(SORTING_TITLE_ASCENDING)}
+                />
+                <PopupMenuItem
+                  text="Title (descending)"
+                  checked={this.props.sorting === SORTING_TITLE_DESCENDING}
+                  onClick={e => this.handleChangeSortingOrder(SORTING_TITLE_DESCENDING)}
+                />
               </PopupMenu>
             </PopupBox>
           </div>
         </div>
         <div className="document-list">
-          {this.props.documents.length === 0 &&
-            <div className="document-empty-tip">
-              You don't have any notes.
-              Click the plus sign to create new note.
+          {this.props.documents.length === 0 && this.props.showingOwned &&
+            <div className="document-empty-tip tip-creating-new">
+              You don't have any notes. Click the plus sign to create a new note.
             </div>
           }
-          {this.props.documents.map(item => {
-            const classes = classNames({
-              'document-item': true,
-              'document-item-selected': item.id === this.props.selectedDocumentID
-            });
-            return (
-              <Link className={classes} key={item.id} to={`/notes/${item.id}`}>
-                <Document
-                  title={item.title}
-                  lastModified={item.lastModified}
-                  onDeleteClicked={e => this.handleDeleteDocumentClicked(e, item.id, item.title)}
-                />
-              </Link>
-            );
-          })}
+          {this.props.documents.length === 0 && !this.props.showingOwned &&
+            <div className="document-empty-tip tip-switching">
+              No note is visible. Click the more icon to show your own notes.
+            </div>
+          }
+          {this.props.documents.map(item =>
+            <Document
+              id={item.id}
+              selected={item.id === this.props.selectedDocumentID}
+              title={item.title}
+              createTime={item.createTime}
+              access={item.access}
+              onDeleteClicked={e => this.handleDeleteDocumentClicked(e, item.id, item.title)}
+            />
+          )}
         </div>
       </div>
     );
@@ -141,6 +197,9 @@ class DocumentManager extends React.Component {
 DocumentManager.propTypes = {
   loading: React.PropTypes.bool.isRequired,
   creating: React.PropTypes.bool.isRequired,
+  showingOwned: React.PropTypes.bool.isRequired,
+  showingShared: React.PropTypes.bool.isRequired,
+  sorting: React.PropTypes.string.isRequired,
   user: React.PropTypes.shape({
     name: React.PropTypes.string.isRequired,
     email: React.PropTypes.string.isRequired
@@ -148,7 +207,8 @@ DocumentManager.propTypes = {
   documents: React.PropTypes.arrayOf(React.PropTypes.shape({
     id: React.PropTypes.string.isRequired,
     title: React.PropTypes.string.isRequired,
-    lastModified: React.PropTypes.string
+    createTime: React.PropTypes.string.isRequired,
+    access: React.PropTypes.string.isRequired
   })).isRequired,
   selectedDocumentID: React.PropTypes.string,
   collapsed: React.PropTypes.bool.isRequired,
@@ -159,13 +219,47 @@ DocumentManager.propTypes = {
   onSignOutClicked: React.PropTypes.func.isRequired
 };
 
+function getDocuments(documents, showingOwned, showingShared, sorting) {
+  let sortingFunction;
+  switch (sorting) {
+    case SORTING_CREATE_TIME_ASCENDING:
+      sortingFunction = (a, b) => a.createTime.localeCompare(b.createTime);
+      break;
+    case SORTING_CREATE_TIME_DESCENDING:
+      sortingFunction = (a, b) => -a.createTime.localeCompare(b.createTime);
+      break;
+    case SORTING_TITLE_ASCENDING:
+      sortingFunction = (a, b) => a.title.localeCompare(b.title);
+      break;
+    case SORTING_TITLE_DESCENDING:
+      sortingFunction = (a, b) => -a.title.localeCompare(b.title);
+      break;
+    default:
+      sortingFunction = null;
+      break;
+  }
+  const docs = documents.filter(doc =>
+    (showingOwned && doc.access === 'owner') ||
+    (showingShared && (doc.access === 'viewable' || doc.access === 'editable'))
+  );
+  docs.sort((a, b) => -a.createTime.localeCompare(b.createTime));
+  if (sortingFunction) {
+    docs.sort(sortingFunction);
+  }
+  return docs;
+}
+
 function mapStateToProps(state, ownProps) {
-  const user = state.manager.email ? { name: state.manager.name, email: state.manager.email } : null;
+  const { manager } = state;
+  const user = manager.email ? { name: manager.name, email: manager.email } : null;
   return {
-    loading: state.manager.loading,
-    creating: state.manager.creating,
+    loading: manager.loading,
+    creating: manager.creating,
+    showingOwned: manager.showingOwned,
+    showingShared: manager.showingShared,
+    sorting: manager.sorting,
     user,
-    documents: state.manager.documents,
+    documents: getDocuments(manager.documents, manager.showingOwned, manager.showingShared, manager.sorting),
     collapsed: !user,
     selectedDocumentID: ownProps.selectedDocumentID
   };
@@ -187,6 +281,15 @@ function mapDispatchToProps(dispatch) {
     },
     onSignOutClicked: () => {
       dispatch(signOut());
+    },
+    onChangeSortingOrder: order => {
+      dispatch(changeSortingOrder(order));
+    },
+    onToggleShowOwnedDocuments: () => {
+      dispatch(toggleShowOwnedDocuments());
+    },
+    onToggleShowSharedDocuments: () => {
+      dispatch(toggleShowSharedDocuments());
     }
   };
 }

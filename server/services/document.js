@@ -34,6 +34,44 @@ function findByOwner(userID) {
   });
 }
 
+function findAccessible(userID) {
+  return new Promise((resolve, reject) => {
+    Document.findByOwner(userID, (errOwner, ownedDocs) => {
+      if (errOwner) {
+        logger.error('Database error when finding documents');
+        reject(errOwner);
+        return;
+      }
+      Document.findViewableByUser(userID, (errViewable, viewableDocs) => {
+        if (errViewable) {
+          logger.error('Database error when finding documents');
+          reject(errViewable);
+          return;
+        }
+        Document.findEditableByUser(userID, (errEditable, editableDocs) => {
+          if (errEditable) {
+            logger.error('Database error when finding documents');
+            reject(errEditable);
+            return;
+          }
+          const docs = [];
+          const addDocument = access => doc => {
+            if (doc.deleted_at) {
+              return;
+            }
+            doc.userAccess = access;
+            docs.push(doc);
+          };
+          ownedDocs.forEach(addDocument('owner'));
+          viewableDocs.forEach(addDocument('viewable'));
+          editableDocs.forEach(addDocument('editable'));
+          resolve(docs);
+        });
+      });
+    });
+  });
+}
+
 function create(id, collection, ownerID, title) {
   return new Promise((resolve, reject) => {
     const doc = new Document();
@@ -53,7 +91,8 @@ function create(id, collection, ownerID, title) {
 }
 
 module.exports = {
-  findByOwner,
   find,
+  findByOwner,
+  findAccessible,
   create
 };

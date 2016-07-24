@@ -270,10 +270,10 @@ router.get('/notes', function (req, res, next) {
     res.send({});
     return;
   }
-  documentService.findByOwner(req.user._id).then(docs => res.send({
+  documentService.findAccessible(req.user._id).then(docs => res.send({
     name: req.user.name,
     email: req.user.email,
-    documents: docs.map(doc => ({ id: doc._id, title: doc.title }))
+    documents: docs.map(doc => ({ id: doc._id, title: doc.title, createTime: doc.created_at, access: doc.userAccess }))
   })).catch(err => next(err));
 });
 
@@ -283,9 +283,9 @@ router.post('/notes', function (req, res, next) {
     return;
   }
   const userID = req.user ? req.user._id : null;
-  sharedbService.createDocument(config.documentCollection).then(doc => {
-    documentService.create(doc.id, doc.collection, userID, doc.title)
-      .then(() => res.send({ id: doc.id, title: doc.t }))
+  sharedbService.createDocument(config.documentCollection).then(shareDBDoc => {
+    documentService.create(shareDBDoc.id, shareDBDoc.collection, userID, shareDBDoc.title)
+      .then(doc => res.send({ id: shareDBDoc.id, title: shareDBDoc.title, createTime: doc.created_at }))
       .catch(e => next(e));
   }).catch(err => next(err));
 });

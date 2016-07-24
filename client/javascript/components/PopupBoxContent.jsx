@@ -28,16 +28,17 @@ class PopupBoxContent extends React.Component {
   }
 
   render() {
+    const children = React.Children.map(this.props.children,
+      child => React.cloneElement(child, { onClose: this.props.onClose })
+    );
     return (
-      <div className="popup-content">
-        {this.props.children}
-      </div>
+      <div className="popup-content">{children}</div>
     );
   }
 }
 
 PopupBoxContent.propTypes = {
-  onClose: React.PropTypes.func.isRequired,
+  onClose: React.PropTypes.func,
   children: React.PropTypes.element.isRequired
 };
 

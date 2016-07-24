@@ -137,7 +137,6 @@ $editor-title-section-height: 48px;
       &::before, &::after {
         position: absolute;
         bottom: 100%;
-        right: 28px;
         content: " ";
         width: 0;
         height: 0;
@@ -155,6 +154,18 @@ $editor-title-section-height: 48px;
         border-right: 6px solid transparent;
         border-bottom: 6px solid $grey-400;
       }
+
+      &.tip-creating-new {
+        &::before, &::after {
+          right: 28px;
+        }
+      }
+
+      &.tip-switching {
+        &::before, &::after {
+          right: 2px;
+        }
+      }
     }
 
     .document-item {
@@ -166,7 +177,7 @@ $editor-title-section-height: 48px;
       &:hover, &:focus {
         background-color: $grey-250;
 
-        .document .delete-button {
+        .delete-button {
           display: inherit;
         }
       }
@@ -175,7 +186,19 @@ $editor-title-section-height: 48px;
         background-color: $grey-300;
       }
 
-      .document .delete-button {
+      .title {
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+      }
+
+      .create-time {
+        margin-top: 4px;
+        color: $dark-text-disabled;
+        font-size: $small-font-size;
+      }
+
+      .delete-button {
         display: none;
         float: right;
         width: 16px;
