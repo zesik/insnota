@@ -97,6 +97,18 @@ class DocumentManager extends React.Component {
           <button className={newDocClasses} onClick={this.handleNewDocumentClicked}>
             <i className="fa fa-plus" />
           </button>
+          <div className="tool-bar-item icon-button">
+            <PopupBox left>
+              <PopupMenu>
+                <PopupMenuItem text="Show Notes" disabled />
+                <PopupMenuItem text="Created by me" checked />
+                <PopupMenuItem text="Shared to me" />
+                <PopupMenuItem divider />
+                <PopupMenuItem text="Sorting by" disabled />
+                <PopupMenuItem text="Date Created" checked />
+              </PopupMenu>
+            </PopupBox>
+          </div>
         </div>
         <div className="document-list">
           {this.props.documents.length === 0 &&

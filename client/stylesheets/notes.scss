@@ -117,7 +117,7 @@ $editor-title-section-height: 48px;
 
   .document-list-status {
     flex: 0 0 auto;
-    padding: 0;
+    padding: 0 4px;
   }
 
   .document-list {
@@ -137,7 +137,7 @@ $editor-title-section-height: 48px;
       &::before, &::after {
         position: absolute;
         bottom: 100%;
-        right: 5px;
+        right: 28px;
         content: " ";
         width: 0;
         height: 0;
@@ -215,26 +215,54 @@ $editor-title-section-height: 48px;
 }
 
 .popup-menu-container {
+  font-family: $base-font-family;
+  font-size: $base-font-size;
+  line-height: $base-line-height;
+  font-weight: $font-regular;
+  text-align: left;
   min-width: 120px;
   padding-top: 4px;
   padding-bottom: 4px;
   @include drop-shadow(0, 0, 2px, rgba(0, 0, 0, 0.5));
   background-color: $white;
+  white-space: nowrap;
+
+  .popup-menu-item-divider {
+    margin: 8px 0;
+    height: 1px;
+    background-color: $dark-text-divider;
+  }
 
   .popup-menu-item {
-    list-style-type: none;
+    position: relative;
+    display: block;
+    padding: 4px 32px 4px 22px;
+    color: $dark-text-primary;
+    background-color: $white;
 
-    a {
-      display: block;
-      padding: 4px 8px;
-      color: $dark-text-primary;
-      background-color: $white;
-      cursor: pointer;
+    &:hover, &:active {
+      color: $white;
+      background-color: $blue-500;
+    }
+
+    &.popup-menu-item-disabled {
+      color: $dark-text-disabled;
 
       &:hover, &:active {
-        color: $white;
-        background-color: $blue-500;
+        color: $dark-text-disabled;
+        background-color: $white;
       }
+    }
+
+    &.popup-menu-item-checked::before {
+      position: absolute;
+      display: block;
+      font-family: FontAwesome;
+      font-weight: normal;
+      font-style: normal;
+      text-decoration: inherit;
+      content: "\f00c";
+      left: 4px;
     }
   }
 }
@@ -269,6 +297,13 @@ $status-bar-item-padding-right: 8px;
 $status-bar-font-size: 12px;
 $status-bar-line-height:
   $status-bar-height - ($status-bar-padding-top + $status-bar-item-margin-top + $status-bar-item-padding-top) * 2;
+
+$tool-bar-padding-top: 0;
+$tool-bar-padding-right: 4px;
+$tool-bar-item-margin-top: 0;
+$tool-bar-item-margin-right: 4px;
+$tool-bar-item-padding-top: 8px;
+$tool-bar-item-padding-right: 4px;
 
 .editor-container {
   position: relative;
@@ -362,7 +397,6 @@ $status-bar-line-height:
   display: flex;
   flex-flow: row;
   height: $status-bar-height;
-  padding: $status-bar-padding-top $status-bar-padding-right;
   font-size: $status-bar-font-size;
   line-height: $status-bar-line-height;
   vertical-align: baseline;
@@ -371,23 +405,27 @@ $status-bar-line-height:
 }
 
 .tool-bar {
+  padding: $tool-bar-padding-top $tool-bar-padding-right;
+
   .tool-bar-item {
     flex: 0 1 auto;
-    margin: $status-bar-item-margin-top $status-bar-item-margin-right;
-    padding: $status-bar-item-padding-top $status-bar-item-padding-right;
+    margin: $tool-bar-item-margin-top $tool-bar-item-margin-right;
+    padding: $tool-bar-item-padding-top $tool-bar-item-padding-right;
 
     &.flex-width {
       flex: 1 1 auto;
     }
 
     &.icon-button {
-      width: 32px;
+      width: 18px;
       text-align: center;
     }
   }
 }
 
 .status-bar {
+  padding: $status-bar-padding-top $status-bar-padding-right;
+
   .status-bar-item {
     flex: 0 1 auto;
     margin: $status-bar-item-margin-top $status-bar-item-margin-right;

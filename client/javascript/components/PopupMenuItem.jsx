@@ -1,4 +1,5 @@
 import React from 'react';
+import classNames from 'classnames';
 
 class PopupMenuItem extends React.Component {
   constructor(props) {
@@ -14,15 +15,21 @@ class PopupMenuItem extends React.Component {
   render() {
     if (this.props.divider) {
       return (
-        <li className="popup-menu-item popup-menu-item-divider" />
+        <div className="popup-menu-item-divider" />
       );
-    } else if (this.props.disabled) {
+    }
+    const classes = classNames({
+      'popup-menu-item': true,
+      'popup-menu-item-disabled': this.props.disabled,
+      'popup-menu-item-checked': this.props.checked,
+    });
+    if (this.props.disabled) {
       return (
-        <li className="popup-menu-item popup-menu-item-disabled">{this.props.text}</li>
+        <div className={classes}>{this.props.text}</div>
       );
     }
     return (
-      <li className="popup-menu-item"><a href="" onClick={this.handleClick}>{this.props.text}</a></li>
+      <a className={classes} href="" onClick={this.handleClick}>{this.props.text}</a>
     );
   }
 }
@@ -31,6 +38,7 @@ PopupMenuItem.propTypes = {
   text: React.PropTypes.string,
   divider: React.PropTypes.bool,
   disabled: React.PropTypes.bool,
+  checked: React.PropTypes.bool,
   onClick: React.PropTypes.func.isRequired
 };
 
