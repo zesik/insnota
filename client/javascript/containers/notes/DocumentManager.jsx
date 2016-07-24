@@ -146,22 +146,22 @@ class DocumentManager extends React.Component {
                 <PopupMenuItem
                   text="Date Created (oldest first)"
                   checked={this.props.sorting === SORTING_CREATE_TIME_ASCENDING}
-                  onClick={e => this.handleChangeSortingOrder(SORTING_CREATE_TIME_ASCENDING)}
+                  onClick={() => this.handleChangeSortingOrder(SORTING_CREATE_TIME_ASCENDING)}
                 />
                 <PopupMenuItem
                   text="Date Created (newest first)"
                   checked={this.props.sorting === SORTING_CREATE_TIME_DESCENDING}
-                  onClick={e => this.handleChangeSortingOrder(SORTING_CREATE_TIME_DESCENDING)}
+                  onClick={() => this.handleChangeSortingOrder(SORTING_CREATE_TIME_DESCENDING)}
                 />
                 <PopupMenuItem
                   text="Title (ascending)"
                   checked={this.props.sorting === SORTING_TITLE_ASCENDING}
-                  onClick={e => this.handleChangeSortingOrder(SORTING_TITLE_ASCENDING)}
+                  onClick={() => this.handleChangeSortingOrder(SORTING_TITLE_ASCENDING)}
                 />
                 <PopupMenuItem
                   text="Title (descending)"
                   checked={this.props.sorting === SORTING_TITLE_DESCENDING}
-                  onClick={e => this.handleChangeSortingOrder(SORTING_TITLE_DESCENDING)}
+                  onClick={() => this.handleChangeSortingOrder(SORTING_TITLE_DESCENDING)}
                 />
               </PopupMenu>
             </PopupBox>
@@ -216,7 +216,10 @@ DocumentManager.propTypes = {
   onNewDocumentClicked: React.PropTypes.func.isRequired,
   onDeleteDocumentClicked: React.PropTypes.func.isRequired,
   onNavigateToSettingsClicked: React.PropTypes.func.isRequired,
-  onSignOutClicked: React.PropTypes.func.isRequired
+  onSignOutClicked: React.PropTypes.func.isRequired,
+  onChangeSortingOrder: React.PropTypes.func.isRequired,
+  onToggleShowOwnedDocuments: React.PropTypes.func.isRequired,
+  onToggleShowSharedDocuments: React.PropTypes.func.isRequired
 };
 
 function getDocuments(documents, showingOwned, showingShared, sorting) {

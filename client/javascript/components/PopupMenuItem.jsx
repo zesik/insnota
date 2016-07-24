@@ -24,7 +24,7 @@ class PopupMenuItem extends React.Component {
     const classes = classNames({
       'popup-menu-item': true,
       'popup-menu-item-disabled': this.props.disabled,
-      'popup-menu-item-checked': this.props.checked,
+      'popup-menu-item-checked': this.props.checked
     });
     if (this.props.disabled) {
       return (

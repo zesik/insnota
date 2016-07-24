@@ -198,6 +198,13 @@ $editor-title-section-height: 48px;
         font-size: $small-font-size;
       }
 
+      .access {
+        float: right;
+        width: 16px;
+        text-align: center;
+        color: $dark-text-disabled;
+      }
+
       .delete-button {
         display: none;
         float: right;

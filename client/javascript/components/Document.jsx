@@ -12,11 +12,17 @@ function Document(props) {
   return (
     <Link className={classes} key={props.id} to={`/notes/${props.id}`}>
       <div className="title">{props.title}</div>
-      <div className="btn btn-link delete-button" onClick={e => props.onDeleteClicked(e)}>
-        <i className="fa fa-trash-o" />
-      </div>
-      <div className="create-time">Created on {createTime.format('ll')}</div>
-      <div className="access"></div>
+      {props.access === 'owner' &&
+        <div className="btn btn-link delete-button" onClick={e => props.onDeleteClicked(e)}>
+          <i className="fa fa-trash-o" />
+        </div>
+      }
+      {props.access !== 'owner' &&
+        <div className="access" title="This note is shared to you.">
+          <i className="fa fa-users" />
+        </div>
+      }
+      <div className="create-time" title={createTime.format('lll')}>Created on {createTime.format('ll')}</div>
     </Link>
   );
 }
