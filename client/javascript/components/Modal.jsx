@@ -86,7 +86,7 @@ class Modal extends React.Component {
             disabled={this.props.cancelButtonDisabled}
             ref="closeButton"
           >
-            <i className="fa fa-close" />
+            <i className="material-icons">close</i>
           </button>
           {titleElement}
           {bodyElement}

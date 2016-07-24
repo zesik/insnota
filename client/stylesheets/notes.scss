@@ -117,7 +117,7 @@ $editor-title-section-height: 48px;
 
   .document-list-status {
     flex: 0 0 auto;
-    padding: 0 4px;
+    padding: 0 8px;
   }
 
   .document-list {
@@ -157,13 +157,13 @@ $editor-title-section-height: 48px;
 
       &.tip-creating-new {
         &::before, &::after {
-          right: 28px;
+          right: 24px;
         }
       }
 
       &.tip-switching {
         &::before, &::after {
-          right: 2px;
+          right: 4px;
         }
       }
     }
@@ -200,16 +200,18 @@ $editor-title-section-height: 48px;
 
       .access {
         float: right;
-        width: 16px;
-        text-align: center;
+        margin-top: 4px;
         color: $dark-text-disabled;
+        font-size: $small-font-size;
+        vertical-align: bottom;
       }
 
       .delete-button {
         display: none;
         float: right;
-        width: 16px;
-        text-align: center;
+        margin-top: 4px;
+        font-size: $small-font-size;
+        vertical-align: bottom;
       }
     }
   }
@@ -217,11 +219,6 @@ $editor-title-section-height: 48px;
 
 .popup-container {
   position: relative;
-
-  .btn.popup-trigger {
-    padding-left: 4px;
-    padding-right: 4px;
-  }
 
   .popup-backdrop {
     position: fixed;
@@ -266,7 +263,7 @@ $editor-title-section-height: 48px;
   .popup-menu-item {
     position: relative;
     display: block;
-    padding: 4px 32px 4px 22px;
+    padding: 4px 32px 4px 24px;
     color: $dark-text-primary;
     background-color: $white;
 
@@ -287,12 +284,12 @@ $editor-title-section-height: 48px;
     &.popup-menu-item-checked::before {
       position: absolute;
       display: block;
-      font-family: FontAwesome;
+      font-family: 'Material Icons';
       font-weight: normal;
       font-style: normal;
       text-decoration: inherit;
-      content: "\f00c";
-      left: 4px;
+      content: "\e5ca";
+      left: 6px;
     }
   }
 }
@@ -330,10 +327,10 @@ $status-bar-line-height:
 
 $tool-bar-padding-top: 0;
 $tool-bar-padding-right: 4px;
-$tool-bar-item-margin-top: 0;
+$tool-bar-item-margin-top: 8px;
 $tool-bar-item-margin-right: 4px;
-$tool-bar-item-padding-top: 8px;
-$tool-bar-item-padding-right: 4px;
+$tool-bar-item-padding-top: 0;
+$tool-bar-item-padding-right: 0;
 
 .editor-container {
   position: relative;
@@ -447,7 +444,6 @@ $tool-bar-item-padding-right: 4px;
     }
 
     &.icon-button {
-      width: 18px;
       text-align: center;
     }
   }
@@ -501,7 +497,7 @@ $tool-bar-item-padding-right: 4px;
 
 #sync-status {
   display: inline-block;
-  font-family: FontAwesome;
+  font-family: 'Material Icons';
 
   .cloud-icon-fill {
     fill: url("#cloud-icon-pattern");

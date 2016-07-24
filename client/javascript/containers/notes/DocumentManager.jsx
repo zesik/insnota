@@ -124,7 +124,7 @@ class DocumentManager extends React.Component {
           <div className="tool-bar-item flex-width" />
           {this.props.showingOwned &&
             <button className={newDocClasses} onClick={this.handleNewDocumentClicked}>
-              <i className="fa fa-plus" />
+              <i className="material-icons small">add</i>
             </button>
           }
           <div className="tool-bar-item icon-button">
@@ -180,6 +180,7 @@ class DocumentManager extends React.Component {
           }
           {this.props.documents.map(item =>
             <Document
+              key={item.id}
               id={item.id}
               key={item.id}
               selected={item.id === this.props.selectedDocumentID}

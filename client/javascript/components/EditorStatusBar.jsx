@@ -4,7 +4,7 @@ import LanguageModePopup from './LanguageModePopup';
 import NavigationPopup from './NavigationPopup';
 import { NET_CONNECTED, NET_CONNECTING, NET_WAITING, DOC_SYNCED } from './SyncedEditor';
 
-function formatSecondCounter(seconds) {
+function formatSeconds(seconds) {
   if (seconds > 1) {
     return `${seconds} seconds`;
   }
@@ -80,7 +80,7 @@ class EditorStatusBar extends React.Component {
         syncTitle = 'Connecting...';
         break;
       case NET_WAITING:
-        syncTitle = `Retrying connection to the server in ${formatSecondCounter(this.props.netRetryWait)}...`;
+        syncTitle = `Disconnected. Retrying connection to the server in ${formatSeconds(this.props.netRetryWait)}...`;
         break;
       case NET_CONNECTED:
         if (this.props.docStatus === DOC_SYNCED) {
@@ -101,15 +101,15 @@ class EditorStatusBar extends React.Component {
       if (this.props.docStatus === DOC_SYNCED) {
         syncStatus = (
           <div className="status-bar-item-content icon-button" title={syncTitle}>
-            <i className="fa fa-cloud" />
+            <i className="material-icons small">cloud_done</i>
           </div>
         );
       } else {
         syncStatus = (
           <div className="status-bar-item-content icon-button" title={syncTitle}>
-            <svg width="16" height="14" viewBox="0 0 16 14">
+            <svg width="12" height="14" viewBox="0 0 12 14">
               <clipPath id="cloud-icon-clip">
-                <text textAnchor="middle" x="50%" y="50%" dy=".35em">&#xf0c2;</text>
+                <text x="0" y="13px">&#xe2bd;</text>
               </clipPath>
               <pattern id="cloud-icon-pattern" width="8" height="8" patternUnits="userSpaceOnUse">
                 <rect x="-1" y="-1" width="120%" height="120%" fill="rgb(117,117,117)" />
@@ -127,7 +127,7 @@ class EditorStatusBar extends React.Component {
     } else {
       syncStatus = (
         <div className="status-bar-item-content icon-button disconnected" title={syncTitle}>
-          <i className="fa fa-exclamation-circle" />
+          <i className="material-icons small">error</i>
         </div>
       );
     }
@@ -173,13 +173,13 @@ class EditorStatusBar extends React.Component {
     let sharingIcon;
     switch (this.props.sharing) {
       case 'team':
-        sharingIcon = (<i className="fa fa-users" />);
+        sharingIcon = (<i className="material-icons small">group</i>);
         break;
       case 'public':
-        sharingIcon = (<i className="fa fa-globe" />);
+        sharingIcon = (<i className="material-icons small">public</i>);
         break;
       default:
-        sharingIcon = (<i className="fa fa-lock" />);
+        sharingIcon = (<i className="material-icons small">lock</i>);
         break;
     }
 

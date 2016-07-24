@@ -15,6 +15,29 @@ $font-light: 300;
 $font-regular: 400;
 $font-bold: 700;
 
+/* -------- Font Definitions -------- */
+.material-icons {
+  font-size: inherit;
+  line-height: inherit;
+  vertical-align: top;
+
+  &.md-24 {
+    font-size: 24px;
+  }
+
+  &.md-32 {
+    font-size: 32px;
+  }
+
+  &.md-48 {
+    font-size: 48px;
+  }
+
+  &.md-64 {
+    font-size: 64px;
+  }
+}
+
 /* -------- Color Definitions -------- */
 $black: #000000;
 $white: #ffffff;

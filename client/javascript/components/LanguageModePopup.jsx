@@ -11,7 +11,7 @@ class LanguageModePopup extends React.Component {
     return (
       <div className="status-popup popup-top-left" id="popup-language-selection">
         <div className="btn btn-link popup-close-button" onClick={this.props.onClosePopup}>
-          <i className="fa fa-close" />
+          <i className="material-icons">close</i>
         </div>
         <div className="popup-title">Language Mode</div>
         <input

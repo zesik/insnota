@@ -23,7 +23,7 @@ class PopupBox extends React.Component {
     return (
       <div className={popupClasses}>
         <button className="btn btn-link popup-trigger" onClick={this.toggleVisibility}>
-          <i className="fa fa-ellipsis-v" />
+          <i className="material-icons">more_vert</i>
         </button>
         {this.state.visible && <div className="popup-backdrop" onClick={this.toggleVisibility} />}
         {this.state.visible &&
