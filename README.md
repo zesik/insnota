@@ -47,6 +47,10 @@ $ npm run develop
 
 ## Release History
 
+* 0.1.1: Jul 25, 2016
+  * Fix a problem causing reconnection to fail.
+  * Show shared notes in the list.
+  * Adapt material design style icons.
 * 0.1.0: Jul 10, 2016
   * First proper release.
 
