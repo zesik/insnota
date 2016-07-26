@@ -104,7 +104,7 @@ class PermissionModal extends React.Component {
                       }
                       {currentUserEmail !== collaborator.email &&
                         <div
-                          className="btn btn-link"
+                          className="btn btn-link remove-collaborator-button"
                           onClick={() => this.props.onRemoveCollaborator(collaborator.email)}
                         >
                           <i className="material-icons">remove_circle</i>
@@ -156,10 +156,10 @@ class PermissionModal extends React.Component {
                       </div>
                       <div className="collaborator-operations">
                         <div className="btn btn-link" onClick={this.handleAddCollaborator}>
-                          <i className="material-icons">done</i>
+                          <i className="material-icons md-18">done</i>
                         </div>
                         <div className="btn btn-link" onClick={this.props.onCancelAddingCollaborator}>
-                          <i className="material-icons">clear</i>
+                          <i className="material-icons md-18">clear</i>
                         </div>
                       </div>
                     </div>

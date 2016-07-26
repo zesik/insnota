@@ -124,7 +124,7 @@ class DocumentManager extends React.Component {
           <div className="tool-bar-item flex-width" />
           {this.props.showingOwned &&
             <button className={newDocClasses} onClick={this.handleNewDocumentClicked}>
-              <i className="material-icons small">add</i>
+              <i className="material-icons">add</i>
             </button>
           }
           <div className="tool-bar-item icon-button">
@@ -182,7 +182,6 @@ class DocumentManager extends React.Component {
             <Document
               key={item.id}
               id={item.id}
-              key={item.id}
               selected={item.id === this.props.selectedDocumentID}
               title={item.title}
               createTime={item.createTime}

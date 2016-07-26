@@ -157,7 +157,7 @@ $editor-title-section-height: 48px;
 
       &.tip-creating-new {
         &::before, &::after {
-          right: 24px;
+          right: 26px;
         }
       }
 
@@ -200,7 +200,7 @@ $editor-title-section-height: 48px;
 
       .access {
         float: right;
-        margin-top: 4px;
+        margin-top: 2px;
         color: $dark-text-disabled;
         font-size: $small-font-size;
         vertical-align: bottom;
@@ -209,7 +209,7 @@ $editor-title-section-height: 48px;
       .delete-button {
         display: none;
         float: right;
-        margin-top: 4px;
+        margin-top: 2px;
         font-size: $small-font-size;
         vertical-align: bottom;
       }
@@ -498,6 +498,7 @@ $tool-bar-item-padding-right: 0;
 #sync-status {
   display: inline-block;
   font-family: 'Material Icons';
+  font-size: $base-font-size;
 
   .cloud-icon-fill {
     fill: url("#cloud-icon-pattern");
@@ -747,20 +748,26 @@ $tool-bar-item-padding-right: 0;
 
     .collaborator-operations {
       margin-left: 12px;
+      width: 24px;
 
       .collaborator-self {
         color: $dark-text-secondary;
         font-size: $small-font-size;
+        margin-top: 2px;
       }
 
       .btn {
         visibility: hidden;
         display: inline-block;
-        width: 14px;
-        margin-left: 6px;
+        margin-left: 4px;
 
         &:first-child {
-          margin-right: 0;
+          margin-left: 0;
+        }
+
+        &.remove-collaborator-button {
+          margin-top: 2px;
+          margin-left: 4px;
         }
       }
     }

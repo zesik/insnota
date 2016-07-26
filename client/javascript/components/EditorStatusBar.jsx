@@ -107,9 +107,9 @@ class EditorStatusBar extends React.Component {
       } else {
         syncStatus = (
           <div className="status-bar-item-content icon-button" title={syncTitle}>
-            <svg width="12" height="14" viewBox="0 0 12 14">
+            <svg width="14" height="14" viewBox="0 0 14 14">
               <clipPath id="cloud-icon-clip">
-                <text x="0" y="13px">&#xe2bd;</text>
+                <text x="0" y="14px">&#xe2bd;</text>
               </clipPath>
               <pattern id="cloud-icon-pattern" width="8" height="8" patternUnits="userSpaceOnUse">
                 <rect x="-1" y="-1" width="120%" height="120%" fill="rgb(117,117,117)" />
