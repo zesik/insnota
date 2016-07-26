@@ -9,6 +9,9 @@ import SyncedEditor, { OP_REMOTE } from '../../components/SyncedEditor';
 import PermissionModal from './PermissionModal';
 import DeleteModal from './DeleteModal';
 
+const NOTIFICATION_INFO_DELAY = 10000;
+const NOTIFICATION_ERROR_DELAY = 20000;
+
 class Notes extends React.Component {
   constructor(props) {
     super(props);
@@ -24,7 +27,8 @@ class Notes extends React.Component {
   handleLanguageModeChanged(mimeType, remote) {
     const { dispatch } = this.props;
     if (remote === OP_REMOTE) {
-      dispatch(showInformation(`Language mode is changed to ${getModeName(mimeType)} by remote user.`));
+      dispatch(showInformation(`Language mode is changed to ${getModeName(mimeType)} by remote user.`,
+        NOTIFICATION_INFO_DELAY));
     }
   }
 
@@ -49,7 +53,7 @@ class Notes extends React.Component {
           documentID={this.props.selectedDocumentID}
           onTitleChanged={this.handleTitleChanged}
           onLanguageModeChanged={this.handleLanguageModeChanged}
-          onDocumentError={error => dispatch(showError(JSON.stringify(error)))}
+          onDocumentError={error => dispatch(showError(JSON.stringify(error), NOTIFICATION_ERROR_DELAY))}
           onOpenPermissionModal={documentID => dispatch(openPermissionModal(documentID))}
           onToggleFullScreen={() => dispatch(toggleFullScreen())}
         />
