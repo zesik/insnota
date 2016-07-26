@@ -26,7 +26,7 @@ function Collaborators({ collaborators, collaboratorCursorsVisible, onShowCursor
           <div className={classNames({ 'collaborator-color': true, [`color-${item.color}`]: true })} />
         </div>
       ))}
-      <PopupBox left>
+      <PopupBox left largeIcon>
         <div className="popup-collaborators">
           <div className="popup-collaborator-list">
             {moreCollaborators.map(item => (

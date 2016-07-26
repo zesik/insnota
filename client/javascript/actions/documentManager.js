@@ -9,6 +9,7 @@ export const CHANGE_DOCUMENT_TITLE = 'CHANGE_DOCUMENT_TITLE';
 export const CHANGE_SORTING_ORDER = 'CHANGE_SORTING_ORDER';
 export const TOGGLE_SHOW_OWNED_DOCUMENTS = 'TOGGLE_SHOW_OWNED_DOCUMENTS';
 export const TOGGLE_SHOW_SHARED_DOCUMENTS = 'TOGGLE_SHOW_SHARED_DOCUMENTS';
+export const TOGGLE_FULL_SCREEN = 'TOGGLE_FULL_SCREEN';
 
 function startLoadingDocuments() {
   return {
@@ -141,5 +142,11 @@ export function toggleShowOwnedDocuments() {
 export function toggleShowSharedDocuments() {
   return {
     type: TOGGLE_SHOW_SHARED_DOCUMENTS
+  };
+}
+
+export function toggleFullScreen() {
+  return {
+    type: TOGGLE_FULL_SCREEN
   };
 }

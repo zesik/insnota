@@ -106,7 +106,7 @@ class DocumentManager extends React.Component {
                 <div className="user-email">{this.props.user.email}</div>
               </div>
               <div className="account-menu">
-                <PopupBox>
+                <PopupBox largeIcon>
                   <PopupMenu>
                     <PopupMenuItem text="Settings" onClick={this.handleNavigateToSettingsClicked} />
                     <PopupMenuItem text="Sign out" onClick={this.handleSignOutClicked} />
@@ -264,7 +264,7 @@ function mapStateToProps(state, ownProps) {
     sorting: manager.sorting,
     user,
     documents: getDocuments(manager.documents, manager.showingOwned, manager.showingShared, manager.sorting),
-    collapsed: !user,
+    collapsed: ownProps.collapsed,
     selectedDocumentID: ownProps.selectedDocumentID
   };
 }

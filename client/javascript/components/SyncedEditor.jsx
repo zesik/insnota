@@ -878,6 +878,14 @@ class SyncedEditor extends React.Component {
       <div className={containerClasses}>
         <EditorOverlay state={this.state.docStatus} />
         <div id="document-editor">
+          <div className="editor-options">
+            {this.props.user &&
+              <button className="btn btn-link" onClick={this.props.onToggleFullScreen} title="Toggle Full Screen">
+                {this.props.fullScreen && <i className="material-icons md-18">fullscreen_exit</i>}
+                {!this.props.fullScreen && <i className="material-icons md-18">fullscreen</i>}
+              </button>
+            }
+          </div>
           <Collaborators
             collaborators={this.state.collaborators}
             collaboratorCursorsVisible={this.state.collaboratorCursorsVisible}
@@ -932,7 +940,8 @@ SyncedEditor.propTypes = {
   onCursorActivity: React.PropTypes.func,
   onLanguageModeChanged: React.PropTypes.func,
   onDocumentError: React.PropTypes.func,
-  onOpenPermissionModal: React.PropTypes.func
+  onOpenPermissionModal: React.PropTypes.func,
+  onToggleFullScreen: React.PropTypes.func
 };
 
 export default SyncedEditor;

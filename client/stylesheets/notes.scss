@@ -343,7 +343,8 @@ $tool-bar-item-padding-right: 0;
 
   .title-editor {
     height: $editor-title-section-height;
-    margin-right: 180px;
+    margin-right: 220px;
+    max-width: 800px;
 
     .document-title {
       outline: none;
@@ -366,12 +367,25 @@ $tool-bar-item-padding-right: 0;
     }
   }
 
+  .editor-options {
+    display: flex;
+    float: right;
+    height: 30px;
+    margin: 10px 8px 8px 0;
+    align-items: center;
+
+    .btn {
+      margin-left: 4px;
+      margin-right: 4px;
+    }
+  }
+
   .collaborator-list {
     display: flex;
     float: right;
     width: 150px;
     height: 30px;
-    margin: 10px 8px 8px 8px;
+    margin: 10px 0 8px 8px;
     align-items: center;
     justify-content: flex-end;
 

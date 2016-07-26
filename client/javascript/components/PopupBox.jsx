@@ -20,10 +20,14 @@ class PopupBox extends React.Component {
       'popup-container': true,
       'popup-container-bottom-left': this.props.left
     });
+    const iconClasses = classNames({
+      'material-icons': true,
+      'md-18': this.props.largeIcon
+    });
     return (
       <div className={popupClasses}>
         <button className="btn btn-link popup-trigger" onClick={this.toggleVisibility}>
-          <i className="material-icons">more_vert</i>
+          <i className={iconClasses}>more_vert</i>
         </button>
         {this.state.visible && <div className="popup-backdrop" onClick={this.toggleVisibility} />}
         {this.state.visible &&
@@ -38,6 +42,7 @@ class PopupBox extends React.Component {
 
 PopupBox.propTypes = {
   left: React.PropTypes.bool,
+  largeIcon: React.PropTypes.bool,
   children: React.PropTypes.element.isRequired
 };
 

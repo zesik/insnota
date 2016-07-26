@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import NotificationSystem, { showInformation, showError } from 're-alert';
-import { changeDocumentTitle } from '../../actions/documentManager';
+import { changeDocumentTitle, toggleFullScreen } from '../../actions/documentManager';
 import { openPermissionModal } from '../../actions/permissionModal';
 import { getModeName } from '../../utils/editorLanguageModes';
 import DocumentManager from './DocumentManager';
@@ -42,15 +42,16 @@ class Notes extends React.Component {
     const { dispatch, user } = this.props;
     return (
       <div id="editor-container" className="full-size">
-        <DocumentManager selectedDocumentID={this.props.selectedDocumentID} />
+        <DocumentManager collapsed={this.props.fullScreen} selectedDocumentID={this.props.selectedDocumentID} />
         <SyncedEditor
           user={user}
-          fullScreen={!user}
+          fullScreen={!user || this.props.fullScreen}
           documentID={this.props.selectedDocumentID}
           onTitleChanged={this.handleTitleChanged}
           onLanguageModeChanged={this.handleLanguageModeChanged}
           onDocumentError={error => dispatch(showError(JSON.stringify(error)))}
           onOpenPermissionModal={documentID => dispatch(openPermissionModal(documentID))}
+          onToggleFullScreen={() => dispatch(toggleFullScreen())}
         />
         <DeleteModal selectedDocumentID={this.props.selectedDocumentID} />
         <PermissionModal />
@@ -73,6 +74,7 @@ function mapStateToProps(state, ownProps) {
   const user = state.manager.email ? { name: state.manager.name, email: state.manager.email } : null;
   return {
     user,
+    fullScreen: state.manager.fullScreen,
     selectedDocumentID: ownProps.params.id
   };
 }

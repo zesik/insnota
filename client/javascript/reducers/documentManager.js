@@ -6,7 +6,8 @@ import {
   CHANGE_DOCUMENT_TITLE,
   CHANGE_SORTING_ORDER,
   TOGGLE_SHOW_OWNED_DOCUMENTS,
-  TOGGLE_SHOW_SHARED_DOCUMENTS
+  TOGGLE_SHOW_SHARED_DOCUMENTS,
+  TOGGLE_FULL_SCREEN
 } from '../actions/documentManager';
 import { HIDE_DELETE_MODAL } from '../actions/deleteModal';
 import { SORTING_CREATE_TIME_DESCENDING } from '../constants/documentManager';
@@ -21,7 +22,9 @@ const initialState = {
   creating: false,
   showingOwned: true,
   showingShared: true,
-  sorting: SORTING_CREATE_TIME_DESCENDING
+  sorting: SORTING_CREATE_TIME_DESCENDING,
+  // Editor options
+  fullScreen: false
 };
 
 function documentManagerReducer(state = initialState, action) {
@@ -88,6 +91,10 @@ function documentManagerReducer(state = initialState, action) {
     case TOGGLE_SHOW_SHARED_DOCUMENTS:
       return Object.assign({}, state, {
         showingShared: !state.showingShared
+      });
+    case TOGGLE_FULL_SCREEN:
+      return Object.assign({}, state, {
+        fullScreen: !state.fullScreen
       });
     default:
       return state;
