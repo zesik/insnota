@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import NotificationSystem, { showInformation, showError } from 're-alert';
-import { changeDocumentTitle, toggleFullScreen } from '../../actions/documentManager';
+import { changeDocumentTitle, toggleFullScreen, togglePreview } from '../../actions/documentManager';
 import { openPermissionModal } from '../../actions/permissionModal';
 import { getModeName } from '../../utils/editorLanguageModes';
 import DocumentManager from './DocumentManager';
@@ -46,16 +46,18 @@ class Notes extends React.Component {
     const { dispatch, user } = this.props;
     return (
       <div id="editor-container" className="full-size">
-        <DocumentManager collapsed={this.props.fullScreen} selectedDocumentID={this.props.selectedDocumentID} />
+        <DocumentManager visible={!this.props.fullScreen} selectedDocumentID={this.props.selectedDocumentID} />
         <SyncedEditor
           user={user}
           fullScreen={!user || this.props.fullScreen}
+          previewVisible={this.props.previewVisible}
           documentID={this.props.selectedDocumentID}
           onTitleChanged={this.handleTitleChanged}
           onLanguageModeChanged={this.handleLanguageModeChanged}
           onDocumentError={error => dispatch(showError(JSON.stringify(error), NOTIFICATION_ERROR_DELAY))}
           onOpenPermissionModal={documentID => dispatch(openPermissionModal(documentID))}
           onToggleFullScreen={() => dispatch(toggleFullScreen())}
+          onTogglePreview={() => dispatch(togglePreview())}
         />
         <DeleteModal selectedDocumentID={this.props.selectedDocumentID} />
         <PermissionModal />
@@ -71,6 +73,8 @@ Notes.propTypes = {
     email: React.PropTypes.string
   }),
   selectedDocumentID: React.PropTypes.string,
+  previewVisible: React.PropTypes.bool.isRequired,
+  fullScreen: React.PropTypes.bool.isRequired,
   dispatch: React.PropTypes.func.isRequired
 };
 
@@ -78,6 +82,7 @@ function mapStateToProps(state, ownProps) {
   const user = state.manager.email ? { name: state.manager.name, email: state.manager.email } : null;
   return {
     user,
+    previewVisible: state.manager.previewVisible,
     fullScreen: state.manager.fullScreen,
     selectedDocumentID: ownProps.params.id
   };

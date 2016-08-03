@@ -93,7 +93,7 @@ class DocumentManager extends React.Component {
     });
     const containerClasses = classNames({
       'document-list-container': true,
-      collapsed: this.props.collapsed
+      collapsed: !this.props.visible
     });
     return (
       <div className={containerClasses}>
@@ -212,7 +212,7 @@ DocumentManager.propTypes = {
     access: React.PropTypes.string.isRequired
   })).isRequired,
   selectedDocumentID: React.PropTypes.string,
-  collapsed: React.PropTypes.bool.isRequired,
+  visible: React.PropTypes.bool.isRequired,
   initializeManager: React.PropTypes.func.isRequired,
   onNewDocumentClicked: React.PropTypes.func.isRequired,
   onDeleteDocumentClicked: React.PropTypes.func.isRequired,
@@ -264,7 +264,7 @@ function mapStateToProps(state, ownProps) {
     sorting: manager.sorting,
     user,
     documents: getDocuments(manager.documents, manager.showingOwned, manager.showingShared, manager.sorting),
-    collapsed: ownProps.collapsed,
+    visible: ownProps.visible,
     selectedDocumentID: ownProps.selectedDocumentID
   };
 }

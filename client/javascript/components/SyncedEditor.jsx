@@ -12,6 +12,7 @@ import ShareDB from 'sharedb/lib/client';
 import Collaborators from './Collaborators';
 import EditorOverlay from './EditorOverlay';
 import EditorStatusBar from './EditorStatusBar';
+import DocumentPreview from './DocumentPreview';
 import { LANGUAGE_MODES } from '../utils/editorLanguageModes';
 
 export const NET_DISCONNECTED = 'NET_DISCONNECTED';
@@ -201,6 +202,7 @@ class SyncedEditor extends React.Component {
       netRetryCount: 0,
       netRetryWait: 0,
       docStatus: DOC_INITIAL,
+      docContent: '',
       focused: false,
       languageMode: '',
       sharing: '',
@@ -352,6 +354,8 @@ class SyncedEditor extends React.Component {
       console.error('Content changed when not subscribing to a document');
       return;
     }
+
+    this.setState({ docContent: cm.getValue() });
 
     // Raise event
     this.raiseContentChanged(cm.getValue(), this.operationSource);
@@ -872,7 +876,8 @@ class SyncedEditor extends React.Component {
   render() {
     const containerClasses = classNames({
       'editor-container': true,
-      'full-screen': this.props.fullScreen
+      'full-screen': this.props.fullScreen,
+      'preview-visible': this.props.previewVisible
     });
     return (
       <div className={containerClasses}>
@@ -885,6 +890,10 @@ class SyncedEditor extends React.Component {
                 {!this.props.fullScreen && <i className="material-icons md-18">fullscreen</i>}
               </button>
             }
+            <button className="btn btn-link" onClick={this.props.onTogglePreview} title="Toggle Preview">
+              {this.props.previewVisible && <i className="material-icons md-18">visibility_off</i>}
+              {!this.props.previewVisible && <i className="material-icons md-18">visibility</i>}
+            </button>
           </div>
           <Collaborators
             collaborators={this.state.collaborators}
@@ -904,6 +913,11 @@ class SyncedEditor extends React.Component {
               />
             </div>
           </form>
+          <DocumentPreview
+            visible={this.props.previewVisible}
+            content={this.state.docContent}
+            mode={this.state.languageMode}
+          />
           <div className="editor">
             <textarea ref="textarea" />
           </div>
@@ -933,6 +947,7 @@ SyncedEditor.propTypes = {
     name: React.PropTypes.string.isRequired,
     email: React.PropTypes.string.isRequired
   }),
+  previewVisible: React.PropTypes.bool.isRequired,
   fullScreen: React.PropTypes.bool.isRequired,
   documentID: React.PropTypes.string,
   onTitleChanged: React.PropTypes.func,
@@ -941,6 +956,7 @@ SyncedEditor.propTypes = {
   onLanguageModeChanged: React.PropTypes.func,
   onDocumentError: React.PropTypes.func,
   onOpenPermissionModal: React.PropTypes.func,
+  onTogglePreview: React.PropTypes.func,
   onToggleFullScreen: React.PropTypes.func
 };
 
