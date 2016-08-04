@@ -1,10 +1,16 @@
 import React from 'react';
-import classNames from 'classnames';
 import { getModeName } from '../utils/editorLanguageModes';
+import PreviewMarkdown from './previews/PreviewMarkdown';
 
 function DocumentPreview(props) {
+  if (!props.visible) {
+    return (<div className="document-preview collapsed" />);
+  }
   let preview = null;
   switch (getModeName(props.mode)) {
+    case 'Markdown':
+      preview = (<PreviewMarkdown content={props.content} />);
+      break;
     default:
       preview = (
         <div className="preview-not-available">
@@ -15,11 +21,7 @@ function DocumentPreview(props) {
       );
       break;
   }
-  return (
-    <div className={classNames({ 'document-preview': true, collapsed: !props.visible })}>
-      {preview}
-    </div>
-  );
+  return (<div className="document-preview">{preview}</div>);
 }
 
 DocumentPreview.propTypes = {

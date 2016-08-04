@@ -452,6 +452,7 @@ $preview-area-width: 400px;
     height: calc(100vh - #{$editor-title-section-height + $status-bar-height});
     width: $preview-area-width;
     border-left: 2px solid $grey-200;
+    padding: 8px;
 
     .preview-not-available {
       position: absolute;
