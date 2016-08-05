@@ -69,7 +69,7 @@ function resetRecaptcha() {
   };
 }
 
-export function setFormStage(stage) {
+function setFormStage(stage) {
   return {
     type: SET_FORM_STAGE,
     stage

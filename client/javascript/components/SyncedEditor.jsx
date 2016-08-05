@@ -603,7 +603,7 @@ class SyncedEditor extends React.Component {
     this.setState({
       netStatus: NET_WAITING,
       netRetryCount: this.state.netRetryCount + 1,
-      netRetryWait: Math.ceil(seconds[0] + seconds[1] / 1000)
+      netRetryWait: Math.ceil(seconds[0] + (seconds[1] / 1000))
     });
 
     // Set up timer for reconnecting

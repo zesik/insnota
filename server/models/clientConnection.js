@@ -1,6 +1,7 @@
 const config = require('../config');
 const logger = require('../logger');
 const mongoose = require('mongoose');
+
 const Schema = mongoose.Schema;
 
 const ClientConnectionSchema = new Schema({

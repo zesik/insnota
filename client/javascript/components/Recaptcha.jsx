@@ -22,7 +22,7 @@ class Recaptcha extends React.Component {
   }
 
   render() {
-    return (<div id={this.props.containerID}></div>);
+    return (<div id={this.props.containerID} />);
   }
 }
 

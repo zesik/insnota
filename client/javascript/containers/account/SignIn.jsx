@@ -4,7 +4,6 @@ import { Link } from 'react-router';
 import SignInForm, { FORM_STAGE_SIGN_IN_EMAIL, FORM_STAGE_SIGN_IN_PASSWORD } from '../../components/SignInForm';
 import {
   initializeSignInForm,
-  setFormStage,
   editEmail,
   editPassword,
   editRememberMe,

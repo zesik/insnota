@@ -1,5 +1,9 @@
 module.exports = {
   'extends': 'airbnb',
+  'env': {
+    'browser': true,
+    'node': true
+  },
   'rules': {
     'comma-dangle': [2, 'never'],
     'func-names': [0],
@@ -12,6 +16,7 @@ module.exports = {
     'no-unused-vars': [1],
     'no-underscore-dangle': [0],
     'prefer-arrow-callback': [0],
+    "import/no-extraneous-dependencies": [0],
     'react/prefer-stateless-function': [1]
   }
 };

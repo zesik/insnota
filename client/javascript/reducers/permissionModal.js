@@ -20,7 +20,7 @@ const initialEmailNoticeState = {
   errorEmailInvalid: false,
   errorEmailNotExist: false,
   errorEmailAlreadyExists: false,
-  errorEmailIsOwner: false,
+  errorEmailIsOwner: false
 };
 
 const initialNoticeState = Object.assign({

@@ -1,5 +1,9 @@
 # Insnota
 
+[![Build Status](https://travis-ci.org/zesik/insnota.svg?branch=master)](https://travis-ci.org/zesik/insnota)
+[![Dependency Status](https://david-dm.org/zesik/insnota.svg)](https://david-dm.org/zesik/insnota)
+[![devDependency Status](https://david-dm.org/zesik/insnota/dev-status.svg)](https://david-dm.org/zesik/insnota#info=devDependencies)
+
 Insnota is a collaborative note-taking platform, using the following technologies:
 
 * [Node.js](https://nodejs.org/)
