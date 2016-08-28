@@ -136,7 +136,7 @@ function handleClientUnsubscribing(clientID, collection, document) {
  */
 function ensureReadPermission(documentID, user) {
   return new Promise((resolve, reject) => {
-    Document.findOne(documentID, function (err, doc) {
+    Document.findOne({ _id: documentID }, function (err, doc) {
       if (err) {
         logger.error('Database error when checking read permission');
         reject(err);
@@ -170,7 +170,7 @@ function ensureReadPermission(documentID, user) {
  */
 function ensureWritePermission(documentID, user) {
   return new Promise((resolve, reject) => {
-    Document.findOne(documentID, function (err, doc) {
+    Document.findOne({ _id: documentID }, function (err, doc) {
       if (err) {
         logger.error('Database error when checking write permission');
         reject(err);
