@@ -1,26 +1,22 @@
 const http = require('http');
 const path = require('path');
 const express = require('express');
+const expressWs = require('express-ws');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 const session = require('express-session');
 const config = require('./config');
 const logger = require('./logger');
+const initializeDatabase = require('./models/database');
 const userService = require('./services/user');
 const sharedbService = require('./services/sharedb');
 
-// Initialize express
-const app = express();
-// Enable web socket on the application
-require('express-ws')(app);
-
-// Initialize database
-require('./models/database')().then(() => {
-  // Initialize ShareDB
-  sharedbService.initialize().then(initializeExpress);
-});
-
 function initializeExpress() {
+  // Initialize express
+  const app = express();
+  // Enable web socket on the application
+  expressWs(app);
+
   // Express routes. This must be called after enabling web socket
   const routes = require('./routes/index');
   const apis = require('./routes/api');
@@ -86,3 +82,11 @@ function initializeExpress() {
     logger.info(`Insnota (${app.get('env') === 'development' ? 'development' : 'production'}) listening on ${port}`);
   });
 }
+
+// Initialize server app
+initializeDatabase()
+  .then(() => sharedbService.initialize())
+  .then(() => initializeExpress())
+  .catch(err => {
+    logger.error(err);
+  });

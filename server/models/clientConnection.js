@@ -10,30 +10,21 @@ const ClientConnectionSchema = new Schema({
   created_at: { type: Date, default: Date.now }
 });
 
-ClientConnectionSchema.static('purgeSubscriptions', function (clientID, collection, document, callback) {
+ClientConnectionSchema.statics.purgeSubscriptions = function (clientID, collection, document) {
   const query = {};
   if (clientID) {
     query.client_id = clientID;
   }
   let promise = null;
   if (collection || document) {
-    promise = this.collection.update(query,
+    promise = this.update(query,
       { $pull: { subscriptions: { c: collection, d: document } } },
       { multi: true });
   } else {
-    promise = this.collection.remove(query);
+    promise = this.remove(query);
   }
-  promise.then(result => {
-    if (callback) {
-      if (result.result.ok) {
-        callback(null, true);
-      } else {
-        logger.warn(`Unexpected result when purging subscription: ${result}`);
-        callback(null, result);
-      }
-    }
-  }).catch(err => callback(err));
-});
+  return promise;
+};
 
 const ClientConnection = mongoose.model('ClientConnection', ClientConnectionSchema, `connections_${config.serverID}`);
 

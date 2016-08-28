@@ -16,7 +16,7 @@ module.exports = {
     'no-unused-vars': [1],
     'no-underscore-dangle': [0],
     'prefer-arrow-callback': [0],
-    "import/no-extraneous-dependencies": [0],
-    'react/prefer-stateless-function': [1]
+    'react/prefer-stateless-function': [1],
+    'react/no-did-mount-set-state': [0]
   }
 };

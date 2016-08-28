@@ -16,17 +16,17 @@ const DocumentSchema = new Schema({
   deleted_at: { type: Date, default: null }
 });
 
-DocumentSchema.static('findByOwner', function (id, callback) {
+DocumentSchema.statics.findByOwner = function (id, callback) {
   return this.find({ owner: id }, callback);
-});
+};
 
-DocumentSchema.static('findViewableByUser', function (id, callback) {
+DocumentSchema.statics.findViewableByUser = function (id, callback) {
   return this.find({ viewable: id }, callback);
-});
+};
 
-DocumentSchema.static('findEditableByUser', function (id, callback) {
+DocumentSchema.statics.findEditableByUser = function (id, callback) {
   return this.find({ editable: id }, callback);
-});
+};
 
 const Document = mongoose.model('Document', DocumentSchema);
 
