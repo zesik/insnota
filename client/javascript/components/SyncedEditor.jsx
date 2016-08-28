@@ -9,6 +9,7 @@ import 'codemirror/addon/selection/active-line';
 import 'codemirror/keymap/sublime';
 import 'whatwg-fetch';
 import ShareDB from 'sharedb/lib/client';
+import SplitterLayout from 'react-splitter-layout';
 import Collaborators from './Collaborators';
 import EditorOverlay from './EditorOverlay';
 import EditorStatusBar from './EditorStatusBar';
@@ -876,8 +877,7 @@ class SyncedEditor extends React.Component {
   render() {
     const containerClasses = classNames({
       'editor-container': true,
-      'full-screen': this.props.fullScreen,
-      'preview-visible': this.props.previewVisible
+      'full-screen': this.props.fullScreen
     });
     return (
       <div className={containerClasses}>
@@ -913,14 +913,14 @@ class SyncedEditor extends React.Component {
               />
             </div>
           </form>
-          <DocumentPreview
-            visible={this.props.previewVisible}
-            content={this.state.docContent}
-            mode={this.state.languageMode}
-          />
-          <div className="editor">
-            <textarea ref="textarea" />
-          </div>
+          <SplitterLayout percentage secondaryInitialSize={50}>
+            <div className="editor">
+              <textarea ref="textarea" />
+            </div>
+            {this.props.previewVisible &&
+              <DocumentPreview content={this.state.docContent} mode={this.state.languageMode} />
+            }
+          </SplitterLayout>
           <EditorStatusBar
             netStatus={this.state.netStatus}
             netRetryCount={this.state.netRetryCount}

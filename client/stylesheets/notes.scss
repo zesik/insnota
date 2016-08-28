@@ -332,8 +332,6 @@ $tool-bar-item-margin-right: 4px;
 $tool-bar-item-padding-top: 0;
 $tool-bar-item-padding-right: 0;
 
-$preview-area-width: 400px;
-
 .editor-container {
   position: relative;
   height: 100%;
@@ -341,16 +339,6 @@ $preview-area-width: 400px;
 
   &.full-screen {
     margin-left: 0;
-  }
-
-  &.preview-visible {
-    .editor {
-      margin-right: $preview-area-width;
-    }
-
-    .document-preview {
-      display: block;
-    }
   }
 
   .title-editor {
@@ -445,13 +433,21 @@ $preview-area-width: 400px;
     }
   }
 
-  .document-preview {
-    display: none;
-    position: relative;
-    float: right;
+  .splitter-layout .layout-splitter {
     height: calc(100vh - #{$editor-title-section-height + $status-bar-height});
-    width: $preview-area-width;
-    border-left: 2px solid $grey-200;
+
+    &, &:hover {
+      background: none;
+    }
+  }
+
+  .splitter-layout.layout-changing .layout-splitter {
+    background: none;
+  }
+
+  .document-preview {
+    position: relative;
+    height: calc(100vh - #{$editor-title-section-height + $status-bar-height});
     padding: 8px;
 
     .preview-not-available {

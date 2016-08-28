@@ -3,9 +3,6 @@ import { getModeName } from '../utils/editorLanguageModes';
 import PreviewMarkdown from './previews/PreviewMarkdown';
 
 function DocumentPreview(props) {
-  if (!props.visible) {
-    return (<div className="document-preview collapsed" />);
-  }
   let preview = null;
   switch (getModeName(props.mode)) {
     case 'Markdown':
@@ -26,8 +23,7 @@ function DocumentPreview(props) {
 
 DocumentPreview.propTypes = {
   mode: React.PropTypes.string,
-  content: React.PropTypes.string,
-  visible: React.PropTypes.bool.isRequired
+  content: React.PropTypes.string
 };
 
 export default DocumentPreview;
