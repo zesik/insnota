@@ -1,43 +1,65 @@
 const crypto = require('crypto');
 const mongoose = require('mongoose');
+const consts = require('../const');
+const { ClientError, ClientErrorCode } = require('../error');
 const config = require('../config');
 const logger = require('../logger');
 const User = require('../models/user');
 const LoginToken = require('../models/loginToken');
 
-const PBKDF2_ALGORITHM = 'pbkdf2';
-const PBKDF2_DIGEST_METHOD = 'sha512';
-const PBKDF2_SALT_BYTE_SIZE = 64;
-const PBKDF2_ITERATIONS = 50000;
-const PBKDF2_KEY_BYTE_SIZE = 64;
-const TOKEN_BYTE_SIZE = 20;
-const LOGIN_TOKEN_EXPIRE_DAYS = 14;
-
+/**
+ * Generates hash for a given password.
+ *
+ * @param {string|null} params Parameter set. If null, default parameter set will be used.
+ * @param {string} password Password to calculate hash.
+ * @returns {Promise}
+ */
 function generateHash(params, password) {
   return new Promise((resolve, reject) => {
-    const algorithm = params[0];
+    let hashParameters;
+    let newParameterSet = false;
+    if (params) {
+      hashParameters = params.split(consts.PASSWORD_HASH_ALGORITHM_PARAMETER_SEPARATOR);
+    } else {
+      newParameterSet = true;
+      hashParameters = config.PASSWORD_HASH_PARAMETERS.split(consts.PASSWORD_HASH_ALGORITHM_PARAMETER_SEPARATOR);
+    }
+    const algorithm = hashParameters[0];
     switch (algorithm) {
-      case PBKDF2_ALGORITHM: {
-        const digest = params[1];
-        const iterations = parseInt(params[2], 10);
-        const keyByteSize = parseInt(params[3], 10);
-        const salt = params[4];
+      case consts.PASSWORD_HASH_ALGORITHM_PBKDF2: {
+        const digest = hashParameters[1];
+        const iterations = parseInt(hashParameters[2], 10);
+        const keyByteSize = parseInt(hashParameters[3], 10);
+        let salt = hashParameters[4];
+        if (newParameterSet) {
+          salt = crypto.randomBytes(parseInt(salt, 10)).toString('hex');
+          hashParameters[4] = salt;
+        }
         crypto.pbkdf2(password, salt, iterations, keyByteSize, digest, (err, key) => {
           if (err) {
+            logger.error(`Failed to run the PBKDF2 algorithm: ${err}`);
             reject(err);
             return;
           }
-          resolve(key.toString('hex'));
+          resolve(hashParameters.concat(key.toString('hex')));
         });
         break;
       }
       default:
-        reject(new Error(`Unsupported algorithm '${algorithm}'`));
+        logger.error(`Unknown algorithm: ${algorithm}`);
+        reject(new Error(`Unknown algorithm: '${algorithm}'`));
         break;
     }
   });
 }
 
+/**
+ * Determines whether two strings are equal with constant time.
+ *
+ * @param {string} str1 The first string.
+ * @param {string} str2 The second string.
+ * @returns {boolean} true if the two strings are equal.
+ */
 function isStringEqual(str1, str2) {
   const minLength = Math.min(str1.length, str2.length);
   let diff = str1.length ^ str2.length;
@@ -48,271 +70,234 @@ function isStringEqual(str1, str2) {
 }
 
 /**
- * @note reject() argument types: Error object or null (when duplication found)
+ * Creates a new user.
+ *
+ * @param {string} name Name of the new user.
+ * @param {string} email Email of the new user.
+ * @param {string} password Password of the new user.
+ * @returns {Promise}
  */
 function createUser(name, email, password) {
-  return new Promise((resolve, reject) => {
-    const params = [
-      PBKDF2_ALGORITHM,
-      PBKDF2_DIGEST_METHOD,
-      PBKDF2_ITERATIONS,
-      PBKDF2_KEY_BYTE_SIZE,
-      crypto.randomBytes(PBKDF2_SALT_BYTE_SIZE).toString('hex')
-    ];
-    generateHash(params, password).then(hash => {
-      params.push(hash);
+  return generateHash(null, password)
+    .then((hash) => {
       const user = new User();
       user.email = email;
-      user.password = params.join(':');
+      user.password = hash.join(consts.PASSWORD_HASH_ALGORITHM_PARAMETER_SEPARATOR);
       user.name = name;
       user.status = 'unverified';
-      user.save(err => {
-        if (err) {
-          if (err.name === 'MongoError' && err.code === 11000) {
-            logger.warn('Duplication found when creating user');
-            reject();
-            return;
-          }
-          logger.error('Database error when creating user');
-          reject(err);
-          return;
-        }
-        resolve(user);
-      });
-    }).catch(err => {
-      logger.error('Hashing error when creating user');
-      reject(err);
+      return user.save().then(() => user);
+    })
+    .catch((err) => {
+      if (err.name === 'MongoError' && err.code === 11000) {
+        throw new ClientError(ClientErrorCode.ERROR_DUPLICATED_USER);
+      }
+      throw err;
     });
-  });
 }
 
 /**
- * @note reject() argument types: Error object, null (when user not found), or User object (when password mismatch)
+ * Verifies whether provided password matches the stored one for a user.
+ * The verification process also increment or reset failed password attempt count for the user.
+ *
+ * @params {User} user The user.
+ * @params {string} password Provided password.
+ * @returns {Promise}
  */
 function verifyPassword(user, password) {
-  return new Promise((resolve, reject) => {
-    if (!user) {
-      reject();
-      return;
-    }
-    const params = user.password.split(':');
-    const expected = params.splice(params.length - 1, 1)[0];
-    generateHash(params, password).then(hash => {
-      if (isStringEqual(hash, expected)) {
-        User.findOneAndUpdate({ _id: user._id }, { password_attempts: 0 }, { new: true }, (err, newUser) => {
-          if (err) {
-            logger.error('Database error while updating user password attempt');
-            reject(err);
-            return;
-          }
-          resolve(newUser);
-        });
-        return;
+  return generateHash(user.password, password)
+    .then((hash) => {
+      if (isStringEqual(hash[hash.length - 2], hash[hash.length - 1])) {
+        return User.findOneAndUpdate({ _id: user._id }, { password_attempts: 0 }, { new: true }).exec();
       }
-      User.findOneAndUpdate({ _id: user._id }, { $inc: { password_attempts: 1 } }, { new: true }, (err, newUser) => {
-        if (err) {
-          logger.error('Database error while updating user password attempt');
-          reject(err);
-          return;
-        }
-        reject(newUser);
-      });
-    }).catch(err => {
-      logger.error('Hashing error when verifying password');
-      reject(err);
+      return User.findOneAndUpdate({ _id: user._id }, { $inc: { password_attempts: 1 } }, { new: true }).exec();
+    })
+    .then((newUser) => {
+      if (newUser.password_attempts) {
+        throw new ClientError(ClientErrorCode.ERROR_PASSWORD_MISMATCH, newUser);
+      }
+      return newUser;
     });
-  });
 }
 
 /**
- * @note reject() argument types: Error object or null (when user not found)
+ * Finds a user by on its ID.
+ *
+ * @params {ObjectId} id User ID.
+ * @returns {Promise}
  */
 function findUser(id) {
-  return new Promise((resolve, reject) => {
-    User.findOne({ _id: id }, (err, user) => {
-      if (err) {
-        logger.error('Database error when finding user');
-        reject(err);
-        return;
-      }
+  return User.findOne({ _id: id }).exec()
+    .then((user) => {
       if (!user) {
-        reject();
-        return;
+        throw new ClientError(ClientErrorCode.ERROR_USER_NOT_FOUND);
       }
-      resolve(user);
+      return user;
     });
-  });
-}
-
-function findUsers(ids) {
-  return new Promise((resolve, reject) => {
-    User.find({ _id: { $in: ids } }, (err, users) => {
-      if (err) {
-        logger.error('Database error when finding user');
-        reject(err);
-        return;
-      }
-      resolve(users);
-    });
-  });
 }
 
 /**
- * @note reject() argument types: Error object or null (when user not found)
+ * Finds a user by its email address.
+ *
+ * @params {string} email Email address of the user.
+ * @returns {Promise}
  */
 function findUserByEmail(email) {
-  return new Promise((resolve, reject) => {
-    User.findOneByEmail(email, (err, user) => {
-      if (err) {
-        logger.error('Database error when finding user');
-        reject(err);
-        return;
-      }
+  return User.findOne({ email }).exec()
+    .then((user) => {
       if (!user) {
-        reject();
-        return;
+        throw new ClientError(ClientErrorCode.ERROR_USER_NOT_FOUND);
       }
-      resolve(user);
+      return user;
     });
-  });
-}
-
-function findUsersByEmails(emails) {
-  return new Promise((resolve, reject) => {
-    User.find({ email: { $in: emails } }, (err, users) => {
-      if (err) {
-        logger.error('Database error when finding user');
-        reject(err);
-        return;
-      }
-      resolve(users);
-    });
-  });
-}
-
-function issueLoginToken(userID) {
-  return new Promise((resolve, reject) => {
-    const tokenID = ((new mongoose.Types.ObjectId()).toString() +
-      crypto.randomBytes(TOKEN_BYTE_SIZE).toString('hex')).toLowerCase();
-    const date = new Date();
-    date.setDate(date.getDate() + LOGIN_TOKEN_EXPIRE_DAYS);
-    const token = new LoginToken();
-    token._id = tokenID;
-    token.expires = date;
-    token.user_id = userID;
-    token.save(err => {
-      if (err) {
-        logger.error('Database error when issuing new login token');
-        reject(err);
-        return;
-      }
-      resolve(token);
-    });
-  });
 }
 
 /**
- * @note reject() argument types: Error object or string (when verification failed)
+ * Find users by a list of user ID.
+ *
+ * @params {Array.<ObjectId>} ids List of user IDs.
+ * @returns {Promise}
  */
-function verifyLoginToken(id) {
-  return new Promise((resolve, reject) => {
-    LoginToken.findOneAndUpdate({ _id: id }, { $set: { used: true } }, (err, token) => {
-      if (err) {
-        logger.error('Database error when verifying login token');
-        reject(err);
-        return;
-      }
+function findUsers(ids) {
+  return User.find({ _id: { $in: ids } }).exec();
+}
+
+/**
+ * Finds users by their email addresses.
+ *
+ * @params {Array.<string>} emails List of user email addresses.
+ * @returns {Promise}
+ */
+function findUsersByEmails(emails) {
+  return User.find({ email: { $in: emails } }).exec();
+}
+
+/**
+ * Issues a new login token.
+ *
+ * @params {User} user User to which the login token belongs.
+ * @returns {Promise}
+ */
+function issueLoginToken(user) {
+  const userID = user._id;
+  const tokenID = ((new mongoose.Types.ObjectId()).toString() +
+    crypto.randomBytes(config.LOGIN_TOKEN_BYTE_SIZE).toString('hex')).toLowerCase();
+  const date = new Date();
+  date.setDate(date.getDate() + config.LOGIN_TOKEN_EXPIRE_DAYS);
+  const token = new LoginToken();
+  token._id = tokenID;
+  token.expires = date;
+  token.user_id = userID;
+  return token.save().then(() => ({ user, token }));
+}
+
+/**
+ * Verifies whether a login token is valid and get corresponding user.
+ *
+ * @params {string} loginToken The login token.
+ * @returns {Promise}
+ */
+function verifyLoginToken(loginToken) {
+  return LoginToken.findOneAndUpdate({ _id: loginToken.id }, { $set: { used: true } }).exec()
+    .then((token) => {
       if (!token) {
-        logger.warn('No such token found');
-        reject('notfound');
-        return;
+        logger.warn('Login token not found');
+        throw new ClientError(ClientErrorCode.ERROR_LOGIN_TOKEN_NOT_FOUND);
       }
       if (token.used) {
         logger.warn('Used login token detected');
-        reject('used');
-        return;
+        throw new ClientError(ClientErrorCode.ERROR_LOGIN_TOKEN_USED);
       }
       if (new Date() > token.expires) {
         logger.warn('Expired login token detected');
-        reject('expired');
-        return;
+        throw new ClientError(ClientErrorCode.ERROR_LOGIN_TOKEN_EXPIRED);
       }
-      resolve(token.user_id);
+      return token.user_id;
     });
-  });
 }
 
-function updateName(id, name) {
-  return new Promise((resolve, reject) => {
-    User.update({ _id: id }, { name }, err => {
-      if (err) {
-        logger.error('Database error when updating user profile');
-        reject(err);
-        return;
-      }
-      resolve();
-    });
-  });
+/**
+ * Updates name of a user.
+ *
+ * @params {User} user The user whose name should be updated.
+ * @returns {Promise}
+ */
+function updateUserName(user, name) {
+  return User.update({ _id: user._id }, { name }).exec();
 }
 
-function updatePassword(id, password) {
-  return new Promise((resolve, reject) => {
-    const params = [
-      PBKDF2_ALGORITHM,
-      PBKDF2_DIGEST_METHOD,
-      PBKDF2_ITERATIONS,
-      PBKDF2_KEY_BYTE_SIZE,
-      crypto.randomBytes(PBKDF2_SALT_BYTE_SIZE).toString('hex')
-    ];
-    generateHash(params, password).then(hash => {
-      params.push(hash);
-      User.update({ _id: id }, { password: params.join(':') }, err => {
-        if (err) {
-          logger.error('Database error when updating user password');
-          reject(err);
+/**
+ * Updates password of a user.
+ *
+ * @params {User} user The user whose password should be updated.
+ * @returns {Promise}
+ */
+function updateUserPassword(user, password) {
+  return generateHash(null, password)
+    .then(hash => User.update({ _id: user._id }, { password: hash.join(':') }).exec());
+}
+
+/**
+ * Resets password attempt count of a user.
+
+ * @param {User} user The user whose password attempt count should be reset.
+ * @returns {Promise}
+ */
+function resetUserPasswordAttempts(user) {
+  return User.update({ _id: user._id }, { $set: { password_attempts: 0 } }).exec();
+}
+
+/**
+ * An express middleware to deserialize user information.
+ */
+function deserializeUser(req, res, next) {
+  // First try to deserialize user from session
+  if (req.session.userID) {
+    findUser(req.session.userID)
+      .then((user) => {
+        req.user = user;
+        next();
+      })
+      .catch((err) => {
+        if (err instanceof ClientError && err.errorCode === ClientErrorCode.ERROR_USER_NOT_FOUND) {
+          next();
           return;
         }
-        resolve();
+        next(err);
       });
-    }).catch(err => {
-      logger.error('Hashing error when updating password');
-      reject(err);
-    });
-  });
-}
-
-function deserializeUser(req, res, next) {
-  // First try to check from session
-  if (req.session.userID) {
-    findUser(req.session.userID).then(user => {
-      req.user = user;
-      next();
-    }).catch(err => next(err));
     return;
   }
   // Check whether the user has login token
-  if (!req.upgrade && req.signedCookies[config.loginTokenName]) {
-    verifyLoginToken(req.signedCookies[config.loginTokenName]).then(userID => {
-      res.clearCookie(config.loginTokenName, {});
-      findUser(userID).then(user => {
-        issueLoginToken(user._id).then(token => {
-          req.session.userID = user._id;
-          req.user = user;
-          res.cookie(config.loginTokenName, token._id, {
-            expires: token.expires,
-            signed: true
-          });
-          next();
-        }).catch(err => next(err));
-      }).catch(err => next(err));
-    }).catch(err => {   // userService.verifyLoginToken rejected
-      if (typeof err === 'string') {
-        res.clearCookie(config.loginTokenName, {});
+  if (!req.upgrade && req.signedCookies[config.LOGIN_TOKEN_NAME]) {
+    verifyLoginToken(req.signedCookies[config.LOGIN_TOKEN_NAME])
+      .then((userID) => {
+        res.clearCookie(config.LOGIN_TOKEN_NAME, {});
+        return findUser(userID);
+      })
+      .then(user => issueLoginToken(user))
+      .then(({ user, token }) => {
+        req.session.userID = token.user._id;
+        req.user = user;
+        res.cookie(config.LOGIN_TOKEN_NAME, token._id, {
+          expires: token.expires,
+          signed: true
+        });
         next();
-        return;
-      }
-      next(err);
-    });
+      })
+      .catch((err) => {
+        if (err instanceof ClientError) {
+          switch (err.errorCode) {
+            case ClientErrorCode.ERROR_LOGIN_TOKEN_NOT_FOUND:
+            case ClientErrorCode.ERROR_LOGIN_TOKEN_USED:
+            case ClientErrorCode.ERROR_LOGIN_TOKEN_EXPIRED:
+              res.clearCookie(config.LOGIN_TOKEN_NAME, {});
+              next();
+              return;
+            default:
+              break;
+          }
+        }
+        next(err);
+      });
     return;
   }
   next();
@@ -327,7 +312,8 @@ module.exports = {
   findUsersByEmails,
   issueLoginToken,
   verifyLoginToken,
-  updateName,
-  updatePassword,
+  updateUserName,
+  updateUserPassword,
+  resetUserPasswordAttempts,
   deserializeUser
 };

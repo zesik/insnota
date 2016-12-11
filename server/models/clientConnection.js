@@ -10,6 +10,9 @@ const ClientConnectionSchema = new Schema({
   created_at: { type: Date, default: Date.now }
 });
 
+/**
+ * @returns {Promise}
+ */
 ClientConnectionSchema.statics.purgeSubscriptions = function (clientID, collection, document) {
   const query = {};
   if (clientID) {

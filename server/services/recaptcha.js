@@ -1,42 +1,39 @@
 const request = require('request');
+const { ClientError, ClientErrorCode } = require('../error');
 const config = require('../config');
 const logger = require('../logger');
 
-const maxPasswordAttempts = (config.reCAPTCHA.password && typeof config.reCAPTCHA.password.attempts === 'number') ?
-  config.reCAPTCHA.password.attempts : -1;
-
-function shouldCheckSignUp() {
-  return !!config.reCAPTCHA.signUp;
-}
+const RECAPTCHA_VERIFYING_URL = 'https://www.google.com/recaptcha/api/siteverify';
+const MAX_PASSWORD_ATTEMPTS = config.RECAPTCHA_PASSWORD ? config.RECAPTCHA_PASSWORD_ATTEMPTS : -1;
 
 function shouldCheckPasswordAttempt(attempts) {
-  return (maxPasswordAttempts >= 0 && attempts >= maxPasswordAttempts);
+  return (MAX_PASSWORD_ATTEMPTS >= 0 && attempts >= MAX_PASSWORD_ATTEMPTS);
 }
 
 function getPasswordAttemptSiteKey(attempts) {
-  return shouldCheckPasswordAttempt(attempts) ? config.reCAPTCHA.password.siteKey : null;
+  return shouldCheckPasswordAttempt(attempts) ? config.RECAPTCHA_PASSWORD_SITE_KEY : null;
+}
+
+function shouldCheckSignUp() {
+  return config.RECAPTCHA_SIGNUP;
 }
 
 function getSignUpSiteKey() {
-  return shouldCheckSignUp() ? config.reCAPTCHA.signUp.siteKey : null;
+  return shouldCheckSignUp() ? config.RECAPTCHA_SIGNUP_SITE_KEY : null;
 }
 
 /**
- * @note reject() argument types: Error object or null (when reCAPTCHA invalid)
+ * @returns {Promise}
  */
 function verifyRecaptcha(secret, response) {
   return new Promise((resolve, reject) => {
-    request.post({
-      url: 'https://www.google.com/recaptcha/api/siteverify',
-      form: { secret, response }
-    }, (err, res, body) => {
+    request.post({ url: RECAPTCHA_VERIFYING_URL, form: { secret, response } }, (err, res, body) => {
       if (err) {
-        logger.error('Unable to verify reCAPTCHA');
         reject(err);
         return;
       }
       if (res.statusCode !== 200) {
-        logger.error(`Unable to verify reCAPTCHA: ${res.statusCode}`);
+        logger.error(`Unexpected status code when verifying reCAPTCHA: ${res.statusCode}`);
         reject(new Error(`Unexpected status code: ${res.statusCode}`));
         return;
       }
@@ -44,12 +41,13 @@ function verifyRecaptcha(secret, response) {
       try {
         result = JSON.parse(body).success;
       } catch (e) {
-        logger.error(`Unable to parse result when verifying reCAPTCHA: ${e}`);
+        logger.error(`Malformed response when verifying reCAPTCHA: ${e}`);
         reject(e);
         return;
       }
       if (!result) {
-        reject();
+        logger.debug('reCAPTCHA mismatch');
+        reject(new ClientError(ClientErrorCode.ERROR_RECAPTCHA_MISMATCH));
         return;
       }
       resolve();
@@ -57,20 +55,26 @@ function verifyRecaptcha(secret, response) {
   });
 }
 
+/**
+ * @returns {Promise}
+ */
 function verifyPasswordAttempt(passwordAttemptCount, response) {
   if (shouldCheckPasswordAttempt(passwordAttemptCount) || response) {
-    const secretKey = config.reCAPTCHA.password.secretKey;
+    const secretKey = config.RECAPTCHA_PASSWORD_SECRET_KEY;
     return verifyRecaptcha(secretKey, response);
   }
-  return new Promise(resolve => resolve());
+  return Promise.resolve();
 }
 
+/**
+ * @returns {Promise}
+ */
 function verifySignUp(response) {
   if (shouldCheckSignUp() || response) {
-    const secretKey = config.reCAPTCHA.signUp.secretKey;
+    const secretKey = config.RECAPTCHA_SIGNUP_SECRET_KEY;
     return verifyRecaptcha(secretKey, response);
   }
-  return new Promise(resolve => resolve());
+  return Promise.resolve();
 }
 
 module.exports = {

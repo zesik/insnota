@@ -141,7 +141,7 @@ export function addCollaborator(email) {
     dispatch(startAddingCollaborator());
     const errors = {};
     if (email.trim().length === 0) {
-      errors.errorEmailEmpty = true;
+      errors.ERROR_EMAIL_EMPTY = true;
     } else if (!/[^@]+@[^@]+/.test(email.trim())) {
       errors.errorEmailInvalid = true;
     }

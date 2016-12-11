@@ -29,7 +29,7 @@ function initializeExpress() {
   app.use(express.static(path.join(__dirname, '..', 'build')));
   app.use(bodyParser.json());
   app.use(bodyParser.urlencoded({ extended: false }));
-  app.use(cookieParser(config.cookieSecret));
+  app.use(cookieParser(config.COOKIE_SECRET));
   app.use(session({
     secret: 'keyboard cat',
     resave: false,
@@ -77,9 +77,9 @@ function initializeExpress() {
   });
 
   // Listen
-  const port = 3000;
+  const port = config.SERVER_PORT;
   app.listen(port, function () {
-    logger.info(`Insnota (${app.get('env') === 'development' ? 'development' : 'production'}) listening on ${port}`);
+    logger.info(`Insnota ${app.get('env') === 'development' ? '(development)' : ''} listening on ${port}`);
   });
 }
 
@@ -88,5 +88,5 @@ initializeDatabase()
   .then(() => sharedbService.initialize())
   .then(() => initializeExpress())
   .catch(err => {
-    logger.error(err);
+    logger.error(`Error while initializing: ${err}`);
   });

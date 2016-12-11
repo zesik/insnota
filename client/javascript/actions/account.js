@@ -14,53 +14,29 @@ export const START_SUBMITTING_ACCOUNT_FORM = 'START_SUBMITTING_ACCOUNT_FORM';
 export const FINISH_SUBMITTING_ACCOUNT_FORM = 'FINISH_SUBMITTING_ACCOUNT_FORM';
 
 function getSignInResponse(email) {
-  return new Promise(function (resolve, reject) {
-    fetch(`/api/signin/${email}`, {
-      credentials: 'same-origin'
-    })
-    .then(function (response) {
+  return fetch(`/api/signin/${email}`, { credentials: 'same-origin' })
+    .then((response) => {
       if (response.status >= 200 && response.status < 300) {
         return response.json();
       }
-      const error = new Error(response.statusText);
-      error.response = response;
-      throw error;
-    })
-    .then(function (json) {
-      return resolve(json);
-    })
-    .catch(function (err) {
-      if (err.response.status === 404) {
-        return resolve(null);
+      if (response.status === 404) {
+        return null;
       }
-      return reject(err);
+      throw new Error(response.statusText);
     });
-  });
 }
 
 function getSignUpResponse() {
-  return new Promise(function (resolve, reject) {
-    fetch('/api/signup', {
-      credentials: 'same-origin'
-    })
-    .then(function (response) {
+  return fetch('/api/signup', { credentials: 'same-origin' })
+    .then((response) => {
       if (response.status >= 200 && response.status < 300) {
         return response.json();
       }
-      const error = new Error(response.statusText);
-      error.response = response;
-      throw error;
-    })
-    .then(function (json) {
-      return resolve(json);
-    })
-    .catch(function (err) {
-      if (err.response.status === 403) {
-        return resolve({ forbidden: true });
+      if (response.status === 403) {
+        return { forbidden: true };
       }
-      return reject(err);
+      throw new Error(response.statusText);
     });
-  });
 }
 
 function resetRecaptcha() {
@@ -134,12 +110,12 @@ function finishInitializingSignUpForm(serverError, forbidden, recaptcha) {
 
 export function initializeSignUpForm() {
   return dispatch => {
-    getSignUpResponse().then(function (response) {
-      dispatch(finishInitializingSignUpForm(false, response.forbidden, response.recaptcha));
-    }, function (err) {
-      console.error(err);
-      dispatch(finishInitializingSignUpForm(true));
-    });
+    getSignUpResponse()
+      .then(response => dispatch(finishInitializingSignUpForm(false, response.forbidden, response.recaptchaSiteKey)))
+      .catch((err) => {
+        console.error(err);
+        dispatch(finishInitializingSignUpForm(true));
+      });
   };
 }
 
@@ -164,7 +140,7 @@ export function submitSignUpForm(name, email, password, passwordConfirmation, re
       errors.errorNameEmpty = true;
     }
     if (email.trim().length === 0) {
-      errors.errorEmailEmpty = true;
+      errors.ERROR_EMAIL_EMPTY = true;
     } else if (!/[^@]+@[^@]+/.test(email.trim())) {
       errors.errorEmailInvalid = true;
     }
@@ -189,27 +165,27 @@ export function submitSignUpForm(name, email, password, passwordConfirmation, re
       body: JSON.stringify({ name: name.trim(), email: email.trim(), password, recaptcha }),
       credentials: 'same-origin'
     })
-    .then(function (response) {
+    .then((response) => {
       if (response.status >= 200 && response.status < 300) {
-        return response;
+        return null;
       }
-      const error = new Error(response.statusText);
-      error.response = response;
-      throw error;
-    })
-    .then(function () {
-      window.location = '/notes';
-    })
-    .catch(function (err) {
-      dispatch(resetRecaptcha());
-      if (err.response.status >= 500) {
-        console.error(err);
-        dispatch(finishSubmittingAccount({ serverError: true }));
-        return;
+      if (response.status < 500) {
+        return response.json();
       }
-      err.response.json().then(function (json) {
+      throw new Error(response.statusText);
+    })
+    .then((json) => {
+      if (json) {
+        dispatch(resetRecaptcha());
         dispatch(finishSubmittingAccount(json));
-      });
+      } else {
+        window.location = '/notes';
+      }
+    })
+    .catch((err) => {
+      console.error(err);
+      dispatch(resetRecaptcha());
+      dispatch(finishSubmittingAccount({ serverError: true }));
     });
   };
 }
@@ -219,7 +195,7 @@ export function submitSignInEmail(email) {
     dispatch(startSubmittingAccountForm());
     const errors = {};
     if (email.trim().length === 0) {
-      errors.errorEmailEmpty = true;
+      errors.ERROR_EMAIL_EMPTY = true;
     } else if (!/[^@]+@[^@]+/.test(email.trim())) {
       errors.errorEmailInvalid = true;
     }
@@ -227,17 +203,19 @@ export function submitSignInEmail(email) {
       dispatch(finishSubmittingAccount(errors));
       return;
     }
-    getSignInResponse(email).then(function (userInfo) {
-      if (userInfo) {
-        dispatch(finishSubmittingAccount({ name: userInfo.name, recaptchaSiteKey: userInfo.recaptcha }));
-        dispatch(setFormStage(FORM_STAGE_SIGN_IN_PASSWORD));
-      } else {
-        dispatch(finishSubmittingAccount({ errorEmailNotExist: true }));
-      }
-    }).catch(function (err) {
-      console.error(err);
-      dispatch(finishSubmittingAccount({ serverError: true }));
-    });
+    getSignInResponse(email)
+      .then(function (userInfo) {
+        if (userInfo) {
+          dispatch(finishSubmittingAccount({ name: userInfo.name, recaptchaSiteKey: userInfo.recaptchaSiteKey }));
+          dispatch(setFormStage(FORM_STAGE_SIGN_IN_PASSWORD));
+        } else {
+          dispatch(finishSubmittingAccount({ errorEmailNotExist: true }));
+        }
+      })
+      .catch(function (err) {
+        console.error(err);
+        dispatch(finishSubmittingAccount({ serverError: true }));
+      });
   };
 }
 
@@ -261,28 +239,27 @@ export function submitSignInForm(email, password, remember, recaptcha) {
       body: JSON.stringify({ email: email.trim(), password, remember, recaptcha }),
       credentials: 'same-origin'
     })
-    .then(function (response) {
+    .then((response) => {
       if (response.status >= 200 && response.status < 300) {
-        return response;
+        return null;
       }
-      const error = new Error(response.statusText);
-      error.response = response;
-      throw error;
-    })
-    .then(function () {
-      window.location = '/notes';
-    })
-    .catch(function (err) {
-      dispatch(resetRecaptcha());
-      if (err.response.status >= 500) {
-        console.error(err);
-        dispatch(finishSubmittingAccount({ serverError: true }));
-        return;
+      if (response.status < 500) {
+        return response.json();
       }
-      err.response.json().then(function (json) {
+      throw new Error(response.statusText);
+    })
+    .then((json) => {
+      if (json) {
+        dispatch(resetRecaptcha());
         dispatch(finishSubmittingAccount(json));
-      });
+      } else {
+        window.location = '/notes';
+      }
+    })
+    .catch((err) => {
+      console.error(err);
+      dispatch(resetRecaptcha());
+      dispatch(finishSubmittingAccount({ serverError: true }));
     });
   };
 }
-

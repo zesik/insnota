@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const Hashids = require('hashids');
 const sharedb = require('sharedb');
 const config = require('../config');
-const sharedbDatabase = require('sharedb-mongo')(config.mongo);
+const sharedbDatabase = require('sharedb-mongo')(config.MONGO_URI);
 const sharedbLogger = require('sharedb-logger');
 const logger = require('../logger');
 const SocketStream = require('./socket-stream');
@@ -13,13 +13,13 @@ const ERROR_NOT_FOUND = '404';
 const ERROR_ACCESS_DENIED = '403';
 const ERROR_SERVICE_UNAVAILABLE = '503';
 const DEFAULT_DOCUMENT = {
-  a: {},                // Collaborators
-  t: 'Untitled',        // Title
-  c: '',                // Content
-  m: 'text/plain'       // MIME type
+  a: {},                                // Collaborators
+  t: config.DOCUMENT_DEFAULT_TITLE,     // Title
+  c: config.DOCUMENT_DEFAULT_CONTENT,   // Content
+  m: config.DOCUMENT_DEFAULT_MIME       // MIME type
 };
 
-const hashids = new Hashids(config.hashidSalt);
+const hashids = new Hashids(config.HASH_ID_SALT);
 let backend = null;
 let serverConnection = null;
 

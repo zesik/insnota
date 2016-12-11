@@ -1,98 +1,73 @@
+const { ClientError, ClientErrorCode } = require('../error');
 const Document = require('../models/document');
-const logger = require('../logger');
 
 /**
- * @note reject() argument types: Error object or null (when document not found or deleted)
+ * Create a new document.
+ *
+ * @params {string} id Document ID.
+ * @params {string} collection Collection of the document in ShareDB.
+ * @params {ObjectId} ownerID User ID of the owner.
+ * @params {string} title Title of the document.
+ * @returns {Promise}
+ */
+function createDocument(id, collection, ownerID, title) {
+  const doc = new Document();
+  doc._id = id;
+  doc.doc_collection = collection;
+  doc.owner = ownerID;
+  doc.title = title;
+  return doc.save().then(() => doc);
+}
+
+/**
+ * Find a document by its ID.
+ *
+ * @params {string} id Document ID.
+ * @returns {Promise}
  */
 function find(id) {
-  return new Promise((resolve, reject) => {
-    Document.findOne({ _id: id }, (err, doc) => {
-      if (err) {
-        logger.error('Database error when finding document');
-        reject(err);
-        return;
-      }
+  return Document.findOne({ _id: id }).exec()
+    .then((doc) => {
       if (!doc || doc.deleted_at) {
-        reject();
-        return;
+        throw new ClientError(ClientErrorCode.ERROR_DOCUMENT_NOT_FOUND);
       }
-      resolve(doc);
+      return doc;
     });
-  });
 }
 
-function findByOwner(userID) {
-  return new Promise((resolve, reject) => {
-    Document.findByOwner(userID, (err, docs) => {
-      if (err) {
-        logger.error('Database error when finding documents');
-        reject(err);
-        return;
-      }
-      resolve(docs.filter(doc => !doc.deleted_at));
-    });
-  });
+/**
+ * @returns {Promise}
+ */
+function findByOwner(user) {
+  return Document.find({ owner: user._id }).exec()
+    .then(docs => docs.filter(doc => !doc.deleted_at));
 }
 
-function findAccessible(userID) {
-  return new Promise((resolve, reject) => {
-    Document.findByOwner(userID, (errOwner, ownedDocs) => {
-      if (errOwner) {
-        logger.error('Database error when finding documents');
-        reject(errOwner);
-        return;
-      }
-      Document.findViewableByUser(userID, (errViewable, viewableDocs) => {
-        if (errViewable) {
-          logger.error('Database error when finding documents');
-          reject(errViewable);
-          return;
-        }
-        Document.findEditableByUser(userID, (errEditable, editableDocs) => {
-          if (errEditable) {
-            logger.error('Database error when finding documents');
-            reject(errEditable);
-            return;
-          }
-          const docs = [];
-          const addDocument = access => doc => {
-            if (doc.deleted_at) {
-              return;
-            }
-            doc.userAccess = access;
-            docs.push(doc);
-          };
-          ownedDocs.forEach(addDocument('owner'));
-          viewableDocs.forEach(addDocument('viewable'));
-          editableDocs.forEach(addDocument('editable'));
-          resolve(docs);
-        });
-      });
-    });
-  });
-}
-
-function create(id, collection, ownerID, title) {
-  return new Promise((resolve, reject) => {
-    const doc = new Document();
-    doc._id = id;
-    doc.owner_collection = collection;
-    doc.owner = ownerID;
-    doc.title = title;
-    doc.save(err => {
-      if (err) {
-        logger.error('Database error when creating document');
-        reject(err);
-        return;
-      }
-      resolve(doc);
-    });
+/**
+ * @returns {Promise}
+ */
+function findAccessible(user) {
+  return Promise.all([
+    Document.find({ owner: user._id }).exec().then(docs => docs.filter(doc => !doc.deleted_at)),
+    Document.find({ viewable: user._id }).exec().then(docs => docs.filter(doc => !doc.deleted_at)),
+    Document.find({ editable: user._id }).exec().then(docs => docs.filter(doc => !doc.deleted_at))
+  ]).then((values) => {
+    const addDocument = access => (collection, doc) => {
+      doc.userAccess = access;
+      collection.push(doc);
+      return collection;
+    };
+    const docs = [];
+    values[0].reduce(addDocument('owner'), docs);
+    values[1].reduce(addDocument('viewable'), docs);
+    values[2].reduce(addDocument('editable'), docs);
+    return docs;
   });
 }
 
 module.exports = {
+  createDocument,
   find,
   findByOwner,
-  findAccessible,
-  create
+  findAccessible
 };

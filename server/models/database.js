@@ -2,21 +2,19 @@ const config = require('../config');
 const logger = require('../logger');
 const mongoose = require('mongoose');
 
+/**
+ * @returns {Promise}
+ */
 function initialize() {
-  return new Promise((resolve, reject) => {
-    mongoose.Promise = global.Promise;
-    mongoose.connect(config.mongo);
-
-    const db = mongoose.connection;
-    db.on('error', err => {
+  mongoose.Promise = global.Promise;
+  return mongoose.connect(config.MONGO_URI)
+    .then(() => {
+      logger.info('Database connected');
+    })
+    .catch((err) => {
       logger.error(`Database connection error: ${err}`);
-      reject(err);
+      return err;
     });
-    db.once('open', () => {
-      logger.info('Database connection is ready');
-      resolve();
-    });
-  });
 }
 
 module.exports = initialize;
