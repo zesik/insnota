@@ -837,7 +837,7 @@ class SyncedEditor extends React.Component {
         sharing = 'team';
       }
       this.setState({ readOnly, sharing });
-      return callback(null, { collection: json.collection, document: json.document });
+      return callback(null, { collection: json.collection, document: json.id });
     })
     .catch(err => {
       // We could not access the document

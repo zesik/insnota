@@ -24,7 +24,6 @@ const ResponseKeys = {
   DOCUMENT_CREATE_TIME: 'createTime',
   DOCUMENT_ACCESS: 'access',
   DOCUMENT_COLLECTION: 'collection',
-  DOCUMENT_DOCUMENT: 'document',
   DOCUMENT_OWNER: 'owner',
   DOCUMENT_COLLABORATORS: 'collaborators',
   DOCUMENT_EDITOR_INVITING: 'editorInviting',
@@ -401,7 +400,7 @@ router.get('/notes/:docID', function (req, res, next) {
       // Populate basic document information
       const docInfo = {
         [ResponseKeys.DOCUMENT_COLLECTION]: doc.doc_collection,
-        [ResponseKeys.DOCUMENT_DOCUMENT]: doc._id,
+        [ResponseKeys.DOCUMENT_ID]: doc._id,
         [ResponseKeys.DOCUMENT_OWNER]: {},
         [ResponseKeys.DOCUMENT_COLLABORATORS]: [],
         [ResponseKeys.DOCUMENT_EDITOR_INVITING]: !!doc.editor_inviting
